@@ -146,21 +146,27 @@ export function SeccionResumenLey({ resultado: r, aplicaTabla383 }: Props) {
 
           {r.isIndependiente && r.ibcMes !== undefined && (
             <>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid var(--border-color)" }}>
-                <div style={{ flex: 1 }}>
-                  <span style={{ fontSize: "0.78rem", color: "var(--text-secondary)" }}>(-) Deducciones por Actividad (Costos Presuntos o Reales)</span>
-                  {r.actividadUGPP !== "Costos Reales (Declarados con Soportes)" && r.actividadUGPP && PRESUNCION_COSTOS_UGPP[r.actividadUGPP] !== undefined && (
-                    <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginTop: 2 }}>
-                      (${formatCOP(r.ingresoBrutoMes * 12)} × {(PRESUNCION_COSTOS_UGPP[r.actividadUGPP] * 100).toFixed(2)}% / 12)
+              {/* FIX: Mostrar costo UGPP visual (no costosDeduciblesMes que es $0 por regla DIAN) */}
+              {(() => {
+                const costoUGPPMesVisual = r.ingresoBrutoMes * (PRESUNCION_COSTOS_UGPP[r.actividadUGPP || ""] || 0);
+                return (
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid var(--border-color)" }}>
+                    <div style={{ flex: 1 }}>
+                      <span style={{ fontSize: "0.78rem", color: "var(--text-secondary)" }}>(-) Deducciones por Actividad (Costos Presuntos o Reales)</span>
+                      {r.actividadUGPP !== "Costos Reales (Declarados con Soportes)" && r.actividadUGPP && PRESUNCION_COSTOS_UGPP[r.actividadUGPP] !== undefined && (
+                        <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginTop: 2 }}>
+                          ({formatCOP(r.ingresoBrutoMes)} × {(PRESUNCION_COSTOS_UGPP[r.actividadUGPP] * 100).toFixed(2)}%)
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-                <div style={{ textAlign: "right" }}>
-                  <span style={{ fontSize: "0.82rem", fontWeight: 500, fontFamily: "JetBrains Mono, monospace", color: "var(--accent-rose)" }}>
-                    - {formatCOP(r.costosDeduciblesMes || 0)}
-                  </span>
-                </div>
-              </div>
+                    <div style={{ textAlign: "right" }}>
+                      <span style={{ fontSize: "0.82rem", fontWeight: 500, fontFamily: "JetBrains Mono, monospace", color: "var(--accent-rose)" }}>
+                        − {formatCOP(costoUGPPMesVisual)}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
 
               <div style={{ padding: "10px 0", borderBottom: "1px solid var(--border-color)", borderTop: "1px solid var(--border-color)", margin: "10px 0" }}>
                 <Row bold label="Ingreso Neto para SS Mensual" value={formatCOP(r.ingresoNetoSSMes!)} />
@@ -243,6 +249,24 @@ export function SeccionResumenLey({ resultado: r, aplicaTabla383 }: Props) {
             
             {/* 8. Renta Exenta 25% */}
             <Row negative label="(-) Renta Exenta 25%" value={`- ${formatCOP(r.rentaExentaMes)}`} />
+
+            {/* 8b. Bloque pedagógico de auditoría de Renta Exenta Mensual */}
+            {aplicaTabla383 !== false && (
+              <div style={{ padding: "12px", borderRadius: "8px", background: "rgba(245, 158, 11, 0.03)", border: "1px solid rgba(245, 158, 11, 0.1)", marginTop: "4px", marginBottom: "4px", fontSize: "0.72rem", color: "var(--text-secondary)" }}>
+                <div style={{ fontWeight: 700, marginBottom: "6px", color: "#f59e0b" }}>⚙️ Auditoría de Base Renta Exenta (Mensual):</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
+                  <div>Renta Líquida Mensual: <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(r.ingresoNetoMes)}</span></div>
+                  <div>(–) Dependientes Art. 387: <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(r.deduccionArt387Mes || 0)}</span></div>
+                  <div>(–) Medicina Prepagada: <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(r.medicinaPrepagadaMensual || 0)}</span></div>
+                  <div>(–) Intereses Vivienda: <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(r.interesesViviendaMensual || 0)}</span></div>
+                  <div>(–) Aportes AFC / FPV: <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(r.aportesVoluntariosMensual || 0)}</span></div>
+                  <div style={{ borderTop: "1px solid rgba(245,158,11,0.2)", marginTop: "4px", paddingTop: "4px", fontWeight: 600 }}>
+                    (=) Base Depurada Mensual: <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(Math.max(0, r.ingresoNetoMes - (r.deduccionArt387Mes || 0) - (r.medicinaPrepagadaMensual || 0) - (r.interesesViviendaMensual || 0) - (r.aportesVoluntariosMensual || 0)))}</span>
+                  </div>
+                  <div>(×) 25% de Ley = <span style={{ fontFamily: "JetBrains Mono, monospace", color: "#f59e0b" }}>{formatCOP(r.rentaExentaMes)}</span> {r.topeRentaExentaActivo ? <span style={{ color: "#fb923c" }}>(Topado a 790 UVT anuales)</span> : ""}</div>
+                </div>
+              </div>
+            )}
             
             {/* 9. Barra de Progreso Límite 40% */}
             {aplicaTabla383 !== false && (

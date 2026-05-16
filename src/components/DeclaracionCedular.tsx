@@ -64,7 +64,7 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
     actividad: "G. Comercio al por mayor y al por menor, reparación de vehículos..." 
   });
   
-  const [deducciones, setDeducciones] = useState({ afc: 0, prepagada: 0, interesesVivienda: 0 });
+  const [deducciones, setDeducciones] = useState({ afc: 0, prepagada: 0, interesesVivienda: 0, factura: 0 });
   const [rentabilidadEsperada, setRentabilidadEsperada] = useState(10); // 10% por defecto
   const [numDependientes, setNumDependientes] = useState(0);
   
@@ -106,23 +106,25 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
     const INCR_LaboralAnual = INCR_LaboralMes * 12;
     const netoLaboralAnual = netoLaboralMes * 12;
 
-    // B. Rentas de Trabajo (Honorarios)
-    const tasaCostosHonorarios = honorarios.usaPresuntos 
-      ? (PRESUNCION_COSTOS_UGPP[honorarios.actividad] || 0)
-      : 0;
-    const costosHonorariosMes = honorarios.usaPresuntos 
-      ? honorarios.bruto * tasaCostosHonorarios
+    // ─── B. Rentas de Trabajo (Honorarios) ───
+    // UGPP: presuntos o reales (para IBC/Seguridad Social)
+    const costosUGPPHonorariosMes = honorarios.usaPresuntos
+      ? honorarios.bruto * (PRESUNCION_COSTOS_UGPP[honorarios.actividad] || 0)
       : honorarios.costosReales;
-    
-    const netoUGPPHonorariosMes = Math.max(0, honorarios.bruto - costosHonorariosMes);
+    // DIAN: SOLO costos reales soportados (Art. 107 E.T.) — presuntos = $0
+    const costosDIANHonorariosMes = honorarios.usaPresuntos ? 0 : honorarios.costosReales;
+
+    const netoUGPPHonorariosMes = Math.max(0, honorarios.bruto - costosUGPPHonorariosMes);
     const { ibcMes: ibcHonorariosMes, adjusted: ibcAdjustedHonorarios, type: ibcTypeHonorarios } = calculateIBC(netoUGPPHonorariosMes);
-    
+
     const saludHonorariosMes = ibcHonorariosMes * 0.125;
     const pensionHonorariosMes = ibcHonorariosMes * 0.16;
     const INCR_HonorariosMes = saludHonorariosMes + pensionHonorariosMes;
-    const netoHonorariosMes = Math.max(0, honorarios.bruto - costosHonorariosMes - INCR_HonorariosMes);
+    // netoHonorariosMes: para DIAN, resta costos DIAN (no presuntos) y aportes SS
+    const netoHonorariosMes = Math.max(0, honorarios.bruto - costosDIANHonorariosMes - INCR_HonorariosMes);
 
-    const costosHonorariosAnual = costosHonorariosMes * 12;
+    const costosUGPPHonorariosAnual = costosUGPPHonorariosMes * 12;
+    const costosDIANHonorariosAnual = costosDIANHonorariosMes * 12;
     const netoUGPPHonorariosAnual = netoUGPPHonorariosMes * 12;
     const ibcHonorariosAnual = ibcHonorariosMes * 12;
     const saludHonorariosAnual = saludHonorariosMes * 12;
@@ -130,21 +132,22 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
     const INCR_HonorariosAnual = INCR_HonorariosMes * 12;
     const netoHonorariosAnual = netoHonorariosMes * 12;
 
-    // C. Rentas de Capital
-    const tasaCostosCapital = capital.usaPresuntos ? 0.2808 : 0;
-    const costosCapitalMes = capital.usaPresuntos 
-      ? capital.bruto * tasaCostosCapital
+    // ─── C. Rentas de Capital ───
+    const costosUGPPCapitalMes = capital.usaPresuntos
+      ? capital.bruto * 0.2808
       : capital.costosReales;
-      
-    const netoUGPPCapitalMes = Math.max(0, capital.bruto - costosCapitalMes);
+    const costosDIANCapitalMes = capital.usaPresuntos ? 0 : capital.costosReales;
+
+    const netoUGPPCapitalMes = Math.max(0, capital.bruto - costosUGPPCapitalMes);
     const { ibcMes: ibcCapitalMes, adjusted: ibcAdjustedCapital, type: ibcTypeCapital } = calculateIBC(netoUGPPCapitalMes);
-    
+
     const saludCapitalMes = ibcCapitalMes * 0.125;
     const pensionCapitalMes = ibcCapitalMes * 0.16;
     const INCR_CapitalMes = saludCapitalMes + pensionCapitalMes;
-    const netoCapitalMes = Math.max(0, capital.bruto - costosCapitalMes - INCR_CapitalMes);
+    const netoCapitalMes = Math.max(0, capital.bruto - costosDIANCapitalMes - INCR_CapitalMes);
 
-    const costosCapitalAnual = costosCapitalMes * 12;
+    const costosUGPPCapitalAnual = costosUGPPCapitalMes * 12;
+    const costosDIANCapitalAnual = costosDIANCapitalMes * 12;
     const netoUGPPCapitalAnual = netoUGPPCapitalMes * 12;
     const ibcCapitalAnual = ibcCapitalMes * 12;
     const saludCapitalAnual = saludCapitalMes * 12;
@@ -152,23 +155,22 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
     const INCR_CapitalAnual = INCR_CapitalMes * 12;
     const netoCapitalAnual = netoCapitalMes * 12;
 
-    // D. Rentas No Laborales
-    const tasaCostosNoLaborales = noLaborales.usaPresuntos 
-      ? (PRESUNCION_COSTOS_UGPP[noLaborales.actividad] || 0)
-      : 0;
-    const costosNoLaboralesMes = noLaborales.usaPresuntos 
-      ? noLaborales.bruto * tasaCostosNoLaborales
+    // ─── D. Rentas No Laborales ───
+    const costosUGPPNoLaboralesMes = noLaborales.usaPresuntos
+      ? noLaborales.bruto * (PRESUNCION_COSTOS_UGPP[noLaborales.actividad] || 0)
       : noLaborales.costosReales;
-      
-    const netoUGPPNoLaboralesMes = Math.max(0, noLaborales.bruto - costosNoLaboralesMes);
+    const costosDIANNoLaboralesMes = noLaborales.usaPresuntos ? 0 : noLaborales.costosReales;
+
+    const netoUGPPNoLaboralesMes = Math.max(0, noLaborales.bruto - costosUGPPNoLaboralesMes);
     const { ibcMes: ibcNoLaboralesMes, adjusted: ibcAdjustedNoLaborales, type: ibcTypeNoLaborales } = calculateIBC(netoUGPPNoLaboralesMes);
-    
+
     const saludNoLaboralesMes = ibcNoLaboralesMes * 0.125;
     const pensionNoLaboralesMes = ibcNoLaboralesMes * 0.16;
     const INCR_NoLaboralesMes = saludNoLaboralesMes + pensionNoLaboralesMes;
-    const netoNoLaboralesMes = Math.max(0, noLaborales.bruto - costosNoLaboralesMes - INCR_NoLaboralesMes);
+    const netoNoLaboralesMes = Math.max(0, noLaborales.bruto - costosDIANNoLaboralesMes - INCR_NoLaboralesMes);
 
-    const costosNoLaboralesAnual = costosNoLaboralesMes * 12;
+    const costosUGPPNoLaboralesAnual = costosUGPPNoLaboralesMes * 12;
+    const costosDIANNoLaboralesAnual = costosDIANNoLaboralesMes * 12;
     const netoUGPPNoLaboralesAnual = netoUGPPNoLaboralesMes * 12;
     const ibcNoLaboralesAnual = ibcNoLaboralesMes * 12;
     const saludNoLaboralesAnual = saludNoLaboralesMes * 12;
@@ -187,11 +189,16 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
     const aportesAFCAnual = deducciones.afc * 12;
 
     // Dependientes (Art. 387) - Tope 32 UVT/mes -> 384 UVT/año
-    const deduccionDependientes387Bruta = numDependientes > 0 ? (rentasTrabajo.bruto * 12) * 0.10 : 0;
+    const brutoParaDependientes = rentasTrabajo.bruto + (honorarios.usaPresuntos ? honorarios.bruto : 0);
+    const deduccionDependientes387Bruta = numDependientes > 0 ? (brutoParaDependientes * 12) * 0.10 : 0;
     const deduccionDependientes387Anual = Math.min(deduccionDependientes387Bruta, 384 * C.UVT);
 
+    // Deducción por compras con factura electrónica (1% de compras, máx 240 UVT anuales - Art. 336 E.T.)
+    const deduccionFacturaAnual = Math.min(deducciones.factura * 0.01, 240 * C.UVT);
+
     // Base depurada exclusiva para la renta de trabajo
-    const baseRentaExenta = netoLaboralAnual - deduccionDependientes387Anual - deduccionPrepagadaAnual - deduccionViviendaAnual - aportesAFCAnual;
+    const netoHonorariosExentos = honorarios.usaPresuntos ? (honorarios.bruto * 12) - (saludHonorariosAnual + pensionHonorariosAnual) : 0;
+    const baseRentaExenta = netoLaboralAnual + netoHonorariosExentos - deduccionDependientes387Anual - deduccionPrepagadaAnual - deduccionViviendaAnual - aportesAFCAnual;
 
     // Si las deducciones superan el ingreso, la base es 0
     const rentaExentaLaboralBruta = Math.max(0, baseRentaExenta) * 0.25;
@@ -210,11 +217,22 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
     // Deducciones fuera de tope
     const deduccionDependientes336Anual = numDependientes * 72 * C.UVT; // 72 UVT anuales por dep (Art. 336)
     
-    const baseGravable = Math.max(0, rentaLiquidaTotal - deduccionesLimitadasAnual - deduccionDependientes336Anual);
+    const baseGravable = Math.max(0, rentaLiquidaTotal - deduccionesLimitadasAnual - deduccionDependientes336Anual - deduccionFacturaAnual);
     const baseGravableUVT = baseGravable / C.UVT;
 
     // Cupo Disponible para Optimización
-    const cupoDisponibleAnual = Math.max(0, Math.min(limite40Anual, limite1340UVT) - deduccionesLimitadasAnual);
+    const deduccionesPreviasAnual = deduccionDependientes387Anual + deduccionPrepagadaAnual + deduccionViviendaAnual;
+    const ingresoNetoDIANAnual = netoLaboralAnual + (honorarios.usaPresuntos ? netoHonorariosAnual : 0);
+    
+    let cupoOptimoAFCAnual = 0;
+    if (honorarios.usaPresuntos) {
+      const re = 0.25;
+      const limiteReal = Math.min(limite40Anual, limite1340UVT);
+      const candidato = (limiteReal - re * ingresoNetoDIANAnual - (1 - re) * deduccionesPreviasAnual) / (1 - re);
+      cupoOptimoAFCAnual = Math.max(0, candidato);
+    } else {
+      cupoOptimoAFCAnual = Math.max(0, Math.min(limite40Anual, limite1340UVT) - deduccionesLimitadasAnual);
+    }
 
     // Tabla Art 241
     let impuestoCedulaGeneralUVT = 0;
@@ -235,8 +253,8 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
     
     const impuestoCedulaGeneral = impuestoCedulaGeneralUVT * C.UVT;
 
-    // Simulador de Ahorro Neto
-    const baseOptimizada = Math.max(0, baseGravable - cupoDisponibleAnual);
+    // Simulador de Ahorro Neto Riguroso: Re-calcula la base final asumiendo que se agota el límite máximo permitido por la ley
+    const baseOptimizada = Math.max(0, rentaLiquidaTotal - limiteMaximoDeducciones - deduccionDependientes336Anual - deduccionFacturaAnual);
     const baseOptimizadaUVT = baseOptimizada / C.UVT;
     let impuestoOptimizadoUVT = 0;
     
@@ -269,7 +287,8 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
     const retencionesTotalesAnual = (rentasTrabajo.retenciones + honorarios.retenciones + capital.retenciones + noLaborales.retenciones) * 12;
     const saldoFinal = impuestoTotal - retencionesTotalesAnual;
 
-    const costosTotalesAnual = costosHonorariosAnual + costosCapitalAnual + costosNoLaboralesAnual;
+    const costosTotalesUGPPAnual = costosUGPPHonorariosAnual + costosUGPPCapitalAnual + costosUGPPNoLaboralesAnual;
+    const costosTotalesDIANAnual = costosDIANHonorariosAnual + costosDIANCapitalAnual + costosDIANNoLaboralesAnual;
 
     return {
       ingresosBrutosTotales,
@@ -285,7 +304,7 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
       retencionesTotales: retencionesTotalesAnual,
       saldoFinal,
       tramoMarginal,
-      cupoDisponible: cupoDisponibleAnual,
+      cupoDisponible: cupoOptimoAFCAnual,
       impuestoOptimizado,
       ahorroNeto,
       rentaExentaLaboralAnual,
@@ -295,23 +314,41 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
       deduccionPrepagadaAnual,
       deduccionViviendaAnual,
       aportesAFCAnual,
-      costosTotalesAnual,
+      costosTotalesUGPPAnual,
+      costosTotalesDIANAnual,
       limite40Anual,
       // Desgloses para UI
-      honorarios: { 
-        costosMes: costosHonorariosMes, netoUGPPMes: netoUGPPHonorariosMes, ibcMes: ibcHonorariosMes, saludMes: saludHonorariosMes, pensionMes: pensionHonorariosMes,
-        costosAnual: costosHonorariosAnual, netoUGPPAnual: netoUGPPHonorariosAnual, ibcAnual: ibcHonorariosAnual, saludAnual: saludHonorariosAnual, pensionAnual: pensionHonorariosAnual,
-        ibcAdjusted: ibcAdjustedHonorarios, ibcType: ibcTypeHonorarios
+      honorarios: {
+        // UGPP (para IBC / Seguridad Social)
+        costosUGPPMes: costosUGPPHonorariosMes, costosUGPPAnual: costosUGPPHonorariosAnual,
+        netoUGPPMes: netoUGPPHonorariosMes, netoUGPPAnual: netoUGPPHonorariosAnual,
+        ibcMes: ibcHonorariosMes, ibcAnual: ibcHonorariosAnual,
+        saludMes: saludHonorariosMes, saludAnual: saludHonorariosAnual,
+        pensionMes: pensionHonorariosMes, pensionAnual: pensionHonorariosAnual,
+        ibcAdjusted: ibcAdjustedHonorarios, ibcType: ibcTypeHonorarios,
+        // DIAN (para base gravable renta)
+        costosDIANMes: costosDIANHonorariosMes, costosDIANAnual: costosDIANHonorariosAnual,
+        usaPresuntos: honorarios.usaPresuntos,
       },
-      capital: { 
-        costosMes: costosCapitalMes, netoUGPPMes: netoUGPPCapitalMes, ibcMes: ibcCapitalMes, saludMes: saludCapitalMes, pensionMes: pensionCapitalMes,
-        costosAnual: costosCapitalAnual, netoUGPPAnual: netoUGPPCapitalAnual, ibcAnual: ibcCapitalAnual, saludAnual: saludCapitalAnual, pensionAnual: pensionCapitalAnual,
-        ibcAdjusted: ibcAdjustedCapital, ibcType: ibcTypeCapital
+      capital: {
+        costosUGPPMes: costosUGPPCapitalMes, costosUGPPAnual: costosUGPPCapitalAnual,
+        netoUGPPMes: netoUGPPCapitalMes, netoUGPPAnual: netoUGPPCapitalAnual,
+        ibcMes: ibcCapitalMes, ibcAnual: ibcCapitalAnual,
+        saludMes: saludCapitalMes, saludAnual: saludCapitalAnual,
+        pensionMes: pensionCapitalMes, pensionAnual: pensionCapitalAnual,
+        ibcAdjusted: ibcAdjustedCapital, ibcType: ibcTypeCapital,
+        costosDIANMes: costosDIANCapitalMes, costosDIANAnual: costosDIANCapitalAnual,
+        usaPresuntos: capital.usaPresuntos,
       },
-      noLaborales: { 
-        costosMes: costosNoLaboralesMes, netoUGPPNoLaboralesMes: netoUGPPNoLaboralesMes, ibcMes: ibcNoLaboralesMes, saludMes: saludNoLaboralesMes, pensionMes: pensionNoLaboralesMes,
-        costosAnual: costosNoLaboralesAnual, netoUGPPAnual: netoUGPPNoLaboralesAnual, ibcAnual: ibcNoLaboralesAnual, saludAnual: saludNoLaboralesAnual, pensionAnual: pensionNoLaboralesAnual,
-        ibcAdjusted: ibcAdjustedNoLaborales, ibcType: ibcTypeNoLaborales
+      noLaborales: {
+        costosUGPPMes: costosUGPPNoLaboralesMes, costosUGPPAnual: costosUGPPNoLaboralesAnual,
+        netoUGPPNoLaboralesMes: netoUGPPNoLaboralesMes, netoUGPPAnual: netoUGPPNoLaboralesAnual,
+        ibcMes: ibcNoLaboralesMes, ibcAnual: ibcNoLaboralesAnual,
+        saludMes: saludNoLaboralesMes, saludAnual: saludNoLaboralesAnual,
+        pensionMes: pensionNoLaboralesMes, pensionAnual: pensionNoLaboralesAnual,
+        ibcAdjusted: ibcAdjustedNoLaborales, ibcType: ibcTypeNoLaborales,
+        costosDIANMes: costosDIANNoLaboralesMes, costosDIANAnual: costosDIANNoLaboralesAnual,
+        usaPresuntos: noLaborales.usaPresuntos,
       },
       laboral: { saludMes: saludLaboralMes, pensionMes: pensionLaboralMes, saludAnual: saludLaboralAnual, pensionAnual: pensionLaboralAnual }
     };
@@ -572,6 +609,13 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
             </div>
           )}
 
+          {/* DIAN Compliance Banner */}
+          {honorarios.usaPresuntos && honorarios.bruto > 0 && (
+            <div style={{ marginTop: "12px", padding: "10px 14px", backgroundColor: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.35)", borderRadius: "8px", color: "#fca5a5", fontSize: "0.82rem", lineHeight: 1.5 }}>
+              🚨 <strong>Alerta Cumplimiento DIAN (Art. 107 E.T.):</strong> Los costos presuntos UGPP <em>no son deducibles</em> en la declaración de renta. Para esta sección la Base Gravable DIAN se calcula sin deducción de costos. Si tienes costos reales soportados (facturas, contratos), selecciona <strong>«Usar Costos Reales»</strong>.
+            </div>
+          )}
+
           <div className="desglose-box" style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: "6px" }}>
             <div style={{ fontWeight: 700, color: "#38bdf8" }}>Concepto</div>
             <div style={{ fontWeight: 700, color: "#38bdf8", textAlign: "right" }}>Mensual</div>
@@ -581,13 +625,17 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
             <div style={{ textAlign: "right" }}>{formatCOP(honorarios.bruto)}</div>
             <div style={{ textAlign: "right" }}>{formatCOP(honorarios.bruto * 12)}</div>
             
-            <div style={{ color: "#f87171" }}>(-) Costos:</div>
-            <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.honorarios.costosMes)}</div>
-            <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.honorarios.costosAnual)}</div>
+            <div style={{ color: "#64748b", fontStyle: "italic" }}>(-) Costos UGPP (SS):</div>
+            <div style={{ textAlign: "right", color: "#64748b" }}>{formatCOP(calculos.honorarios.costosUGPPMes)}</div>
+            <div style={{ textAlign: "right", color: "#64748b" }}>{formatCOP(calculos.honorarios.costosUGPPAnual)}</div>
             
             <div style={{ borderTop: "1px solid #334155", paddingTop: "4px" }}>(=) Ingreso Neto UGPP:</div>
             <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px" }}>{formatCOP(calculos.honorarios.netoUGPPMes)}</div>
             <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px" }}>{formatCOP(calculos.honorarios.netoUGPPAnual)}</div>
+            
+            <div style={{ color: "#f87171" }}>(-) Costos DIAN (Reales):</div>
+            <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.honorarios.costosDIANMes)}</div>
+            <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.honorarios.costosDIANAnual)}</div>
             
             {/* Alertas de IBC */}
             {calculos.honorarios.netoUGPPMes < C.SMMLV && (
@@ -618,9 +666,9 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
             <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.honorarios.pensionMes)}</div>
             <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.honorarios.pensionAnual)}</div>
             
-            <div style={{ borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700 }}>(=) Neto:</div>
-            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700 }}>{formatCOP(honorarios.bruto - calculos.honorarios.costosMes - calculos.honorarios.saludMes - calculos.honorarios.pensionMes)}</div>
-            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700 }}>{formatCOP((honorarios.bruto - calculos.honorarios.costosMes - calculos.honorarios.saludMes - calculos.honorarios.pensionMes) * 12)}</div>
+            <div style={{ borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700, color: "#34d399" }}>(=) Neto DIAN (Renta):</div>
+            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700, color: "#34d399" }}>{formatCOP(honorarios.bruto - calculos.honorarios.costosDIANMes - calculos.honorarios.saludMes - calculos.honorarios.pensionMes)}</div>
+            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700, color: "#34d399" }}>{formatCOP((honorarios.bruto - calculos.honorarios.costosDIANMes - calculos.honorarios.saludMes - calculos.honorarios.pensionMes) * 12)}</div>
           </div>
         </details>
 
@@ -671,6 +719,13 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
             </div>
           )}
 
+          {/* DIAN Compliance Banner */}
+          {capital.usaPresuntos && capital.bruto > 0 && (
+            <div style={{ marginTop: "12px", padding: "10px 14px", backgroundColor: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.35)", borderRadius: "8px", color: "#fca5a5", fontSize: "0.82rem", lineHeight: 1.5 }}>
+              🚨 <strong>Alerta Cumplimiento DIAN (Art. 107 E.T.):</strong> La presunción del 28.08% de rentistas de capital es exclusiva para el IBC de seguridad social. Para la declaración de renta, la deducción de costos es <strong>$0</strong> salvo que tengas costos reales soportados.
+            </div>
+          )}
+
           <div className="desglose-box" style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: "6px" }}>
             <div style={{ fontWeight: 700, color: "#38bdf8" }}>Concepto</div>
             <div style={{ fontWeight: 700, color: "#38bdf8", textAlign: "right" }}>Mensual</div>
@@ -680,13 +735,17 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
             <div style={{ textAlign: "right" }}>{formatCOP(capital.bruto)}</div>
             <div style={{ textAlign: "right" }}>{formatCOP(capital.bruto * 12)}</div>
             
-            <div style={{ color: "#f87171" }}>(-) Costos:</div>
-            <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.capital.costosMes)}</div>
-            <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.capital.costosAnual)}</div>
+            <div style={{ color: "#64748b", fontStyle: "italic" }}>(-) Costos UGPP (SS):</div>
+            <div style={{ textAlign: "right", color: "#64748b" }}>{formatCOP(calculos.capital.costosUGPPMes)}</div>
+            <div style={{ textAlign: "right", color: "#64748b" }}>{formatCOP(calculos.capital.costosUGPPAnual)}</div>
             
             <div style={{ borderTop: "1px solid #334155", paddingTop: "4px" }}>(=) Ingreso Neto UGPP:</div>
             <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px" }}>{formatCOP(calculos.capital.netoUGPPMes)}</div>
             <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px" }}>{formatCOP(calculos.capital.netoUGPPAnual)}</div>
+            
+            <div style={{ color: "#f87171" }}>(-) Costos DIAN (Reales):</div>
+            <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.capital.costosDIANMes)}</div>
+            <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.capital.costosDIANAnual)}</div>
             
             {/* Alertas de IBC */}
             {calculos.capital.netoUGPPMes < C.SMMLV && (
@@ -717,9 +776,9 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
             <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.capital.pensionMes)}</div>
             <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.capital.pensionAnual)}</div>
             
-            <div style={{ borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700 }}>(=) Neto:</div>
-            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700 }}>{formatCOP(capital.bruto - calculos.capital.costosMes - calculos.capital.saludMes - calculos.capital.pensionMes)}</div>
-            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700 }}>{formatCOP((capital.bruto - calculos.capital.costosMes - calculos.capital.saludMes - calculos.capital.pensionMes) * 12)}</div>
+            <div style={{ borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700, color: "#34d399" }}>(=) Neto DIAN (Renta):</div>
+            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700, color: "#34d399" }}>{formatCOP(capital.bruto - calculos.capital.costosDIANMes - calculos.capital.saludMes - calculos.capital.pensionMes)}</div>
+            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700, color: "#34d399" }}>{formatCOP((capital.bruto - calculos.capital.costosDIANMes - calculos.capital.saludMes - calculos.capital.pensionMes) * 12)}</div>
           </div>
         </details>
 
@@ -782,6 +841,13 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
             </div>
           )}
 
+          {/* DIAN Compliance Banner */}
+          {noLaborales.usaPresuntos && noLaborales.bruto > 0 && (
+            <div style={{ marginTop: "12px", padding: "10px 14px", backgroundColor: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.35)", borderRadius: "8px", color: "#fca5a5", fontSize: "0.82rem", lineHeight: 1.5 }}>
+              🚨 <strong>Alerta Cumplimiento DIAN (Art. 107 E.T.):</strong> Los costos presuntos UGPP no son deducibles en renta. Si no tienes costos reales soportados con facturas o documentos equivalentes, la deducción DIAN es <strong>$0</strong>. Selecciona <strong>«Usar Costos Reales»</strong> si los tienes.
+            </div>
+          )}
+
           <div className="desglose-box" style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: "6px" }}>
             <div style={{ fontWeight: 700, color: "#38bdf8" }}>Concepto</div>
             <div style={{ fontWeight: 700, color: "#38bdf8", textAlign: "right" }}>Mensual</div>
@@ -791,13 +857,17 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
             <div style={{ textAlign: "right" }}>{formatCOP(noLaborales.bruto)}</div>
             <div style={{ textAlign: "right" }}>{formatCOP(noLaborales.bruto * 12)}</div>
             
-            <div style={{ color: "#f87171" }}>(-) Costos:</div>
-            <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.noLaborales.costosMes)}</div>
-            <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.noLaborales.costosAnual)}</div>
+            <div style={{ color: "#64748b", fontStyle: "italic" }}>(-) Costos UGPP (SS):</div>
+            <div style={{ textAlign: "right", color: "#64748b" }}>{formatCOP(calculos.noLaborales.costosUGPPMes)}</div>
+            <div style={{ textAlign: "right", color: "#64748b" }}>{formatCOP(calculos.noLaborales.costosUGPPAnual)}</div>
             
             <div style={{ borderTop: "1px solid #334155", paddingTop: "4px" }}>(=) Ingreso Neto UGPP:</div>
             <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px" }}>{formatCOP(calculos.noLaborales.netoUGPPNoLaboralesMes)}</div>
             <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px" }}>{formatCOP(calculos.noLaborales.netoUGPPAnual)}</div>
+            
+            <div style={{ color: "#f87171" }}>(-) Costos DIAN (Reales):</div>
+            <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.noLaborales.costosDIANMes)}</div>
+            <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.noLaborales.costosDIANAnual)}</div>
             
             {/* Alertas de IBC */}
             {calculos.noLaborales.netoUGPPNoLaboralesMes < C.SMMLV && (
@@ -828,9 +898,9 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
             <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.noLaborales.pensionMes)}</div>
             <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.noLaborales.pensionAnual)}</div>
             
-            <div style={{ borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700 }}>(=) Neto:</div>
-            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700 }}>{formatCOP(noLaborales.bruto - calculos.noLaborales.costosMes - calculos.noLaborales.saludMes - calculos.noLaborales.pensionMes)}</div>
-            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700 }}>{formatCOP((noLaborales.bruto - calculos.noLaborales.costosMes - calculos.noLaborales.saludMes - calculos.noLaborales.pensionMes) * 12)}</div>
+            <div style={{ borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700, color: "#34d399" }}>(=) Neto DIAN (Renta):</div>
+            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700, color: "#34d399" }}>{formatCOP(noLaborales.bruto - calculos.noLaborales.costosDIANMes - calculos.noLaborales.saludMes - calculos.noLaborales.pensionMes)}</div>
+            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700, color: "#34d399" }}>{formatCOP((noLaborales.bruto - calculos.noLaborales.costosDIANMes - calculos.noLaborales.saludMes - calculos.noLaborales.pensionMes) * 12)}</div>
           </div>
         </details>
 
@@ -876,6 +946,15 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
                 placeholder="10"
                 style={{ background: "#1e293b", color: "#f8fafc", border: "1px solid #334155", borderRadius: "4px", padding: "8px" }}
               />
+            </div>
+            <MoneyInput 
+              id="deduc-factura"
+              label="Compras con Factura Electrónica (Anual)"
+              value={deducciones.factura}
+              onChange={(v) => setDeducciones({ ...deducciones, factura: v })}
+            />
+            <div className="tip-text" style={{ marginTop: "-8px", marginBottom: "8px", fontSize: "0.7rem" }}>
+              ↳ Se deduce el 1% de las compras (Art. 336 E.T.), máx {formatCOP(240 * C.UVT)}/año.
             </div>
           </div>
 
@@ -964,8 +1043,8 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
         </div>
         
         <div className="result-row" style={{ color: "#f87171" }}>
-          <span>(-) Costos y Gastos Procedentes (Hon/Cap/NoLab):</span>
-          <span className="result-value">{formatCOP(calculos.costosTotalesAnual)}</span>
+          <span>(-) Costos DIAN Reales (Hon/Cap/NoLab):</span>
+          <span className="result-value">{formatCOP(calculos.costosTotalesDIANAnual)}</span>
         </div>
         
         <div className="result-row">
@@ -1040,26 +1119,30 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
           
           {/* Sunk Cost Analysis */}
           <p style={{ fontSize: "0.9rem", color: "#e2e8f0", marginBottom: "12px", borderLeft: "4px solid #06b6d4", paddingLeft: "8px" }}>
-            💡 Eficiencia Proactiva: Antes de inmovilizar capital en AFC, considera que los aportes a Medicina Prepagada o Intereses de Vivienda reducen tu impuesto con dinero que ya 'gastas' mensualmente. Esto libera tu flujo de caja para inversiones líquidas.
+            💡 Eficiencia Proactiva: Antes de inmovilizar capital en AFC, considera que los aportes a Medicina Prepagada o Intereses de Vivienda reducen tu impuesto con dinero que ya &apos;gastas&apos; mensualmente. Esto libera tu flujo de caja para inversiones líquidas.
           </p>
 
           <p style={{ fontSize: "0.9rem", color: "#e2e8f0" }}>
-            Si inviertes el tope legal de <span style={{ fontWeight: 700, color: "#34d399" }}>{formatCOP(calculos.cupoDisponible)}</span> en un fondo AFC/FPV, tu impuesto proyectado bajaría a <span style={{ fontWeight: 700, color: "#38bdf8" }}>{formatCOP(calculos.impuestoOptimizado)}</span>.
+            Si inviertes el tope legal de <span style={{ fontWeight: 700, color: "#34d399" }}>{formatCOP(calculos.cupoDisponible)}</span> al año (<span style={{ fontWeight: 700, color: "#22c55e" }}>{formatCOP(calculos.cupoDisponible / 12)} / mes</span>) en un fondo AFC/FPV, tu impuesto proyectado bajaría a <span style={{ fontWeight: 700, color: "#38bdf8" }}>{formatCOP(calculos.impuestoOptimizado)}</span>.
           </p>
           
-          {/* Static Rate Comparator */}
-          <p style={{ fontSize: "0.9rem", color: "#e2e8f0", marginTop: "8px" }}>
-            Si tu inversión propia rinde más del 7.00% anual, podría ser financieramente mejor pagar el impuesto hoy y mantener la liquidez para invertir libremente en bolsa, en lugar de inmovilizar el dinero a 10 años en un FPV.
-          </p>
-
           {/* Dynamic Breakeven Analysis */}
           <p style={{ fontSize: "0.9rem", color: "#e2e8f0", marginTop: "8px" }}>
             {rentabilidadEsperada / 100 > calculos.rentabilidadBreakevenAnual ? (
-              <span>Si tu inversión propia rinde más del {(calculos.rentabilidadBreakevenAnual * 100).toFixed(2)}%, es financieramente mejor pagar el impuesto hoy y mantener la liquidez para invertir en bolsa.</span>
+              <span>Si tu inversión propia rinde más del {(calculos.rentabilidadBreakevenAnual * 100).toFixed(2)}% anual, podría ser financieramente mejor pagar el impuesto hoy y mantener la liquidez para invertir libremente en bolsa, en lugar de inmovilizar el dinero a 10 años en un FPV.</span>
             ) : (
-              <span>Financieramente es mejor invertir en AFC, ya que tu rentabilidad esperada ({rentabilidadEsperada}%) es menor al breakeven de {(calculos.rentabilidadBreakevenAnual * 100).toFixed(2)}%.</span>
+              <span>Financieramente es mejor invertir en AFC/FPV, ya que tu rentabilidad esperada ({rentabilidadEsperada}%) es menor al breakeven del {(calculos.rentabilidadBreakevenAnual * 100).toFixed(2)}% anual que otorga el beneficio tributario.</span>
             )}
           </p>
+
+          <div style={{ marginTop: "12px", padding: "12px", background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(6, 182, 212, 0.2)", borderRadius: "8px", fontSize: "0.75rem", color: "#cbd5e1", lineHeight: "1.45" }}>
+            <span style={{ color: "#06b6d4", fontWeight: 700, display: "block", marginBottom: "4px" }}>🔍 Entendiendo el Algebra de la Tasa de Equilibrio ({(calculos.rentabilidadBreakevenAnual * 100).toFixed(2)}%):</span>
+            <p style={{ margin: 0 }}>
+              Representa el <strong>costo de oportunidad</strong> de tu liquidez a 10 años (tiempo de permanencia legal del beneficio). Si decides NO aportar a la AFC para invertir libremente en bolsa, la DIAN te retendrá hoy el <strong>{(calculos.tramoMarginal * 100).toFixed(0)}%</strong> en tu tarifa marginal, dejando solo el <strong>{((1 - calculos.tramoMarginal) * 100).toFixed(0)}%</strong> de tu capital neto disponible.
+              <br /><br />
+              Para que una inversión líquida compense esa pérdida tributaria de entrada frente a un fondo exento de retención (asumiendo un rendimiento estándar de FPV del 7.00% anual), tu portafolio personal en bolsa está obligado a rentar por encima del <strong>{(calculos.rentabilidadBreakevenAnual * 100).toFixed(2)}% anual compuesto</strong> durante una década. Si tu estrategia no supera este umbral, es fiscalmente óptimo acogerse al blindaje de la cuenta AFC.
+            </p>
+          </div>
 
           <p style={{ fontSize: "0.8rem", color: "#94a3b8", marginTop: "8px" }}>
             {(() => {

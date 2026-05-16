@@ -1,12 +1,19 @@
 "use client";
 
 import { useMemo } from "react";
-import { formatCOP, CONSTANTES_POR_ANIO, PRESUNCION_COSTOS_UGPP, encontrarSalarioMagicoIndependiente, calcularRetencionIndependiente, TARIFAS_RST } from "@/lib/tax-calculator";
+import {
+  formatCOP,
+  CONSTANTES_POR_ANIO,
+  PRESUNCION_COSTOS_UGPP,
+  TARIFAS_RST,
+  encontrarSalarioMagicoIndependiente,
+  calcularRetencionIndependiente,
+} from "@/lib/tax-calculator";
 import type { AnioGravable, ActividadIndependiente } from "@/lib/tax-calculator";
-import { DependientesInput } from "@/components/DependientesInput";
+import { DependientesInput } from "./DependientesInput";
 
-const MAPEO_UGPP_A_RST: Record<string, keyof typeof TARIFAS_RST> = {
-  "A. Agricultura, ganadería, caza, silvicultura y pesca": "2",
+const MAPEO_UGPP_A_RST: Record<string, string> = {
+  "A. Agricultura, ganadería, caza, silvicultura y pesca": "1",
   "B. Explotación de minas y canteras": "2",
   "C. Industrias Manufactureras": "2",
   "D. Suministro de electricidad, gas, vapor y aire acondicionado": "2",
@@ -31,6 +38,102 @@ const MAPEO_UGPP_A_RST: Record<string, keyof typeof TARIFAS_RST> = {
   "Presunción Media": "2",
   "Rentistas de Capital incluidos dividendos y participaciones": "2"
 };
+
+// --- HELPER COMPONENTS (PREMIUM) ---
+
+function CascadaItem({ 
+  step, label, subtitle, value, color, isTotal = false, subItems = [], highlight = false, highlightColor
+}: { 
+  step: number; label: string; subtitle?: string; value: number; color?: string; isTotal?: boolean; subItems?: {label: string, value: number, isSpecial?: boolean}[]; highlight?: boolean; highlightColor?: string; isSpecial?: boolean;
+}) {
+  const safeValue = value || 0;
+  return (
+    <div className={`audit-step ${highlight ? 'highlighted' : ''}`} style={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      gap: 4, 
+      padding: "16px",
+      background: highlight ? `${highlightColor}10` : 'rgba(255,255,255,0.02)',
+      border: highlight ? `2px solid ${highlightColor}` : '1px solid var(--border-color)',
+      borderRadius: 16,
+      transition: 'all 0.3s ease'
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+          <span style={{ 
+            fontSize: '0.7rem', 
+            width: 22, 
+            height: 22, 
+            borderRadius: '50%', 
+            background: isTotal ? 'var(--text-primary)' : (color || 'var(--accent-cyan)'), 
+            color: 'white', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            fontWeight: 900,
+            marginTop: 2
+          }}>{step}</span>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span style={{ 
+              fontSize: '0.9rem', 
+              fontWeight: isTotal || highlight ? 800 : 600, 
+              color: highlight ? highlightColor : 'var(--text-primary)' 
+            }}>{label}</span>
+            {subtitle && (
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                {subtitle}
+              </div>
+            )}
+          </div>
+        </div>
+        <span style={{ 
+          fontFamily: "JetBrains Mono, monospace", 
+          fontSize: isTotal || highlight ? '1rem' : '0.9rem', 
+          fontWeight: 800, 
+          color: safeValue < 0 ? 'var(--text-error)' : (highlight ? highlightColor : 'var(--text-primary)'),
+          textAlign: 'right'
+        }}>
+          {safeValue === 0 ? "$0" : (safeValue > 0 ? "" : "-") + formatCOP(Math.abs(safeValue))}
+        </span>
+      </div>
+      
+      {subItems.length > 0 && (
+        <div style={{ marginLeft: 34, display: 'flex', flexDirection: 'column', gap: 6, borderLeft: '1px solid var(--border-color)', paddingLeft: 16, marginTop: 10 }}>
+          {subItems.map((si, idx) => (
+            <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: si.isSpecial ? 'var(--accent-amber)' : 'var(--text-muted)' }}>
+              <span>{si.label}:</span>
+              <span style={{ fontFamily: "JetBrains Mono, monospace", fontWeight: 700 }}>
+                {(si.value || 0) === 0 ? "$0" : ((si.value || 0) > 0 ? "" : "-") + formatCOP(Math.abs(si.value || 0))}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BentoIndicator({ label, value, color, description }: { label: string; value: string; color: string; description?: string }) {
+  return (
+    <div style={{ 
+      background: "var(--bg-card)", 
+      border: `1px solid ${color}30`, 
+      borderRadius: 20, 
+      padding: 24, 
+      flex: 1,
+      boxShadow: `0 10px 20px -5px ${color}10`,
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
+      <div style={{ position: 'absolute', top: -10, right: -10, width: 60, height: 60, background: color, opacity: 0.05, borderRadius: '50%' }}></div>
+      <div style={{ fontSize: "0.7rem", fontWeight: 800, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>{label}</div>
+      <div style={{ fontSize: "1.8rem", fontWeight: 900, color: color, fontFamily: "JetBrains Mono, monospace", marginBottom: 4 }}>{value}</div>
+      {description && <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", lineHeight: 1.4 }}>{description}</div>}
+    </div>
+  );
+}
+
+// --- HOOKS ---
 
 export function useSalarioMagicoRST(anio: AnioGravable, actividadUGPP: ActividadIndependiente) {
   const C = CONSTANTES_POR_ANIO[anio];
@@ -64,15 +167,17 @@ export function useSalarioMagicoRST(anio: AnioGravable, actividadUGPP: Actividad
     const descuentoPensionAnual = ibc * 0.16 * 12;
     const descuentoElectronicoAnual = G * 12 * 0.005;
     
-    const impuestoNetoAnual = impuestoBrutoAnual - descuentoPensionAnual - descuentoElectronicoAnual;
+    const descuentoPensionEfectivo = Math.min(descuentoPensionAnual, impuestoBrutoAnual);
+    const impuestoNetoAnual = Math.max(0, impuestoBrutoAnual - descuentoPensionEfectivo - descuentoElectronicoAnual);
+    
     return impuestoNetoAnual;
   }
 
   let low = 0;
-  let high = 100000000; // 100 millones mensual
+  let high = 150000000; 
   let optimalG = 0;
 
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < 60; i++) {
     const mid = (low + high) / 2;
     if (getExpression(mid) <= 0) {
       optimalG = mid;
@@ -87,7 +192,6 @@ export function useSalarioMagicoRST(anio: AnioGravable, actividadUGPP: Actividad
   const ibc = Math.max(ingresoNetoUgpp * 0.40, smmlv);
   const salud = ibc * 0.125;
   const pensionTotal = ibc * 0.16;
-  const pensionDescuento = ibc * 0.16;
   
   const baseGravableRST = Math.max(0, optimalG - salud);
   const baseGravableRSTAnual = baseGravableRST * 12;
@@ -103,7 +207,7 @@ export function useSalarioMagicoRST(anio: AnioGravable, actividadUGPP: Actividad
   }
 
   const impuestoBrutoAnual = baseGravableRSTAnual * tarifa;
-  const descuentoPensionAnual = pensionDescuento * 12;
+  const descuentoPensionAnual = pensionTotal * 12;
   const descuentoElectronicoAnual = optimalG * 12 * 0.005;
 
   const descuentoPensionEfectivo = Math.min(descuentoPensionAnual, impuestoBrutoAnual);
@@ -121,6 +225,7 @@ export function useSalarioMagicoRST(anio: AnioGravable, actividadUGPP: Actividad
       salud,
       pensionTotal,
       baseGravableRST,
+      baseGravableRSTAnual,
       impuestoBruto: impuestoBrutoAnual,
       descuentoPension: descuentoPensionEfectivo,
       descuentoElectronico: descuentoElectronicoAnual,
@@ -128,6 +233,8 @@ export function useSalarioMagicoRST(anio: AnioGravable, actividadUGPP: Actividad
     }
   };
 }
+
+// --- MAIN COMPONENT ---
 
 interface SalarioMagicoIndependientesProps {
   anio: AnioGravable;
@@ -143,10 +250,6 @@ interface SalarioMagicoIndependientesProps {
   interesesViviendaCop?: number;
 }
 
-
-
-// Búsqueda binaria eliminada por soluciones algebraicas cerradas
-
 export function SalarioMagicoIndependientes({ 
   anio, 
   numDependientes, 
@@ -161,1047 +264,367 @@ export function SalarioMagicoIndependientes({
   interesesViviendaCop = 0,
 }: SalarioMagicoIndependientesProps) {
 
+  const isCostosReales = actividad === "Costos Reales (Declarados con Soportes)";
   const C = CONSTANTES_POR_ANIO[anio];
-  const nDep = Math.min(Math.max(0, Math.floor(numDependientes)), C.MAX_DEPENDIENTES);
-  const deduccionArt336Mes = nDep > 0 ? nDep * 6 * C.UVT : 0;
 
   const { optimalG: optimalGRST, breakdown: breakdownRST } = useSalarioMagicoRST(anio, actividad);
 
   // --- ESCENARIO A: ORGÁNICO ---
   const { salarioOrg, resOrg } = useMemo(() => {
-    const MetaFiscal_Mes = (1090 * C.UVT) / 12;
-    const Deduccion_Art336_Mes = nDep * 6 * C.UVT;
-    const MetaNeto_Mes = MetaFiscal_Mes + Deduccion_Art336_Mes + medicinaPrepagadaCop + interesesViviendaCop;
+    const searchCostos = isCostosReales ? (costosRealesCop || 0) : 0;
+    const magicoOrg = encontrarSalarioMagicoIndependiente(actividad, true, 0, anio, numDependientes, searchCostos, medicinaPrepagadaCop, interesesViviendaCop, false) || 0;
+    const res = calcularRetencionIndependiente(magicoOrg, actividad, true, 0, anio, numDependientes, searchCostos, 0, medicinaPrepagadaCop, interesesViviendaCop);
+    return { salarioOrg: magicoOrg, resOrg: res };
+  }, [anio, numDependientes, actividad, costosRealesCop, medicinaPrepagadaCop, interesesViviendaCop, isCostosReales]);
 
-    let p = 0;
-    let costsMes = 0;
-    let BrutoMes = 0;
-    let AportesFinalesMes = 0;
-    let IngresoNetoMes = 0;
-
-    const costsPresuntos = PRESUNCION_COSTOS_UGPP[actividad] || 0;
-    const isCostosReales = actividad === "Costos Reales (Declarados con Soportes)";
-
-    if (isCostosReales) {
-      costsMes = costosRealesCop || 0;
-      if (costsMes > 0) {
-        IngresoNetoMes = MetaNeto_Mes;
-        BrutoMes = IngresoNetoMes / 0.886 + costsMes;
-        
-        const ibcMes = (BrutoMes - costsMes) * 0.40;
-        if (ibcMes < C.SMMLV) {
-          AportesFinalesMes = C.SMMLV * 0.285;
-          BrutoMes = IngresoNetoMes + AportesFinalesMes + costsMes;
-        } else {
-          AportesFinalesMes = (BrutoMes - costsMes) * 0.114;
-        }
-      } else {
-        IngresoNetoMes = MetaNeto_Mes / 0.75;
-        BrutoMes = IngresoNetoMes / 0.886;
-        
-        const ibcMes = BrutoMes * 0.40;
-        if (ibcMes < C.SMMLV) {
-          AportesFinalesMes = C.SMMLV * 0.285;
-          BrutoMes = IngresoNetoMes + AportesFinalesMes;
-        } else {
-          AportesFinalesMes = BrutoMes * 0.114;
-        }
-      }
-    } else {
-      p = costsPresuntos;
-      if (p > 0) {
-        IngresoNetoMes = MetaNeto_Mes;
-        BrutoMes = IngresoNetoMes / ((1 - p) * 0.886);
-        
-        const ibcMes = BrutoMes * (1 - p) * 0.40;
-        if (ibcMes < C.SMMLV) {
-          AportesFinalesMes = C.SMMLV * 0.285;
-          BrutoMes = (IngresoNetoMes + AportesFinalesMes) / (1 - p);
-          costsMes = BrutoMes * p;
-        } else {
-          AportesFinalesMes = BrutoMes * (1 - p) * 0.114;
-          costsMes = BrutoMes * p;
-        }
-      } else {
-        IngresoNetoMes = MetaNeto_Mes / 0.75;
-        BrutoMes = IngresoNetoMes / 0.886;
-        
-        const ibcMes = BrutoMes * 0.40;
-        if (ibcMes < C.SMMLV) {
-          AportesFinalesMes = C.SMMLV * 0.285;
-          BrutoMes = IngresoNetoMes + AportesFinalesMes;
-        } else {
-          AportesFinalesMes = BrutoMes * 0.114;
-        }
-      }
-    }
-
-    return {
-      salarioOrg: BrutoMes,
-      resOrg: {
-        costosDeduciblesMes: costsMes,
-        descuentoSaludMes: AportesFinalesMes * (0.125 / 0.285),
-        descuentoPensionMes: AportesFinalesMes * (0.16 / 0.285),
-        ingresoNetoMes: IngresoNetoMes,
-      }
-    };
-  }, [C, nDep, actividad, costosRealesCop, medicinaPrepagadaCop, interesesViviendaCop]);
-
-  // --- ESCENARIO B: MAXIMIZADO ---
+  // --- ESCENARIO B: MAXIMIZADO (CON AFC) ---
   const { salarioMax, resMax } = useMemo(() => {
-    const magicoMax = encontrarSalarioMagicoIndependiente(
-      actividad,
-      aplicaTabla383,
-      0, // tarifaRetencionPlana
-      anio,
-      numDependientes,
-      costosRealesCop,
-      medicinaPrepagadaCop,
-      interesesViviendaCop,
-      true // maximizarAFC
-    );
-
-    const afcOptimo = Math.min(magicoMax * 0.30, (C.TOPE_VOLUNTARIOS_UVT_ANUAL * C.UVT) / 12);
-
-    const resCalculoMax = calcularRetencionIndependiente(
-      magicoMax,
-      actividad,
-      aplicaTabla383,
-      0, // tarifaRetencionPlana
-      anio,
-      numDependientes,
-      costosRealesCop,
-      afcOptimo,
-      medicinaPrepagadaCop,
-      interesesViviendaCop
-    );
-
-    const costsAnual = actividad === "Costos Reales (Declarados con Soportes)" ? (costosRealesCop || 0) * 12 : magicoMax * 12 * (PRESUNCION_COSTOS_UGPP[actividad] || 0);
-    const AportesFinales = resCalculoMax.descuentoSaludAnual + resCalculoMax.descuentoPensionAnual;
-    const Neto_DIAN_Anual = magicoMax * 12 - costsAnual - AportesFinales;
-
-    return {
-      salarioMax: magicoMax,
-      resMax: {
-        costosDeduciblesMes: costsAnual / 12,
-        descuentoSSMes: AportesFinales / 12,
-        saludMes: resCalculoMax.descuentoSaludAnual / 12,
-        pensionMes: resCalculoMax.descuentoPensionAnual / 12,
-        ingresoNetoMensual: Neto_DIAN_Anual / 12,
-        BrutoAnual: magicoMax * 12,
-        costsAnual,
-        AportesFinales,
-        rentaExentaMes: resCalculoMax.rentaExentaMes,
-        aportesVoluntariosMensual: afcOptimo,
-        deduccionesCapadasMes: resCalculoMax.deduccionesCapadasMes
-      }
-    };
-  }, [C, actividad, aplicaTabla383, anio, numDependientes, costosRealesCop, medicinaPrepagadaCop, interesesViviendaCop]);
-
-  const comparativoData = useMemo(() => {
-    const netoOrg = salarioOrg - resOrg.descuentoSaludMes - resOrg.descuentoPensionMes;
-    const netoMax = salarioMax - resMax.saludMes - resMax.pensionMes - resMax.aportesVoluntariosMensual;
-    const netoRST = optimalGRST - breakdownRST.salud - breakdownRST.pensionTotal - (breakdownRST.impuestoNeto / 12);
+    const searchCostos = isCostosReales ? (costosRealesCop || 0) : 0;
+    const magicoMax = encontrarSalarioMagicoIndependiente(actividad, true, 0, anio, numDependientes, searchCostos, medicinaPrepagadaCop, interesesViviendaCop, true) || 0;
     
-    return {
-      org: { g: salarioOrg, salud: resOrg.descuentoSaludMes, pension: resOrg.descuentoPensionMes, afc: 0, neto: netoOrg },
-      max: { g: salarioMax, salud: resMax.saludMes, pension: resMax.pensionMes, afc: resMax.aportesVoluntariosMensual, neto: netoMax },
-      rst: { g: optimalGRST, salud: breakdownRST.salud, pension: breakdownRST.pensionTotal, afc: 0, neto: netoRST }
-    };
-  }, [salarioOrg, resOrg, salarioMax, resMax, optimalGRST, breakdownRST]);
+    // Hallar AFC óptimo
+    const resPre = calcularRetencionIndependiente(magicoMax, actividad, true, 0, anio, numDependientes, searchCostos, 0, medicinaPrepagadaCop, interesesViviendaCop);
+    const afcOptimo = resPre.aporteAFCOptimoMes || 0;
+    
+    const res = calcularRetencionIndependiente(magicoMax, actividad, true, 0, anio, numDependientes, searchCostos, afcOptimo, medicinaPrepagadaCop, interesesViviendaCop);
+    return { salarioMax: magicoMax, resMax: { ...res, afcOptimo } };
+  }, [actividad, anio, numDependientes, costosRealesCop, medicinaPrepagadaCop, interesesViviendaCop, isCostosReales]);
 
-  // Variables para la Caja Blanca
-  const metaFiscalOrg = (1090 * C.UVT) / 12;
-  const paso2Org = deduccionArt336Mes;
-  const paso2_1Org = medicinaPrepagadaCop;
-  const paso2_2Org = interesesViviendaCop;
-
-  const metaFiscalMax = (1090 * C.UVT) / 12;
-  const paso2Max = deduccionArt336Mes;
+  const netoOrg = (salarioOrg || 0) - (resOrg.descuentoSaludMes || 0) - (resOrg.descuentoPensionMes || 0);
+  const netoMax = (salarioMax || 0) - (resMax.descuentoSaludMes || 0) - (resMax.descuentoPensionMes || 0) - (resMax.afcOptimo || 0);
+  const netoRST = (optimalGRST || 0) - (breakdownRST.salud || 0) - (breakdownRST.pensionTotal || 0) - ((breakdownRST.impuestoNeto || 0) / 12);
 
   if (!aplicaTabla383) {
     return (
-      <div style={{ background: "rgba(245, 158, 11, 0.1)", border: "1px solid rgba(245, 158, 11, 0.3)", borderRadius: 12, padding: 16 }}>
-        <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--accent-amber)" }}>⚠️ No aplica para tarifa plana</div>
-        <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: 8 }}>
-          El &quot;Salario Mágico&quot; requiere que apliques a la tabla progresiva (Art. 383). Bajo tarifa plana comercial del 10% u 11%, cualquier ingreso mayor a cero genera retención.
-        </div>
+      <div style={{ background: "rgba(245, 158, 11, 0.05)", border: "2px dashed rgba(245, 158, 11, 0.3)", borderRadius: 24, padding: 48, textAlign: 'center' }}>
+        <div style={{ fontSize: "3rem", marginBottom: 16 }}>⚡</div>
+        <h3 style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--accent-amber)", marginBottom: 12 }}>Optimización Inactiva</h3>
+        <p style={{ maxWidth: 500, margin: "0 auto 32px", color: "var(--text-secondary)", lineHeight: 1.6 }}>
+          El &quot;Salario Mágico&quot; requiere el uso de la <strong>Tabla Progresiva (Art. 383)</strong>. 
+          En tarifa plana del 10/11%, no hay tramo exento que optimizar.
+        </p>
+        <button onClick={() => setAplicaTabla383(true)} className="btn-primary" style={{ background: "var(--accent-amber)" }}>Activar Art. 383</button>
       </div>
     );
   }
 
-  const afcEfectivoMax = resMax.deduccionesCapadasMes - resMax.rentaExentaMes;
-  const flujoCajaMax = salarioMax - resMax.descuentoSSMes - afcEfectivoMax;
-
-  const icaEstimado = salarioOrg * 0.00966;
-  const icaEstimadoMax = salarioMax * 0.00966;
-
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 48 }}>
       
-      {/* ── CABECERA: SELECTOR DE ACTIVIDAD + BADGE RST ── */}
-      <div style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: 16, padding: 24 }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <div>
-            <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.04em", display: "block", marginBottom: 6 }}>
-              Actividad Económica (Costos Presuntos)
-            </label>
-            <select
-              value={actividad}
-              onChange={(e) => setActividad(e.target.value as ActividadIndependiente)}
-              style={{
-                width: "100%",
-                padding: "10px 12px",
-                borderRadius: 8,
-                border: "1px solid var(--border-color)",
-                background: "var(--bg-card)",
-                color: "var(--text-primary)",
-                fontSize: "0.9rem",
-                appearance: "none",
-                WebkitAppearance: "none",
-                MozAppearance: "none",
-                backgroundImage: "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>\")",
-                backgroundRepeat: "no-repeat",
-                backgroundPosition: "right 12px center",
-                backgroundSize: "16px",
-                paddingRight: "40px"
-              }}
-            >
-              {Object.keys(PRESUNCION_COSTOS_UGPP).map((key) => (
-                <option key={key} value={key} style={{ background: "var(--bg-card)", color: "var(--text-primary)" }}>
-                  {key}
-                </option>
-              ))}
-            </select>
-          </div>
-          
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>
-              Presunción de Costos UGPP: <strong>{((PRESUNCION_COSTOS_UGPP[actividad] || 0) * 100).toFixed(2)}%</strong>
-            </div>
-            <div style={{ 
-              fontSize: "0.75rem", 
-              fontWeight: 700, 
-              color: "#0f172a", // Dark text for light background
-              background: "var(--accent-cyan)", 
-              padding: "4px 10px", 
-              borderRadius: "20px" 
-            }}>
-              Mapeado a Grupo {MAPEO_UGPP_A_RST[actividad] || "1"} del RST
+      {/* --- PANEL DE CONTROL --- */}
+      <div style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: 24, padding: 32, backdropFilter: 'blur(10px)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ fontSize: "1.2rem", fontWeight: 800, display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontSize: '1.5rem' }}>🧪</span> Laboratorio de Optimización
+            </h3>
+            <div style={{ background: "var(--accent-cyan)", color: "#0f172a", padding: "6px 16px", borderRadius: 30, fontSize: "0.7rem", fontWeight: 900, textTransform: 'uppercase' }}>
+              RST GRUPO {breakdownRST.grupoRST}
             </div>
           </div>
 
-          {actividad === "Costos Reales (Declarados con Soportes)" && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
+            <div>
+              <label style={{ fontSize: "0.7rem", fontWeight: 800, color: "var(--text-muted)", textTransform: "uppercase", display: "block", marginBottom: 10 }}>Actividad Económica</label>
+              <select value={actividad} onChange={(e) => setActividad(e.target.value as ActividadIndependiente)} className="tax-input" style={{ width: '100%' }}>
+                {Object.keys(PRESUNCION_COSTOS_UGPP).map(k => <option key={k} value={k}>{k}</option>)}
+              </select>
+            </div>
+            <div>
+              <DependientesInput value={numDependientes} onChange={setNumDependientes} />
+            </div>
+          </div>
+
+          {isCostosReales && (
             <div className="animate-fade-up">
-              <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.04em", display: "block", marginBottom: 6 }}>
-                Costos Reales Mensuales
-              </label>
-              <div style={{ position: "relative" }}>
-                <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", fontFamily: "JetBrains Mono, monospace", fontWeight: 700, color: "var(--text-muted)", fontSize: "1rem" }}>$</span>
-                <input
-                  type="text"
-                  value={costosRealesCop > 0 ? costosRealesCop.toLocaleString("es-CO") : ""}
-                  onChange={(e) => setCostosRealesRaw(e.target.value.replace(/[^0-9]/g, ""))}
-                  className="tax-input"
-                  style={{ paddingLeft: 34, fontSize: "1rem" }}
-                  placeholder="0"
-                />
-              </div>
+              <label style={{ fontSize: "0.7rem", fontWeight: 800, color: "var(--text-muted)", textTransform: "uppercase", display: "block", marginBottom: 10 }}>Costos Mensuales Soportados</label>
+              <input type="text" value={costosRealesCop.toLocaleString()} onChange={(e) => setCostosRealesRaw(e.target.value.replace(/\D/g,""))} className="tax-input" placeholder="$0" />
             </div>
           )}
-
-          <div>
-            <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.04em", display: "block", marginBottom: 6 }}>
-              Método de Retención
-            </label>
-            <div style={{ display: "flex", gap: 16, marginBottom: 8 }}>
-              <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "0.85rem", color: "var(--text-primary)", cursor: "pointer" }}>
-                <input type="radio" name="metodo-magico" checked={aplicaTabla383} onChange={() => setAplicaTabla383(true)} />
-                Tabla Art. 383
-              </label>
-              <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "0.85rem", color: "var(--text-primary)", cursor: "pointer" }}>
-                <input type="radio" name="metodo-magico" checked={!aplicaTabla383} onChange={() => setAplicaTabla383(false)} />
-                Tarifa Plana (11%)
-              </label>
-            </div>
-          </div>
-
-          <div style={{ paddingTop: 16, borderTop: "1px solid var(--border-color)" }}>
-            <DependientesInput value={numDependientes} onChange={setNumDependientes} />
-          </div>
-        </div>
-      </div>
-      
-      {/* ── BLOQUE A: ESCENARIO ORGÁNICO ── */}
-      <div style={{ 
-        background: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: 16, overflow: "hidden" 
-      }}>
-        <div style={{ background: "linear-gradient(135deg, rgba(52,211,153,0.1), rgba(16,185,129,0.05))", padding: 24, textAlign: "center", borderBottom: "1px solid rgba(52,211,153,0.3)" }}>
-          <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
-            Escenario Orgánico (Sin aportes voluntarios)
-          </div>
-          <div style={{ fontSize: "2.5rem", fontWeight: 800, color: "var(--accent-emerald)", fontFamily: "JetBrains Mono, monospace", marginBottom: 8 }}>
-            {formatCOP(salarioOrg)}
-          </div>
-          <div style={{ fontSize: "0.9rem", color: "var(--text-secondary)" }}>
-            Máximo honorario bruto con retención $0, confiando solo en rentas exentas de ley y dependientes.
-          </div>
-        </div>
-        
-        <div style={{ padding: "0 20px" }}>
-          <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--text-primary)", paddingTop: 16 }}>
-            Demostración Top-Down
-          </div>
-          
-          {/* Paso 1: Ingreso Bruto */}
-          <div style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
-            <div>
-              <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 1: Ingreso Bruto</div>
-              <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Honorarios calculados</div>
-            </div>
-            <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-primary)", textAlign: "right" }}>
-              {formatCOP(salarioOrg)}
-            </div>
-          </div>
-
-          {/* Paso 2: Costos Deducibles */}
-          {resOrg.costosDeduciblesMes > 0 && (
-            <div style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
-              <div>
-                <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 2: (-) Costos Deducibles</div>
-                <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>{actividad === "Costos Reales (Declarados con Soportes)" ? "Costos Reales" : `Costos Presuntos (${((PRESUNCION_COSTOS_UGPP[actividad] || 0) * 100).toFixed(2)}%)`}</div>
-              </div>
-              <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-primary)", textAlign: "right" }}>
-                (-) {formatCOP(resOrg.costosDeduciblesMes)}
-              </div>
-            </div>
-          )}
-
-          {/* Paso 3: (=) Ingreso Neto */}
-          <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <div>
-                <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 3: (=) Ingreso Neto</div>
-                <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Base para aportes a seguridad social (40% del Ingreso Neto de Costos)</div>
-              </div>
-              <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-primary)", textAlign: "right" }}>
-                (=) {formatCOP(salarioOrg - resOrg.costosDeduciblesMes)}
-              </div>
-            </div>
-            <div style={{ marginLeft: "12px", marginTop: "4px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
-                <span>↳ IBC (40% del Ingreso Neto):</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(Math.max(C.SMMLV, (salarioOrg - resOrg.costosDeduciblesMes) * 0.40))}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Paso 4: (-) Salud y Pensión */}
-          <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <div>
-                <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 4: (-) Salud y Pensión</div>
-                <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Aportes a Seguridad Social (PILA)</div>
-              </div>
-              <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-primary)", textAlign: "right" }}>
-                (-) {formatCOP(resOrg.descuentoSaludMes + resOrg.descuentoPensionMes)}
-              </div>
-            </div>
-            {/* Sub-renglones */}
-            <div style={{ marginLeft: "12px", marginTop: "4px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
-                <span>↳ Salud (12.5% de IBC):</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(resOrg.descuentoSaludMes)}</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
-                <span>↳ Pensión (16% de IBC):</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(resOrg.descuentoPensionMes)}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Paso 5: (=) Base Gravable Final */}
-          <div style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderTop: "2px solid var(--accent-emerald)", marginTop: "4px" }}>
-            <div>
-              <div style={{ fontSize: "0.9rem", fontWeight: 800, color: "var(--accent-emerald)" }}>Paso 5: (=) Base Gravable Final</div>
-              <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Monto sobre el que se tiene $0 impuesto (90.83 UVT mensuales | 1090 UVT anuales con UVT = {formatCOP(C.UVT)})</div>
-            </div>
-            <div style={{ fontSize: "1.1rem", fontWeight: 800, fontFamily: "JetBrains Mono, monospace", color: "var(--accent-emerald)", textAlign: "right" }}>
-              (=) {formatCOP(metaFiscalOrg)}
-            </div>
-          </div>
-
-          {/* Dinero a Casa */}
-          <div style={{ 
-            background: "rgba(16, 185, 129, 0.1)", 
-            border: "1px solid var(--accent-emerald)", 
-            borderRadius: 12, 
-            padding: "16px", 
-            marginTop: "16px" 
-          }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>
-                <div style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-primary)" }}>💰 Dinero a Casa (Flujo de Caja Libre)</div>
-                <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Lo que realmente llega a tu cuenta bancaria para gastar. (Sin descontar aún el pago de ICA municipal)</div>
-                <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginTop: "4px" }}>
-                  Desglose: {formatCOP(salarioOrg)} (Honorarios) - {formatCOP(resOrg.descuentoSaludMes + resOrg.descuentoPensionMes)} (PILA) - {formatCOP(0)} (Impuesto)
-                </div>
-              </div>
-              <div style={{ fontSize: "1.2rem", fontWeight: 800, fontFamily: "JetBrains Mono, monospace", color: "var(--accent-emerald)" }}>
-                {formatCOP(salarioOrg - (resOrg.descuentoSaludMes + resOrg.descuentoPensionMes))}
-              </div>
-            </div>
-          </div>
-
-          {/* Banner de Advertencia (ICA) - Orgánico */}
-          <div style={{
-            marginTop: "12px",
-            padding: "12px 16px",
-            borderRadius: "12px",
-            background: "rgba(245, 158, 11, 0.05)",
-            border: "1px solid rgba(245, 158, 11, 0.15)",
-            borderLeft: "4px solid #f59e0b",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            gap: "12px"
-          }}>
-            <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
-              <span style={{ fontSize: "1.1rem" }}>🏛️</span>
-              <div>
-                <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-primary)" }}>Impuesto Municipal (ICA) No Incluido</div>
-                <div style={{ fontSize: "0.68rem", color: "var(--text-secondary)", marginTop: 2 }}>
-                  Estimado al 0.966% sobre el ingreso bruto. Este impuesto es municipal y no se puede reducir con aportes a pensión o AFC.
-                </div>
-              </div>
-            </div>
-            <div style={{ fontSize: "0.85rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-primary)" }}>
-              - {formatCOP(icaEstimado)}
-            </div>
-          </div>
         </div>
       </div>
 
-      {/* ── BLOQUE B: ESCENARIO MAXIMIZADO ── */}
-      <div style={{ 
-        background: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: 16, overflow: "hidden" 
-      }}>
-        <div style={{ background: "linear-gradient(135deg, rgba(59,130,246,0.1), rgba(37,99,235,0.05))", padding: 24, textAlign: "center", borderBottom: "1px solid rgba(59,130,246,0.3)" }}>
-          <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
-            Escenario Maximizado (Con tope 40%)
-          </div>
-          <div style={{ fontSize: "2.5rem", fontWeight: 800, color: "var(--accent-blue)", fontFamily: "JetBrains Mono, monospace", marginBottom: 8 }}>
-            {formatCOP(salarioMax)}
-          </div>
-          <div style={{ fontSize: "0.9rem", color: "var(--text-secondary)" }}>
-            Máximo honorario posible si utilizas el tope del 40% invirtiendo inteligentemente (AFC / Pensión Voluntaria).
-          </div>
-        </div>
+      {/* --- ESCENARIOS (VERTICAL) --- */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 64 }}>
         
-        <div style={{ padding: "0 20px" }}>
-          <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--text-primary)", paddingTop: 16 }}>
-            Demostración Top-Down
+        {/* ESCENARIO A: ORGÁNICO */}
+        <div style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: 32, overflow: "hidden", boxShadow: "0 20px 50px -20px rgba(0,0,0,0.2)" }}>
+          <div style={{ background: "linear-gradient(135deg, #10b981 0%, #059669 100%)", padding: "40px", textAlign: 'center', color: 'white' }}>
+            <div style={{ fontSize: "0.8rem", fontWeight: 800, opacity: 0.8, textTransform: 'uppercase', marginBottom: 8 }}>Salario Mágico Orgánico</div>
+            <div style={{ fontSize: "3rem", fontWeight: 950, fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(salarioOrg || 0)}</div>
+            <div style={{ fontSize: "0.9rem", fontWeight: 600, opacity: 0.9, marginTop: 4 }}>Ingreso bruto máximo sin generar Retención en la Fuente</div>
           </div>
           
-          {/* Paso 1: Ingreso Bruto */}
-          <div style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
-            <div>
-              <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 1: Ingreso Bruto</div>
-              <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Honorarios calculados</div>
+          <div style={{ padding: 40 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 40 }}>
+              <BentoIndicator label="Neto Disponible" value={formatCOP(netoOrg || 0)} color="#10b981" description="Lo que recibes en tu cuenta tras pagar PILA." />
+              <BentoIndicator label="Base Gravable" value={formatCOP((resOrg.baseGravableAnual || 0) / 12)} color="var(--text-primary)" description="Ajustada al tramo exento de 1.090 UVT." />
             </div>
-            <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-primary)", textAlign: "right" }}>
-              {formatCOP(salarioMax)}
-            </div>
-          </div>
 
-          {/* Paso 2: Costos Deducibles */}
-          {resMax.costosDeduciblesMes > 0 && (
-            <div style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
-              <div>
-                <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 2: (-) Costos Deducibles</div>
-                <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>{actividad === "Costos Reales (Declarados con Soportes)" ? "Costos Reales" : `Costos Presuntos (${((PRESUNCION_COSTOS_UGPP[actividad] || 0) * 100).toFixed(2)}%)`}</div>
-              </div>
-              <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-primary)", textAlign: "right" }}>
-                (-) {formatCOP(resMax.costosDeduciblesMes)}
-              </div>
-            </div>
-          )}
-
-          {/* Paso 3: (=) Ingreso Neto */}
-          <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <div>
-                <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 3: (=) Ingreso Neto</div>
-                <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Base para aportes a seguridad social (40% del Ingreso Neto de Costos)</div>
-              </div>
-              <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-primary)", textAlign: "right" }}>
-                (=) {formatCOP(salarioMax - resMax.costosDeduciblesMes)}
-              </div>
-            </div>
-            <div style={{ marginLeft: "12px", marginTop: "4px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
-                <span>↳ IBC (40% del Ingreso Neto):</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(Math.max(C.SMMLV, (salarioMax - resMax.costosDeduciblesMes) * 0.40))}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Paso 4: (-) Salud y Pensión */}
-          <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <div>
-                <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 4: (-) Salud y Pensión</div>
-                <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Aportes a Seguridad Social (PILA)</div>
-              </div>
-              <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-primary)", textAlign: "right" }}>
-                (-) {formatCOP(resMax.descuentoSSMes)}
-              </div>
-            </div>
-            {/* Sub-renglones */}
-            <div style={{ marginLeft: "12px", marginTop: "4px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
-                <span>↳ Salud (12.5% de IBC):</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(resMax.descuentoSSMes * (0.125 / 0.285))}</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
-                <span>↳ Pensión (16% de IBC):</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(resMax.descuentoSSMes * (0.16 / 0.285))}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Paso 5: (=) Ingreso Neto */}
-          <div style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid var(--border-color)", borderTop: "1px dashed rgba(107, 114, 128, 0.5)", marginTop: "8px", paddingTop: "8px" }}>
-            <div>
-              <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 5: (=) Ingreso Neto</div>
-              <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Ingreso base para renta</div>
-            </div>
-            <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-primary)", textAlign: "right" }}>
-              (=) {formatCOP(resMax.ingresoNetoMensual)}
-            </div>
-          </div>
-
-          {resMax.rentaExentaMes === 0 ? (
-            // VISTA COLAPSADA (1 sola línea para independientes con Costos Presuntos)
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid var(--border-color)" }}>
-              <div style={{ flex: 1 }}>
-                <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 6: (-) Deducciones y Rentas Exentas</span>
-                <span style={{ display: "block", fontSize: "0.68rem", color: "var(--text-muted)", marginTop: 2 }}>
-                  Optimizado al tope del 40% de {formatCOP(resMax.ingresoNetoMensual)} en aportes voluntarios.
-                </span>
-              </div>
-              <div style={{ fontSize: "0.9rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-primary)", textAlign: "right" }}>
-                (-) {formatCOP(resMax.deduccionesCapadasMes)}
-              </div>
-            </div>
-          ) : (
-            // VISTA DETALLADA (Para Freelancers que sí tienen Renta Exenta del 25%)
-            <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <div>
-                  <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 6: (-) Deducciones y Rentas Exentas</div>
-                  <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Optimizado al tope del 40%</div>
-                </div>
-                <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-primary)", textAlign: "right" }}>
-                  (-) {formatCOP(resMax.deduccionesCapadasMes)}
+            <h4 style={{ fontSize: "0.8rem", fontWeight: 900, color: "var(--text-muted)", textTransform: 'uppercase', marginBottom: 20, letterSpacing: '0.1em' }}>Cascada de Auditoría Fiscal (6 Pasos)</h4>
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "24px" }}>
+              {/* PASO 1 */}
+              <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div><div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 1: Ingreso Bruto</div></div>
+                  <div style={{ fontSize: "1rem", fontWeight: 800, fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(salarioOrg || 0)}</div>
                 </div>
               </div>
-              {/* Sub-renglones */}
-              <div style={{ marginLeft: "12px", marginTop: "4px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
-                  <span>↳ Renta Exenta (25%):</span>
-                  <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(resMax.rentaExentaMes)}</span>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
-                  <span>↳ Aportes Voluntarios (AFC/FPV):</span>
-                  <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(afcEfectivoMax)}</span>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-primary)", fontWeight: 700 }}>
-                  <span>(=) Total Deducciones Aplicadas:</span>
-                  <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(resMax.deduccionesCapadasMes)}</span>
-                </div>
-              </div>
-            </div>
-          )}
 
-          {/* Paso 7: (=) Base Gravable Final */}
-          <div style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderTop: "2px solid var(--accent-emerald)", marginTop: "4px" }}>
-            <div>
-              <div style={{ fontSize: "0.9rem", fontWeight: 800, color: "var(--accent-emerald)" }}>Paso 7: (=) Base Gravable Final</div>
-              <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Monto sobre el que se tiene $0 impuesto (90.83 UVT mensuales | 1090 UVT anuales con UVT = {formatCOP(C.UVT)})</div>
-            </div>
-            <div style={{ fontSize: "1.1rem", fontWeight: 800, fontFamily: "JetBrains Mono, monospace", color: "var(--accent-emerald)", textAlign: "right" }}>
-              (=) {formatCOP(metaFiscalMax)}
-            </div>
-          </div>
-
-          {/* Dinero a Casa */}
-          <div style={{ 
-            background: "rgba(16, 185, 129, 0.1)", 
-            border: "1px solid var(--accent-emerald)", 
-            borderRadius: 12, 
-            padding: "16px", 
-            marginTop: "16px" 
-          }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>
-                <div style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-primary)" }}>💰 Dinero a Casa (Flujo de Caja Libre)</div>
-                <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Lo que realmente llega a tu cuenta bancaria para gastar. (Sin descontar aún el pago de ICA municipal)</div>
-                <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginTop: "4px" }}>
-                  Desglose: {formatCOP(salarioMax)} (Honorarios) - {formatCOP(resMax.descuentoSSMes)} (PILA) 
-                  {afcEfectivoMax > 0 && ` - ${formatCOP(afcEfectivoMax)} (AFC/FPV)`} 
-                  - {formatCOP(0)} (Impuesto)
+              {/* PASO 2 */}
+              <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div><div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 2: (-) Aportes a Seguridad Social (PILA)</div></div>
+                  <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-error, #ef4444)" }}>(-) {formatCOP((resOrg.descuentoSaludMes || 0) + (resOrg.descuentoPensionMes || 0))}</div>
+                </div>
+                <div style={{ marginLeft: "12px", marginTop: "8px", padding: "12px", background: "rgba(255,255,255,0.02)", borderRadius: "12px", display: "flex", flexDirection: "column", gap: "6px", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}><span>↳ Ingreso Bruto base:</span><span>{formatCOP(salarioOrg || 0)}</span></div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}><span>↳ (-) Costos Presuntos UGPP ({(PRESUNCION_COSTOS_UGPP[actividad] * 100).toFixed(1)}%):</span><span>- {formatCOP(resOrg.costosUGPPMes || 0)}</span></div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}><span>↳ (=) Ingreso Neto para SS:</span><span>{formatCOP(resOrg.ingresoNetoSSMes || 0)}</span></div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 600 }}><span>↳ IBC Teórico (40% del Neto SS):</span><span>{formatCOP((resOrg.ingresoNetoSSMes || 0) * 0.40)}</span></div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 700, color: resOrg.usandoIBCMinimo ? "#f59e0b" : "var(--text-primary)" }}><span>↳ IBC Final de Cotización: <span style={{ fontWeight: "normal", marginLeft: 4, color: resOrg.usandoIBCMinimo ? "#f59e0b" : "var(--text-success, #10b981)" }}>{resOrg.usandoIBCMinimo ? "⚠️ Ajustado al piso legal de 1 SMMLV" : "✅ Calculado orgánicamente al 40%"}</span></span><span>{formatCOP(resOrg.ibcMes || 0)}</span></div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}><span>↳ Salud (12.5%):</span><span>- {formatCOP(resOrg.descuentoSaludMes || 0)}</span></div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}><span>↳ Pensión (16%):</span><span>- {formatCOP(resOrg.descuentoPensionMes || 0)}</span></div>
                 </div>
               </div>
-              <div style={{ fontSize: "1.2rem", fontWeight: 800, fontFamily: "JetBrains Mono, monospace", color: "var(--accent-emerald)" }}>
-                {formatCOP(flujoCajaMax)}
-              </div>
-            </div>
-          </div>
 
-          {/* Banner de Advertencia (ICA) - Maximizado */}
-          <div style={{
-            marginTop: "12px",
-            padding: "12px 16px",
-            borderRadius: "12px",
-            background: "rgba(245, 158, 11, 0.05)",
-            border: "1px solid rgba(245, 158, 11, 0.15)",
-            borderLeft: "4px solid #f59e0b",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            gap: "12px"
-          }}>
-            <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
-              <span style={{ fontSize: "1.1rem" }}>🏛️</span>
-              <div>
-                <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-primary)" }}>Impuesto Municipal (ICA) No Incluido</div>
-                <div style={{ fontSize: "0.68rem", color: "var(--text-secondary)", marginTop: 2 }}>
-                  Estimado al 0.966% sobre el ingreso bruto. Este impuesto es municipal y no se puede reducir con aportes a pensión o AFC.
+              {/* PASO 3 */}
+              <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)", background: "rgba(255,255,255,0.01)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div><div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 3: (=) Ingreso Neto DIAN</div><div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Base real impositiva (Ingreso Bruto - Salud y Pensión)</div></div>
+                  <div style={{ fontSize: "1rem", fontWeight: 800, fontFamily: "JetBrains Mono, monospace" }}>(=) {formatCOP(resOrg.ingresoNetoDIANMes || 0)}</div>
                 </div>
               </div>
-            </div>
-            <div style={{ fontSize: "0.85rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-primary)" }}>
-              - {formatCOP(icaEstimadoMax)}
+
+              {/* PASO 4 */}
+              <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 4: (-) Deducciones y Rentas Exentas</div>
+                    <div style={{ marginTop: "2px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                      <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#38bdf8" }}>[ Límite aplicable: {formatCOP(resOrg.limiteLegalMensual || 0)} ]</span>
+                      <span style={{ fontSize: "0.7rem", color: "var(--text-secondary)", fontStyle: "italic", opacity: 0.8 }}>(Menor entre el 40% del Neto DIAN y el tope de 1.340 UVT anuales)</span>
+                    </div>
+                  </div>
+                  <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-error, #ef4444)" }}>(-) {formatCOP(resOrg.deduccionesCapadasMes || 0)}</div>
+                </div>
+                <div style={{ marginLeft: "12px", marginTop: "8px", padding: "12px", background: "rgba(255,255,255,0.02)", borderRadius: "12px", display: "flex", flexDirection: "column", gap: "8px", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}><span>↳ Dependientes Art. 387 <span style={{fontSize: "0.65rem", color: "var(--text-muted)", fontStyle: "italic"}}>(10% del Bruto, máx 32 UVT/mes)</span>:</span><span>- {numDependientes > 0 ? formatCOP(resOrg.deduccionArt387Mes || 0) : "$0"}</span></div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}><span>↳ Aportes Óptimos (AFC/FPV):</span><span>- $0</span></div>
+                  <div style={{ borderTop: "1px dashed rgba(255,255,255,0.05)", paddingTop: "6px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 600 }}><span>↳ (=) Base Depurada para Renta Exenta:</span><span>{formatCOP(resOrg.baseRentaExentaMes || 0)}</span></div>
+                    <div style={{ color: "var(--text-muted)", fontStyle: "italic", fontSize: "0.7rem", marginTop: "2px", marginBottom: "6px" }}>Fórmula: Ingreso Neto DIAN - Dependientes - Aportes AFC/FPV</div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 600 }}><span>↳ Renta Exenta (25% de la Base Depurada):</span><span>- {formatCOP(resOrg.rentaExentaMes || 0)}</span></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* PASO 5 */}
+              {numDependientes > 0 && (
+                <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div><div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 5: (-) Deducciones sin límite del 40%</div></div>
+                    <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-error, #ef4444)" }}>(-) {formatCOP(resOrg.deduccionArt336Mes || 0)}</div>
+                  </div>
+                  <div style={{ marginLeft: "12px", marginTop: "8px", padding: "12px", background: "rgba(255,255,255,0.02)", borderRadius: "12px", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
+                    <div>↳ Dependientes Adicionales (Ley 2277): {numDependientes * 6} UVT mensuales = - {formatCOP(resOrg.deduccionArt336Mes || 0)}</div>
+                  </div>
+                </div>
+              )}
+
+              {/* PASO 6 */}
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "16px", borderLeft: "4px solid #10b981", background: "rgba(16, 185, 129, 0.04)", borderRadius: "8px", alignItems: "center" }}>
+                <div><div style={{ fontSize: "0.9rem", fontWeight: 800, color: "#10b981" }}>Paso 6: (=) Base Gravable Final</div></div>
+                <div style={{ fontSize: "1.2rem", fontWeight: 900, fontFamily: "JetBrains Mono, monospace", color: "#10b981" }}>(=) {formatCOP((resOrg.baseGravableAnual || 0) / 12)}</div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* ── BLOQUE C: ESCENARIO RST ── */}
-      <div style={{ 
-        background: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: 16, overflow: "hidden" 
-      }}>
-        <div style={{ background: "linear-gradient(135deg, rgba(147,51,234,0.1), rgba(126,34,206,0.05))", padding: 24, textAlign: "center", borderBottom: "1px solid rgba(147,51,234,0.3)" }}>
-          <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
-            Escenario Régimen Simple (RST)
-          </div>
-          <div style={{ fontSize: "2.5rem", fontWeight: 800, color: "#a855f7", fontFamily: "JetBrains Mono, monospace", marginBottom: 8 }}>
-            {formatCOP(optimalGRST)}
-          </div>
-          <div style={{ fontSize: "0.9rem", color: "var(--text-secondary)" }}>
-            Máximo honorario bruto para pagar $0 de impuesto consolidado en el RST (Grupo {breakdownRST.grupoRST}).
-          </div>
-        </div>
-        
-        <div style={{ padding: "0 20px" }}>
-          <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--text-primary)", paddingTop: 16 }}>
-            Demostración Top-Down (Cálculo Mensualizado)
+        {/* ESCENARIO B: MAXIMIZADO */}
+        <div style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: 32, overflow: "hidden", boxShadow: "0 20px 50px -20px rgba(0,0,0,0.2)" }}>
+          <div style={{ background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)", padding: "40px", textAlign: 'center', color: 'white' }}>
+            <div style={{ fontSize: "0.8rem", fontWeight: 800, opacity: 0.8, textTransform: 'uppercase', marginBottom: 8 }}>Salario Mágico Maximizado (con AFC)</div>
+            <div style={{ fontSize: "3rem", fontWeight: 950, fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(salarioMax || 0)}</div>
+            <div style={{ fontSize: "0.9rem", fontWeight: 600, opacity: 0.9, marginTop: 4 }}>Optimizando hasta el tope del 40% de beneficios tributarios</div>
           </div>
           
-          {/* Paso 1: Ingreso Bruto */}
-          <div style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
-            <div>
-              <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 1: Ingreso Bruto</div>
-              <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Honorarios calculados (Punto de Equilibrio RST)</div>
+          <div style={{ padding: 40 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 40 }}>
+              <BentoIndicator label="Neto Disponible" value={formatCOP(netoMax || 0)} color="#3b82f6" description="Tras PILA y Ahorro Voluntario en AFC." />
+              <BentoIndicator label="Aporte AFC Sugerido" value={formatCOP(resMax.afcOptimo || 0)} color="var(--accent-cyan)" description="Monto exacto para llenar tu cupo del 40%." />
             </div>
-            <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-primary)", textAlign: "right" }}>
-              {formatCOP(optimalGRST)}
+
+            <h4 style={{ fontSize: "0.8rem", fontWeight: 900, color: "var(--text-muted)", textTransform: 'uppercase', marginBottom: 20, letterSpacing: '0.1em' }}>Cascada de Auditoría Fiscal (6 Pasos)</h4>
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "24px" }}>
+              {/* PASO 1 */}
+              <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div><div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 1: Ingreso Bruto</div><div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Honorarios calculados</div></div>
+                  <div style={{ fontSize: "1rem", fontWeight: 800, fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(salarioMax || 0)}</div>
+                </div>
+              </div>
+
+              {/* PASO 2 */}
+              <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div><div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 2: (-) Aportes a Seguridad Social (PILA)</div></div>
+                  <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-error, #ef4444)" }}>(-) {formatCOP((resMax.descuentoSaludMes || 0) + (resMax.descuentoPensionMes || 0))}</div>
+                </div>
+                <div style={{ marginLeft: "12px", marginTop: "8px", padding: "12px", background: "rgba(255,255,255,0.02)", borderRadius: "12px", display: "flex", flexDirection: "column", gap: "6px", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}><span>↳ Ingreso Bruto base:</span><span>{formatCOP(salarioMax || 0)}</span></div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}><span>↳ (-) Costos Presuntos UGPP ({(PRESUNCION_COSTOS_UGPP[actividad] * 100).toFixed(1)}%):</span><span>- {formatCOP(resMax.costosUGPPMes || 0)}</span></div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}><span>↳ (=) Ingreso Neto para SS:</span><span>{formatCOP(resMax.ingresoNetoSSMes || 0)}</span></div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 600 }}><span>↳ IBC Teórico (40% del Neto SS):</span><span>{formatCOP((resMax.ingresoNetoSSMes || 0) * 0.40)}</span></div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 700, color: resMax.usandoIBCMinimo ? "#f59e0b" : "var(--text-primary)" }}><span>↳ IBC Final de Cotización: <span style={{ fontWeight: "normal", marginLeft: 4, color: resMax.usandoIBCMinimo ? "#f59e0b" : "var(--text-success, #10b981)" }}>{resMax.usandoIBCMinimo ? "⚠️ Ajustado al piso legal de 1 SMMLV" : "✅ Calculado orgánicamente al 40%"}</span></span><span>{formatCOP(resMax.ibcMes || 0)}</span></div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}><span>↳ Salud (12.5%):</span><span>- {formatCOP(resMax.descuentoSaludMes || 0)}</span></div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}><span>↳ Pensión (16%):</span><span>- {formatCOP(resMax.descuentoPensionMes || 0)}</span></div>
+                </div>
+              </div>
+
+              {/* PASO 3 */}
+              <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)", background: "rgba(255,255,255,0.01)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div><div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 3: (=) Ingreso Neto DIAN</div></div>
+                  <div style={{ fontSize: "1rem", fontWeight: 800, fontFamily: "JetBrains Mono, monospace" }}>(=) {formatCOP(resMax.ingresoNetoDIANMes || 0)}</div>
+                </div>
+              </div>
+
+              {/* PASO 4 */}
+              <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 4: (-) Rentas Exentas y Deducciones</div>
+                    <div style={{ marginTop: "2px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                      <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#38bdf8" }}>[ Límite aplicable: {formatCOP(resMax.limiteLegalMensual || 0)} ]</span>
+                      <span style={{ fontSize: "0.7rem", color: "var(--text-secondary)", fontStyle: "italic", opacity: 0.8 }}>(Menor entre el 40% del Neto DIAN y el tope de 1.340 UVT anuales)</span>
+                    </div>
+                  </div>
+                  <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-error, #ef4444)" }}>(-) {formatCOP(resMax.deduccionesCapadasMes || 0)}</div>
+                </div>
+                <div style={{ marginLeft: "12px", marginTop: "8px", padding: "12px", background: "rgba(255,255,255,0.02)", borderRadius: "12px", display: "flex", flexDirection: "column", gap: "8px", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}><span>↳ Dependientes Art. 387 <span style={{fontSize: "0.65rem", color: "var(--text-muted)", fontStyle: "italic"}}>(10% del Bruto, máx 32 UVT/mes)</span>:</span><span>- {numDependientes > 0 ? formatCOP(resMax.deduccionArt387Mes || 0) : "$0"}</span></div>
+                  {(resMax.aporteAFCOptimoMes || 0) > 0 && (
+                    <div style={{ display: "flex", justifyContent: "space-between" }}><span>↳ Aportes Óptimos (AFC/FPV):</span><span>- {formatCOP(resMax.aporteAFCOptimoMes || 0)}</span></div>
+                  )}
+                  <div style={{ borderTop: "1px dashed rgba(255,255,255,0.05)", paddingTop: "6px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 600 }}><span>↳ (=) Base Depurada para Renta Exenta:</span><span>{formatCOP(resMax.baseRentaExentaMes || 0)}</span></div>
+                    <div style={{ color: "var(--text-muted)", fontStyle: "italic", fontSize: "0.7rem", marginTop: "2px", marginBottom: "6px" }}>Fórmula: Ingreso Neto DIAN - Dependientes - Aportes AFC/FPV</div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 600 }}><span>↳ Renta Exenta (25% de la Base Depurada):</span><span>- {formatCOP(resMax.rentaExentaMes || 0)}</span></div>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 700, borderTop: "1px solid var(--border-color)", paddingTop: "6px", marginTop: "4px", color: "var(--text-primary)" }}><span>(=) Total Aplicado en la Bolsa:</span><span>- {formatCOP(resMax.deduccionesCapadasMes || 0)}</span></div>
+                </div>
+              </div>
+
+              {/* PASO 5 */}
+              {numDependientes > 0 && (
+                <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div><div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 5: (-) Deducciones sin límite del 40%</div></div>
+                    <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-error, #ef4444)" }}>(-) {formatCOP(resMax.deduccionArt336Mes || 0)}</div>
+                  </div>
+                  <div style={{ marginLeft: "12px", marginTop: "8px", padding: "12px", background: "rgba(255,255,255,0.02)", borderRadius: "12px", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
+                    <div>↳ Dependientes Adicionales (Ley 2277): {numDependientes * 6} UVT mensuales = - {formatCOP(resMax.deduccionArt336Mes || 0)}</div>
+                  </div>
+                </div>
+              )}
+
+              {/* PASO 6 */}
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "16px", borderLeft: "4px solid #3b82f6", background: "rgba(59, 130, 246, 0.04)", borderRadius: "8px", alignItems: "center" }}>
+                <div><div style={{ fontSize: "0.9rem", fontWeight: 800, color: "#3b82f6" }}>Paso 6: (=) Base Gravable Final</div></div>
+                <div style={{ fontSize: "1.2rem", fontWeight: 900, fontFamily: "JetBrains Mono, monospace", color: "#3b82f6" }}>(=) {formatCOP((resMax.baseGravableAnual || 0) / 12)}</div>
+              </div>
             </div>
           </div>
+        </div>
 
-          {/* Paso 2: Cálculo del IBC */}
-          <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <div>
-                <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 2: Cálculo del IBC (Seguridad Social)</div>
-                <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Para hallar tus aportes, la UGPP permite descontar los costos presuntos.</div>
-              </div>
-              <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-primary)", textAlign: "right" }}>
-                {formatCOP(breakdownRST.ibcMensual)}
-              </div>
-            </div>
-            <div style={{ marginLeft: "12px", marginTop: "8px", display: "flex", flexDirection: "column", gap: "4px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
-                <span>↳ Ingreso Bruto:</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(optimalGRST)}</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
-                <span>↳ (-) Costos Presuntos ({(breakdownRST.porcentajeUGPP * 100).toFixed(2)}%):</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>-{formatCOP(breakdownRST.costosPresuntos)}</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
-                <span>↳ (=) Ingreso Neto para SS:</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(breakdownRST.ingresoNetoUgpp)}</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-primary)", fontWeight: 700, marginTop: "2px", paddingTop: "2px", borderTop: "1px dashed var(--border-color)" }}>
-                <span>↳ IBC Resultante (40% del Neto):</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(breakdownRST.ibcMensual)}</span>
-              </div>
-            </div>
+        {/* ESCENARIO C: RST */}
+        <div style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: 32, overflow: "hidden", boxShadow: "0 20px 50px -20px rgba(0,0,0,0.2)" }}>
+          <div style={{ background: "linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)", padding: "40px", textAlign: 'center', color: 'white' }}>
+            <div style={{ fontSize: "0.8rem", fontWeight: 800, opacity: 0.8, textTransform: 'uppercase', marginBottom: 8 }}>Alternativa: Régimen Simple (RST)</div>
+            <div style={{ fontSize: "3rem", fontWeight: 950, fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(optimalGRST || 0)}</div>
+            <div style={{ fontSize: "0.9rem", fontWeight: 600, opacity: 0.9, marginTop: 4 }}>Ingreso bruto máximo con Impuesto Neto RST = $0</div>
           </div>
+          
+          <div style={{ padding: 40 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 40 }}>
+              <BentoIndicator label="Neto Disponible" value={formatCOP(netoRST || 0)} color="#06b6d4" description="Tras pagar Salud y Pensión (Impuesto Simple compensado)." />
+              <BentoIndicator label="Tarifa Simple" value={((breakdownRST.tarifa || 0) * 100).toFixed(1) + "%"} color="var(--text-primary)" description={`Para Grupo ${breakdownRST.grupoRST} en este tramo.`} />
+            </div>
 
-          {/* Paso 3: Salud (INCRGO) */}
-          <div style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
-            <div>
-              <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 3: (-) Salud (INCRGO)</div>
-              <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Único aporte que reduce la base del impuesto (12.5% del IBC)</div>
-            </div>
-            <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--accent-red)", textAlign: "right" }}>
-              (-) {formatCOP(breakdownRST.salud)}
-            </div>
-          </div>
-
-          {/* Paso 4: Base Gravable */}
-          <div style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
-            <div>
-              <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 4: (=) Base Gravable Mensual (RST)</div>
-              <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Dinero sobre el cual se calculará la tarifa (Ingreso Bruto - Salud)</div>
-            </div>
-            <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-primary)", textAlign: "right" }}>
-              (=) {formatCOP(breakdownRST.baseGravableRST)}
-            </div>
-          </div>
-
-          {/* Paso 5: Impuesto Bruto */}
-          <div style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
-            <div>
-              <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 5: Impuesto Simple Bruto</div>
-              <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Tarifa del {(breakdownRST.tarifa * 100).toFixed(2)}% (Grupo {breakdownRST.grupoRST})</div>
-            </div>
-            <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-primary)", textAlign: "right" }}>
-              {formatCOP(breakdownRST.impuestoBruto / 12)}
-            </div>
-          </div>
-
-          {/* Paso 6: Descuentos */}
-          <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <div>
-                <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 6: (-) Descuentos Tributarios</div>
-                <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Beneficios que restan al impuesto a pagar (Art. 912 E.T.)</div>
+            <h4 style={{ fontSize: "0.8rem", fontWeight: 900, color: "var(--text-muted)", textTransform: 'uppercase', marginBottom: 20, letterSpacing: '0.1em' }}>Liquidación Proyectada RST (6 Pasos)</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <CascadaItem 
+                step={1} 
+                label="Ingreso Bruto Mensual" 
+                value={optimalGRST || 0} 
+                isTotal 
+              />
+              <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div><div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 2: (-) Aporte Salud (PILA)</div></div>
+                  <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-error, #ef4444)" }}>- {formatCOP(breakdownRST.salud || 0)}</div>
+                </div>
+                <div style={{ marginLeft: "12px", marginTop: "8px", padding: "12px", background: "rgba(255,255,255,0.02)", borderRadius: "12px", display: "flex", flexDirection: "column", gap: "8px", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}><span>↳ Ingreso Bruto base:</span><span>{formatCOP(optimalGRST || 0)}</span></div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}><span>↳ (-) Costos Presuntos UGPP ({(PRESUNCION_COSTOS_UGPP[actividad] * 100).toFixed(1)}%):</span><span>- {formatCOP(breakdownRST.costosPresuntos || 0)}</span></div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 600 }}><span>↳ (=) Ingreso Neto para SS:</span><span>{formatCOP(breakdownRST.ingresoNetoUgpp || 0)}</span></div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}><span>↳ IBC Teórico (40% del Neto SS):</span><span>{formatCOP((breakdownRST.ingresoNetoUgpp || 0) * 0.4)}</span></div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 600 }}>
+                    <span>
+                      ↳ IBC Final de Cotización:{" "}
+                      <span style={{ fontSize: "0.65rem", fontWeight: 400, opacity: 0.8 }}>
+                        {(breakdownRST.ibcMensual === C.SMMLV) ? "⚠️ Ajustado al piso legal de 1 SMMLV" : "✅ Calculado orgánicamente al 40%"}
+                      </span>
+                    </span>
+                    <span>{formatCOP(breakdownRST.ibcMensual || 0)}</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", color: "var(--text-error, #ef4444)" }}><span>↳ Salud (12.5%):</span><span>- {formatCOP(breakdownRST.salud || 0)}</span></div>
+                  <div style={{ display: "flex", justifyContent: "space-between", color: "#10b981" }}><span>↳ Pensión (16%): <span style={{ fontSize: "0.65rem", fontStyle: "italic", opacity: 0.8 }}>(Se resta del impuesto, no de la base)</span></span><span>- {formatCOP(breakdownRST.pensionTotal || 0)}</span></div>
+                </div>
               </div>
-              <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--accent-red)", textAlign: "right" }}>
-                (-) {formatCOP(breakdownRST.pensionTotal + (breakdownRST.descuentoElectronico / 12))}
-              </div>
-            </div>
-            <div style={{ marginLeft: "12px", marginTop: "4px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
-                <span>↳ Aporte a Pensión Real (16% del IBC):</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>-{formatCOP(breakdownRST.pensionTotal)}</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
-                <span>↳ Pagos Electrónicos (0.5% del Bruto):</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>-{formatCOP(breakdownRST.descuentoElectronico / 12)}</span>
-              </div>
-              {/* Alerta de Tope de Descuento */}
-              {breakdownRST.pensionTotal > (breakdownRST.impuestoBruto / 12) && (
-                <div style={{ marginTop: "4px", padding: "4px 8px", background: "rgba(239, 68, 68, 0.1)", borderRadius: "4px", fontSize: "0.7rem", color: "var(--accent-red)" }}>
-                  <em>Nota: La ley impide que los descuentos superen el impuesto. Se aplicarán máximo {formatCOP(breakdownRST.impuestoBruto / 12)} para dejar tu saldo en cero.</em>
+              <CascadaItem 
+                step={3} 
+                label="(=) Base Gravable RST" 
+                value={breakdownRST.baseGravableRST || 0} 
+                isTotal 
+              />
+              <CascadaItem 
+                step={4} 
+                label="Impuesto Simple Bruto" 
+                value={(breakdownRST.impuestoBruto || 0) / 12} 
+                color="var(--accent-cyan)" 
+                subtitle={`Calculado al ${ ((breakdownRST.tarifa || 0)*100).toFixed(1) }% sobre ingresos anuales.`} 
+              />
+              <CascadaItem 
+                step={5} 
+                label="(-) Descuento Pensión (Art. 903)" 
+                value={-(breakdownRST.descuentoPension || 0) / 12} 
+                color="#10b981" 
+                isSpecial 
+                subtitle="El 100% de tu aporte a pensión resta directamente el impuesto." 
+              />
+              <CascadaItem 
+                step={6} 
+                label="(=) Impuesto Neto RST" 
+                value={(breakdownRST.impuestoNeto || 0) / 12} 
+                highlight 
+                highlightColor="#06b6d4" 
+                subtitle="Optimizado al punto de equilibrio cero." 
+              />
+              {breakdownRST.impuestoNeto === 0 && (
+                <div style={{ marginTop: "16px", padding: "12px", background: "rgba(56, 189, 248, 0.05)", border: "1px dashed rgba(56, 189, 248, 0.2)", borderRadius: "8px", fontSize: "0.75rem", color: "var(--text-secondary)", lineHeight: "1.4" }}>
+                  <div style={{ fontWeight: 700, color: "#38bdf8", marginBottom: "4px", display: "flex", alignItems: "center", gap: "6px" }}>
+                    🛑 Límite de Optimización por Tramo RST alcanzado
+                  </div>
+                  A pesar de que el aporte a Pensión es matemáticamente superior al impuesto, el Salario Mágico se detiene exactamente aquí porque el ingreso anual proyectado ha alcanzado las <strong>6.000 UVT</strong>. Si se incrementa el ingreso, se cambia automáticamente a la siguiente categoría/tramo del RST, incrementando la tarifa base del <strong>5.9% al 7.3%</strong> e impidiendo lograr un impuesto neto de cero.
                 </div>
               )}
             </div>
           </div>
-
-          {/* Paso 7: Impuesto Neto */}
-          <div style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderTop: "2px solid var(--accent-emerald)", marginTop: "4px" }}>
-            <div>
-              <div style={{ fontSize: "0.9rem", fontWeight: 800, color: "var(--accent-emerald)" }}>Paso 7: (=) Impuesto Neto Consolidado</div>
-              <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Impuesto unificado definitivo (Incluye ICA)</div>
-            </div>
-            <div style={{ fontSize: "1.1rem", fontWeight: 800, fontFamily: "JetBrains Mono, monospace", color: "var(--accent-emerald)", textAlign: "right" }}>
-              (=) {formatCOP(breakdownRST.impuestoNeto / 12)}
-            </div>
-          </div>
-
-          {/* Dinero a Casa */}
-          <div style={{ 
-            background: "rgba(16, 185, 129, 0.1)", 
-            border: "1px solid var(--accent-emerald)", 
-            borderRadius: 12, 
-            padding: "16px", 
-            marginTop: "16px",
-            marginBottom: "24px"
-          }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>
-                <div style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-primary)" }}>💰 Dinero a Casa (Flujo de Caja Libre)</div>
-                <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Lo que realmente llega a tu cuenta bancaria. (En el RST el ICA ya está incluido)</div>
-                <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginTop: "4px" }}>
-                  Desglose: {formatCOP(optimalGRST)} (Ingresos) - {formatCOP(breakdownRST.salud)} (Salud) - {formatCOP(breakdownRST.pensionTotal)} (Pensión) - {formatCOP(breakdownRST.impuestoNeto / 12)} (Impuesto)
-                </div>
-              </div>
-              <div style={{ fontSize: "1.2rem", fontWeight: 800, fontFamily: "JetBrains Mono, monospace", color: "var(--accent-emerald)" }}>
-                {formatCOP(optimalGRST - breakdownRST.salud - breakdownRST.pensionTotal - (breakdownRST.impuestoNeto / 12))}
-              </div>
-            </div>
-          </div>
-
-          {/* Insight Analítico: El Muro del Tramo */}
-          <div style={{
-            marginTop: "16px",
-            marginBottom: "24px",
-            padding: "16px",
-            borderRadius: "12px",
-            background: "rgba(168, 85, 247, 0.05)",
-            border: "1px solid rgba(168, 85, 247, 0.2)",
-            display: "flex",
-            gap: "12px"
-          }}>
-            <div style={{ fontSize: "1.2rem" }}>🛑</div>
-            <div>
-              <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#a855f7" }}>¿Por qué el algoritmo se detuvo aquí? (El salto de tramo)</div>
-              <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginTop: "4px", lineHeight: 1.5 }}>
-                Tus descuentos actuales superan el impuesto a pagar, lo que insinúa que podrías ganar más. Sin embargo, este salario anualizado roza exactamente la frontera del tramo actual en la tabla del RST. Si ganas un solo peso adicional, tu tarifa consolidada saltará al siguiente nivel, disparando tu impuesto por encima de tu capacidad de descuento. <strong>Este es el techo matemático perfecto de eficiencia fiscal.</strong>
-              </div>
-            </div>
-          </div>
         </div>
-      </div>
 
-      {/* Alerta de Transparencia Tributaria: ICA */}
-      <div style={{
-        marginTop: "24px",
-        padding: "16px 20px",
-        borderRadius: "12px",
-        background: "rgba(245, 158, 11, 0.08)", // Fondo ámbar tenue
-        border: "1px solid rgba(245, 158, 11, 0.25)",
-        display: "flex",
-        gap: "14px",
-        alignItems: "flex-start"
-      }}>
-        <div style={{
-          fontSize: "1.2rem",
-          marginTop: "2px"
-        }}>
-          🏛️
-        </div>
-        <div>
-          <h4 style={{
-            fontSize: "0.85rem",
-            fontWeight: 700,
-            color: "#f59e0b", // Ámbar vibrante
-            margin: "0 0 6px 0",
-            letterSpacing: "0.02em"
-          }}>
-            Nota importante sobre Impuestos Municipales (ICA)
-          </h4>
-          <p style={{
-            fontSize: "0.75rem",
-            color: "var(--text-secondary)",
-            lineHeight: 1.6,
-            margin: 0
-          }}>
-            Esta calculadora proyecta exclusivamente tu <strong style={{ color: "var(--text-primary)" }}>Impuesto de Renta (Tributo Nacional DIAN)</strong>. Ten en cuenta que como trabajador independiente en el Régimen Ordinario, también eres responsable de declarar y pagar el <strong>Impuesto de Industria y Comercio (ICA)</strong> en tu municipio. 
-            <br /><br />
-            El ICA se cobra sobre tu <strong>Ingreso Bruto Total</strong> (sin descontar costos ni seguridad social) y la tarifa varía según tu ciudad (suele rondar el 1%). Te sugerimos reservar esta provisión en tu flujo de caja.
-          </p>
-        </div>
-      </div>
-
-      {/* Análisis de Dinero Real en Bolsillo */}
-      <div style={{
-        marginTop: "32px",
-        padding: "24px",
-        borderRadius: "16px",
-        backgroundColor: "var(--bg-elevated, rgba(255,255,255,0.03))",
-        border: "1px solid var(--border-color, #334155)",
-      }}>
-        <h3 style={{
-          fontSize: "1.2rem",
-          fontWeight: 700,
-          color: "var(--text-primary)",
-          marginBottom: "8px"
-        }}>
-          💰 Análisis de Dinero Real en Bolsillo
-        </h3>
-
-
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-          gap: "16px"
-        }}>
-          {/* Escenario 1: Ordinario Orgánico */}
-          <div style={{
-            padding: "16px",
-            borderRadius: "12px",
-            backgroundColor: "rgba(255, 255, 255, 0.02)",
-            border: "1px solid var(--border-color, #334155)",
-            display: "flex",
-            flexDirection: "column",
-            gap: "12px"
-          }}>
-            <h4 style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>
-              Ordinario Orgánico
-            </h4>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
-              <span style={{ color: "var(--text-secondary)" }}>Ingreso Bruto:</span>
-              <span style={{ fontWeight: 600 }}>{formatCOP(comparativoData.org.g)}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", color: "#f87171" }}>
-              <span>(-) Salud:</span>
-              <span>-{formatCOP(comparativoData.org.salud)}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", color: "#f87171" }}>
-              <span>(-) Pensión:</span>
-              <span>-{formatCOP(comparativoData.org.pension)}</span>
-            </div>
-            <div style={{
-              marginTop: "auto",
-              paddingTop: "12px",
-              borderTop: "1px solid rgba(255,255,255,0.05)",
-              display: "flex",
-              justifyContent: "space-between",
-              fontSize: "1rem",
-              fontWeight: 700,
-              color: "#10b981"
-            }}>
-              <span>Neto en Bolsillo:</span>
-              <span>{formatCOP(comparativoData.org.neto)}</span>
-            </div>
-          </div>
-
-          {/* Escenario 2: Ordinario Maximizado */}
-          <div style={{
-            padding: "16px",
-            borderRadius: "12px",
-            backgroundColor: "rgba(255, 255, 255, 0.02)",
-            border: "1px solid var(--border-color, #334155)",
-            display: "flex",
-            flexDirection: "column",
-            gap: "12px"
-          }}>
-            <h4 style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>
-              Ordinario Maximizado
-            </h4>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
-              <span style={{ color: "var(--text-secondary)" }}>Ingreso Bruto:</span>
-              <span style={{ fontWeight: 600 }}>{formatCOP(comparativoData.max.g)}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", color: "#f87171" }}>
-              <span>(-) Salud:</span>
-              <span>-{formatCOP(comparativoData.max.salud)}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", color: "#f87171" }}>
-              <span>(-) Pensión:</span>
-              <span>-{formatCOP(comparativoData.max.pension)}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", color: "#f87171" }}>
-              <span>(-) AFC/FPV:</span>
-              <span>-{formatCOP(comparativoData.max.afc)}</span>
-            </div>
-            <div style={{
-              marginTop: "auto",
-              paddingTop: "12px",
-              borderTop: "1px solid rgba(255,255,255,0.05)",
-              display: "flex",
-              justifyContent: "space-between",
-              fontSize: "1rem",
-              fontWeight: 700,
-              color: "#10b981"
-            }}>
-              <span>Neto en Bolsillo:</span>
-              <span>{formatCOP(comparativoData.max.neto)}</span>
-            </div>
-          </div>
-
-          {/* Escenario 3: Régimen Simple (RST) */}
-          <div style={{
-            padding: "16px",
-            borderRadius: "12px",
-            backgroundColor: "rgba(59, 130, 246, 0.05)", // Resaltado con azul
-            border: "1px solid rgba(59, 130, 246, 0.2)",
-            display: "flex",
-            flexDirection: "column",
-            gap: "12px"
-          }}>
-            <h4 style={{ fontSize: "0.95rem", fontWeight: 700, color: "#60a5fa", margin: 0 }}>
-              Régimen Simple (RST)
-            </h4>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
-              <span style={{ color: "var(--text-secondary)" }}>Ingreso Bruto:</span>
-              <span style={{ fontWeight: 600 }}>{formatCOP(comparativoData.rst.g)}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", color: "#f87171" }}>
-              <span>(-) Salud:</span>
-              <span>-{formatCOP(comparativoData.rst.salud)}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", color: "#f87171" }}>
-              <span>(-) Pensión:</span>
-              <span>-{formatCOP(comparativoData.rst.pension)}</span>
-            </div>
-            <div style={{
-              marginTop: "auto",
-              paddingTop: "12px",
-              borderTop: "1px solid rgba(255,255,255,0.05)",
-              display: "flex",
-              justifyContent: "space-between",
-              fontSize: "1rem",
-              fontWeight: 700,
-              color: "#10b981"
-            }}>
-              <span>Neto en Bolsillo:</span>
-              <span>{formatCOP(comparativoData.rst.neto)}</span>
-            </div>
-          </div>
-        </div>
-        {/* Tabla Comparativa de Flujo de Caja */}
-        <div style={{ marginTop: "32px", overflowX: "auto" }}>
-          <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: "16px" }}>
-            📊 Comparativa de Flujo de Caja (Bolsillo Real)
-          </h3>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem", color: "var(--text-primary)" }}>
-            <thead>
-              <tr style={{ borderBottom: "2px solid var(--border-color)", textAlign: "left" }}>
-                <th style={{ padding: "12px 8px", color: "var(--text-secondary)" }}>Escenario</th>
-                <th style={{ padding: "12px 8px", color: "var(--text-secondary)", textAlign: "right" }}>Ingreso Bruto</th>
-                <th style={{ padding: "12px 8px", color: "var(--text-secondary)", textAlign: "right" }}>SS (Salud+Pens.)</th>
-                <th style={{ padding: "12px 8px", color: "var(--text-secondary)", textAlign: "right" }}>AFC / Voluntarios</th>
-                <th style={{ padding: "12px 8px", color: "var(--text-secondary)", textAlign: "right" }}>Impuesto</th>
-                <th style={{ padding: "12px 8px", color: "var(--text-secondary)", textAlign: "right", fontWeight: 700 }}>Neto Real</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr style={{ borderBottom: "1px solid var(--border-color)" }}>
-                <td style={{ padding: "12px 8px", fontWeight: 600 }}>Ordinario Orgánico</td>
-                <td style={{ padding: "12px 8px", textAlign: "right", fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(comparativoData.org.g)}</td>
-                <td style={{ padding: "12px 8px", textAlign: "right", fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(comparativoData.org.salud + comparativoData.org.pension)}</td>
-                <td style={{ padding: "12px 8px", textAlign: "right", fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(comparativoData.org.afc)}</td>
-                <td style={{ padding: "12px 8px", textAlign: "right", fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(0)}</td>
-                <td style={{ padding: "12px 8px", textAlign: "right", fontFamily: "JetBrains Mono, monospace", fontWeight: 700, color: "var(--accent-emerald)" }}>{formatCOP(comparativoData.org.neto)}</td>
-              </tr>
-              <tr style={{ borderBottom: "1px solid var(--border-color)" }}>
-                <td style={{ padding: "12px 8px", fontWeight: 600 }}>Ordinario Maximizado</td>
-                <td style={{ padding: "12px 8px", textAlign: "right", fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(comparativoData.max.g)}</td>
-                <td style={{ padding: "12px 8px", textAlign: "right", fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(comparativoData.max.salud + comparativoData.max.pension)}</td>
-                <td style={{ padding: "12px 8px", textAlign: "right", fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(comparativoData.max.afc)}</td>
-                <td style={{ padding: "12px 8px", textAlign: "right", fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(0)}</td>
-                <td style={{ padding: "12px 8px", textAlign: "right", fontFamily: "JetBrains Mono, monospace", fontWeight: 700, color: "var(--accent-emerald)" }}>{formatCOP(comparativoData.max.neto)}</td>
-              </tr>
-              <tr style={{ borderBottom: "1px solid var(--border-color)", backgroundColor: "rgba(59, 130, 246, 0.05)" }}>
-                <td style={{ padding: "12px 8px", fontWeight: 600, color: "#60a5fa" }}>Régimen Simple (RST)</td>
-                <td style={{ padding: "12px 8px", textAlign: "right", fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(comparativoData.rst.g)}</td>
-                <td style={{ padding: "12px 8px", textAlign: "right", fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(comparativoData.rst.salud + comparativoData.rst.pension)}</td>
-                <td style={{ padding: "12px 8px", textAlign: "right", fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(comparativoData.rst.afc)}</td>
-                <td style={{ padding: "12px 8px", textAlign: "right", fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(breakdownRST.impuestoNeto / 12)}</td>
-                <td style={{ padding: "12px 8px", textAlign: "right", fontFamily: "JetBrains Mono, monospace", fontWeight: 700, color: "var(--accent-emerald)" }}>{formatCOP(comparativoData.rst.neto)}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
       </div>
     </div>
   );
 }
-

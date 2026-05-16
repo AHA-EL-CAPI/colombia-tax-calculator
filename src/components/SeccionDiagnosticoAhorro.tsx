@@ -85,8 +85,9 @@ export function SeccionDiagnosticoAhorro({ resultado: r, ahorroPorAportesVolunta
 
   // ── Caso con impuesto > 0 ──────────────────────────────────
   const marginalPct = `${(r.tramoMarginal * 100).toFixed(0)}%`;
-  const cupoMes     = r.cupoDisponibleMes;
-  const cupoAnual   = r.cupoDisponibleAnual;
+  // Sincronización con el óptimo algebraico para mitigar el canibalismo del 25% de Renta Exenta
+  const cupoMes     = (r.aporteAFCOptimoMes && r.aporteAFCOptimoMes > 0) ? r.aporteAFCOptimoMes : r.cupoDisponibleMes;
+  const cupoAnual   = cupoMes * 12;
   const ahorroMes   = r.ahorroTributarioMensual;
   const ahorroAnual = r.ahorroTributarioAnual;
   const impuestoOriginalAnual = r.impuestoAnual;

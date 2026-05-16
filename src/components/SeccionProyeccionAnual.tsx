@@ -104,11 +104,11 @@ export function SeccionProyeccionAnual({ resultado: r, aplicaTabla383 }: Props) 
                   
                   <Row negative label={
                     r.actividadUGPP === "Costos Reales (Declarados con Soportes)"
-                      ? "Deducciones por Actividad (Costos Reales)"
+                      ? "(-) Costos Reales (UGPP = DIAN)"
                       : r.actividadUGPP && PRESUNCION_COSTOS_UGPP[r.actividadUGPP] !== undefined
-                        ? `Deducciones por Actividad (Costos Presuntos) (${formatCOP(r.ingresoBrutoAnual)} × ${(PRESUNCION_COSTOS_UGPP[r.actividadUGPP] * 100).toFixed(2)}%)`
-                        : "Deducciones por Actividad (Costos Presuntos)"
-                  } value={`− ${formatCOP((r.costosDeduciblesMes || 0) * 12)}`} />
+                        ? `(-) Costos Presuntos UGPP (${formatCOP(r.ingresoBrutoAnual)} × ${(PRESUNCION_COSTOS_UGPP[r.actividadUGPP] * 100).toFixed(2)}%)`
+                        : "(-) Costos Presuntos UGPP"
+                  } value={`− ${formatCOP((r.costosUGPPMes || 0) * 12)}`} />
                   
                   <div style={{ padding: "10px 0", borderBottom: "1px solid var(--border-color)", borderTop: "1px solid var(--border-color)", margin: "10px 0" }}>
                     <Row bold label="Ingreso Neto para SS Anual" value={formatCOP(r.ingresoNetoSSMes! * 12)} />
@@ -248,12 +248,36 @@ export function SeccionProyeccionAnual({ resultado: r, aplicaTabla383 }: Props) 
 
               {/* Renta Exenta → amber */}
               {aplicaTabla383 !== false && (
-                <Row label={`Renta Exenta 25% (Art. 206 #10)${r.isIndependiente ? " ⓘ Excluyente con costos y gastos" : ""}`}
-                  value={`- ${formatCOP(r.rentaExentaAnual)}`}
-                  valueColor="#f59e0b"
-                  sub={r.topeRentaExentaActivo
-                    ? `Tope 790 UVT activo (${formatCOP(r.topeRentaExentaAnual)})`
-                    : formatUVT(r.rentaExentaAnual / C.UVT)} />
+                <>
+                  <Row label={`Renta Exenta 25% (Art. 206 #10)${r.isIndependiente ? " ⓘ Excluyente con costos y gastos" : ""}`}
+                    value={`- ${formatCOP(r.rentaExentaAnual)}`}
+                    valueColor="#f59e0b"
+                    sub={r.topeRentaExentaActivo
+                      ? `Tope 790 UVT activo (${formatCOP(r.topeRentaExentaAnual)})`
+                      : formatUVT(r.rentaExentaAnual / C.UVT)} />
+
+                  {/* Bloque pedagógico: Auditoría de Base Renta Exenta Anual */}
+                  <div style={{ padding: "12px", borderRadius: "8px", background: "rgba(245, 158, 11, 0.03)", border: "1px solid rgba(245, 158, 11, 0.1)", marginTop: "4px", marginBottom: "4px", fontSize: "0.72rem", color: "var(--text-secondary)" }}>
+                    <div style={{ fontWeight: 700, marginBottom: "6px", color: "#f59e0b" }}>⚙️ Auditoría de Base Renta Exenta (Anual):</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
+                      <div style={{ opacity: 0.85 }}>• Ingreso Bruto Anual: <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(r.ingresoBrutoAnual)}</span></div>
+                      <div style={{ opacity: 0.85 }}>(–) Aportes PILA Obligatorios (Salud + Pensión): <span style={{ fontFamily: "JetBrains Mono, monospace", color: "var(--accent-rose)" }}>- {formatCOP(r.descuentoSaludAnual + r.descuentoPensionAnual)}</span></div>
+                      {r.calificaAuxilio && (
+                        <div style={{ opacity: 0.85 }}>(–) Auxilio de Transporte (INCRGO): <span style={{ fontFamily: "JetBrains Mono, monospace", color: "var(--accent-rose)" }}>- {formatCOP(r.auxilioTransporteMensual * 12)}</span></div>
+                      )}
+                      <div style={{ borderTop: "1px dashed rgba(245, 158, 11, 0.2)", margin: "4px 0" }} />
+                      <div style={{ fontWeight: 600, color: "var(--text-primary)", marginBottom: "6px" }}>(=) Renta Líquida Base: <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(r.ingresoNetoAnual)}</span></div>
+                      <div>(–) Dependientes Art. 387: <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(r.deduccionArt387Anual || 0)}</span></div>
+                      <div>(–) Medicina Prepagada: <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(r.medicinaPrepagadaAnual || 0)}</span></div>
+                      <div>(–) Intereses Vivienda: <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(r.interesesViviendaAnual || 0)}</span></div>
+                      <div>(–) Aportes AFC / FPV: <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(r.aportesVoluntariosAnual || 0)}</span></div>
+                      <div style={{ borderTop: "1px solid rgba(245,158,11,0.2)", marginTop: "4px", paddingTop: "4px", fontWeight: 600 }}>
+                        (=) Base Depurada: <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(Math.max(0, r.ingresoNetoAnual - (r.deduccionArt387Anual || 0) - (r.medicinaPrepagadaAnual || 0) - (r.interesesViviendaAnual || 0) - (r.aportesVoluntariosAnual || 0)))}</span>
+                      </div>
+                      <div>(×) 25% de Ley = <span style={{ fontFamily: "JetBrains Mono, monospace", color: "#f59e0b" }}>{formatCOP(r.rentaExentaAnual)}</span> {r.topeRentaExentaActivo ? <span style={{ color: "#fb923c" }}>(Topado a 790 UVT)</span> : ""}</div>
+                    </div>
+                  </div>
+                </>
               )}
 
               {/* Art. 387 → amber */}
@@ -309,14 +333,18 @@ export function SeccionProyeccionAnual({ resultado: r, aplicaTabla383 }: Props) 
               )}
 
               {/* TOTAL → cyan (accent) */}
-              {/* 1. RENDERIZADO DE COSTOS */}
+              {/* 1. RENDERIZADO DE COSTOS DIAN */}
               {r.isIndependiente && (
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
                   <div style={{ flex: 1 }}>
-                    <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>(-) Deducciones por Actividad (Costos Presuntos o Reales)</span>
-                    {r.actividadUGPP !== "Costos Reales (Declarados con Soportes)" && r.actividadUGPP && PRESUNCION_COSTOS_UGPP[r.actividadUGPP] !== undefined && (
-                      <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginTop: 2 }}>
-                        ({formatCOP(r.ingresoBrutoAnual)} × {(PRESUNCION_COSTOS_UGPP[r.actividadUGPP] * 100).toFixed(2)}%)
+                    <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+                      {r.actividadUGPP === "Costos Reales (Declarados con Soportes)"
+                        ? "(-) Costos Reales DIAN (con soporte)"
+                        : "(-) Costos DIAN (Presuntivos = $0)"}
+                    </span>
+                    {r.actividadUGPP !== "Costos Reales (Declarados con Soportes)" && (
+                      <div style={{ fontSize: "0.69rem", color: "#f59e0b", marginTop: 3, lineHeight: 1.4 }}>
+                        ⚠️ Los costos presuntos <strong>solo aplican para la UGPP</strong>. Ante la DIAN son <strong>$0</strong> sin soportes.
                       </div>
                     )}
                   </div>

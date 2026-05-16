@@ -248,11 +248,19 @@ export interface ResultadoCalculo {
   actividadUGPP?: string;
   costosDeduciblesMes?: number;
   costosDeduciblesAnual?: number;
+  costosUGPPMes?: number;
+  costosUGPPAnual?: number;
   ingresoNetoSSMes?: number;
   ibcMes?: number;
   ibcAnual?: number;
   usandoIBCMinimo?: boolean; // TRUE cuando el IBC calculado < SMMLV y se aplica el piso legal
   tieneCapacidadDePago?: boolean;
+  // ── Campos Auditables Mensual (Cascada 6 Pasos) ───────────
+  ingresoNetoDIANAnual?: number; // Bruto - Salud - Pensión (base imponible DIAN anual)
+  ingresoNetoDIANMes?: number;   // Bruto - Salud - Pensión (base imponible DIAN mensual)
+  limiteLegalMensual?: number;   // min(40% ingresoNetoDIAN, 1.340 UVT/12)
+  aporteAFCOptimoMes?: number;   // AFC óptimo algebraico para llenar exactamente el límite
+  baseRentaExentaMes?: number;   // Base sobre la que se calcula el 25% (ingresoNetoDIAN - previas)
   // Ley 1393 de 2010 (Asalariados)
   totalDevengadoMes?: number;
   limite40Ley1393?: number;
@@ -510,17 +518,26 @@ export function calcularRetencionIndependiente(
 
   const ingresoBrutoAnual = ingresosBrutosMes * 12;
 
-  // 1. Asignación de Costos
-  let costosDeduciblesMes = 0;
-  if (actividad === "Costos Reales (Declarados con Soportes)") {
-    costosDeduciblesMes = costosRealesCop || 0;
-  } else {
-    costosDeduciblesMes = ingresosBrutosMes * PRESUNCION_COSTOS_UGPP[actividad];
-  }
-  const costosDeduciblesAnual = costosDeduciblesMes * 12;
+  // 1. Asignación de Costos (Separación UGPP vs DIAN)
+  // REGLA DE ORO: La presunción de costos solo existe para la UGPP (Seguridad Social).
+  // Para la DIAN (Renta), si no hay soportes reales, el costo es CERO.
+  const costosUGPPMes = actividad === "Costos Reales (Declarados con Soportes)"
+    ? (costosRealesCop || 0)
+    : ingresosBrutosMes * PRESUNCION_COSTOS_UGPP[actividad];
+  const costosUGPPAnual = costosUGPPMes * 12;
+
+  const costosDIANMes = actividad === "Costos Reales (Declarados con Soportes)"
+    ? (costosRealesCop || 0)
+    : 0;
+  const costosDIANAnual = costosDIANMes * 12;
+
+  // Para compatibilidad con la interfaz anterior
+  const costosDeduciblesMes = costosDIANMes;
+  const costosDeduciblesAnual = costosDIANAnual;
 
   // 2. IBC y Seguridad Social (Mensual y Anualizado)
-  const ingresoNetoSSMes = Math.max(0, ingresosBrutosMes - costosDeduciblesMes);
+  // Se usa costosUGPPMes para el cálculo de capacidad de pago e IBC
+  const ingresoNetoSSMes = Math.max(0, ingresosBrutosMes - costosUGPPMes);
   const tieneCapacidadDePago = ingresoNetoSSMes >= C.SMMLV;
 
   let ibcMes = 0;
@@ -535,9 +552,14 @@ export function calcularRetencionIndependiente(
   } else {
     ibcMes = ingresoNetoSSMes * 0.40;
     if (ibcMes < C.SMMLV) {
+      // Piso legal: mínimo 1 SMMLV (Decreto 1601/2022)
       ibcMes = C.SMMLV;
       usandoIBCMinimo = true;
+    } else if (ibcMes > 25 * C.SMMLV) {
+      // Techo legal: máximo 25 SMMLV (Art. 5 Ley 100/1993)
+      ibcMes = 25 * C.SMMLV;
     }
+    // Salud (12.5%) y Pensión (16%) calculados sobre el IBC ya topado
     descuentoSaludMes = ibcMes * 0.125;
     descuentoPensionMes = ibcMes * 0.16;
   }
@@ -550,7 +572,7 @@ export function calcularRetencionIndependiente(
   const ingresoNetoAnual = ingresoBrutoAnual - totalDescuentosAnual;
 
   // Renta Exenta 25% (Switch Exclusividad Art 336 y Método de Retención)
-  const tieneCostos = costosDeduciblesAnual > 0;
+  const tieneCostosDIAN = costosDIANAnual > 0;
 
   // Deducción Dependientes Art 387
   const tieneArt387 = nDep > 0;
@@ -579,7 +601,7 @@ export function calcularRetencionIndependiente(
   const topeRentaExentaAnual = C.TOPE_RENTA_EXENTA_UVT_ANUAL * C.UVT;
 
   // Solo aplica si NO tiene costos presuntos/reales y usa tabla 383
-  if (!tieneCostos && aplicaTabla383) {
+  if (!tieneCostosDIAN && aplicaTabla383) {
     const baseRentaExenta = Math.max(0, ingresoNetoAnual - deduccionArt387Anual - medicinaPrepagadaAnual - interesesViviendaAnual - aportesVoluntariosValidosAnual);
     rentaExentaBrutaAnual = baseRentaExenta * C.PORCENTAJE_RENTA_EXENTA;
     rentaExentaAnual = Math.min(rentaExentaBrutaAnual, topeRentaExentaAnual);
@@ -591,7 +613,8 @@ export function calcularRetencionIndependiente(
   const totalDeduccionesParaTecho = totalDeduccionesParaTechoSinAFC + aportesVoluntariosValidosAnual;
   
   // Corrección: El ingreso neto para el 40% debe restar los costos procedentes (Art. 336 E.T.)
-  const ingresoNetoDIAN = ingresoBrutoAnual - costosDeduciblesAnual - totalDescuentosAnual;
+  // IMPORTANTE: Aquí se usa costosDIANAnual (reales o cero)
+  const ingresoNetoDIAN = ingresoBrutoAnual - costosDIANAnual - totalDescuentosAnual;
   const techo40Anual = Math.max(0, ingresoNetoDIAN) * C.PORCENTAJE_TECHO;
   const topeDeduccion1340Anual = C.TOPE_DEDUCCION_UVT_ANUAL * C.UVT;
   
@@ -620,7 +643,7 @@ export function calcularRetencionIndependiente(
     : 100;
 
   // Base Gravable Pre-Art. 336
-  const baseGravablePreArt336 = Math.max(0, ingresoNetoAnual - deduccionesCapadas - costosDeduciblesAnual);
+  const baseGravablePreArt336 = Math.max(0, ingresoNetoAnual - deduccionesCapadas - costosDIANAnual);
   const baseGravablePreArt336UVT = baseGravablePreArt336 / C.UVT;
 
   // Deducción Especial Art 336 (Fuera del 40%)
@@ -653,24 +676,16 @@ export function calcularRetencionIndependiente(
   const totalDeduccionesMesSinAFC = (rentaExentaAnual + deduccionArt387Anual + medicinaPrepagadaAnual + interesesViviendaAnual) / 12;
   const deduccionesCapadasMesSinAFC = Math.min(totalDeduccionesMesSinAFC, techo40Mes);
   
-  let baseGravableMesPre336SinAFC = 0;
-  if (tieneCostos) {
-    baseGravableMesPre336SinAFC = ingresoNetoMensual - costosDeduciblesMes - deduccionesCapadasMesSinAFC;
-  } else {
-    baseGravableMesPre336SinAFC = ingresoNetoMensual - deduccionesCapadasMesSinAFC;
-  }
-  const deduccionArt336MesReal = 0; // Removido por cumplimiento legal (Art. 383 E.T.)
+  // costosDIANMes = 0 para presuntos (regla DIAN), por lo que la resta es segura en ambos casos
+  const baseGravableMesPre336SinAFC = ingresoNetoMensual - costosDIANMes - deduccionesCapadasMesSinAFC;
+  const deduccionArt336MesReal = deduccionArt336Anual / 12; // Mostrado en UI aunque no afecte retención mensual Art. 383
   const baseGravableMesSinAFC = Math.max(0, baseGravableMesPre336SinAFC);
 
   const totalDeduccionesMes = totalDeduccionesMesSinAFC + aportesVoluntariosMensual;
   const deduccionesCapadasMesLocal = Math.min(totalDeduccionesMes, techo40Mes);
   
-  let baseGravableMesPre336Local = 0;
-  if (tieneCostos) {
-    baseGravableMesPre336Local = ingresoNetoMensual - costosDeduciblesMes - deduccionesCapadasMesLocal;
-  } else {
-    baseGravableMesPre336Local = ingresoNetoMensual - deduccionesCapadasMesLocal;
-  }
+  // costosDIANMes = 0 para presuntos → resta inocua; para costos reales → deduce correctamente
+  const baseGravableMesPre336Local = ingresoNetoMensual - costosDIANMes - deduccionesCapadasMesLocal;
   
   const baseGravableMesFinal = Math.max(0, baseGravableMesPre336Local);
   const baseGravableMesUVT = baseGravableMesFinal / C.UVT;
@@ -692,11 +707,35 @@ export function calcularRetencionIndependiente(
     aporteSugerido = Math.min(reduccionNecesaria, cupoDisponibleMesSinAFC);
   }
 
+  // ── Campos Auditables Mensual (Cascada 6 Pasos) ──────────
+  // ingresoNetoDIANMes: base DIAN real = Bruto - SS (costos presuntos NO restan aquí)
+  const ingresoNetoDIANMes = ingresoNetoMensual; // ya es ingresoBruto - SS (sin costos presuntos DIAN)
+  // limiteLegalMensual: doble candado del 40%
+  const limiteLegalMensual = Math.min(ingresoNetoDIANMes * 0.40, (1340 * C.UVT) / 12);
+  // deduccionesPrevias dentro del 40% (antes del AFC)
+  const deduccionArt387MesPrev = deduccionArt387Anual / 12;
+  const medPrep = medicinaPrepagadaValidaMensual;
+  const intViv = interesesViviendaValidaMensual;
+  const deduccionesPreviasMes = deduccionArt387MesPrev + medPrep + intViv;
+  // Base para calcular la Renta Exenta del 25%
+  const baseRentaExentaMes = Math.max(0, ingresoNetoDIANMes - aportesVoluntariosMensual - deduccionesPreviasMes);
+  // AFC óptimo algebraico: el monto que, sumado a RE25% y previas, llena exactamente el límite
+  // Ecuación: previas + AFC + RE25%(ingresoNeto - AFC - previas) = límite
+  // Despejando AFC: AFC = (límite - RE25%*ingresoNeto - (1-RE25%)*previas) / (1 - RE25%) ... solo si costos DIAN = 0
+  let aporteAFCOptimoMes = 0;
+  if (!tieneCostosDIAN && aplicaTabla383) {
+    const re = C.PORCENTAJE_RENTA_EXENTA; // 0.25
+    const candidato = (limiteLegalMensual - re * ingresoNetoDIANMes - (1 - re) * deduccionesPreviasMes) / (1 - re);
+    aporteAFCOptimoMes = Math.max(0, candidato);
+  }
+
   return {
     isIndependiente: true,
     actividadUGPP: actividad,
     costosDeduciblesMes,
     costosDeduciblesAnual,
+    costosUGPPMes,
+    costosUGPPAnual,
     ingresoNetoSSMes,
     ibcMes,
     ibcAnual,
@@ -756,6 +795,13 @@ export function calcularRetencionIndependiente(
     baseGravableMesUVT:       baseGravableMesUVT,
     impuestoMes:              retencionMensualCOP,
 
+    // Cascada 6 Pasos (campos auditables)
+    ingresoNetoDIANAnual:     ingresoNetoDIAN,
+    ingresoNetoDIANMes,
+    limiteLegalMensual,
+    aporteAFCOptimoMes,
+    baseRentaExentaMes,
+
     isImpuestoCero:  impuestoAnual <= 0,
     obligadoDeclarar: ingresoBrutoAnual > C.UMBRAL_DECLARAR_UVT * C.UVT,
   };
@@ -763,10 +809,11 @@ export function calcularRetencionIndependiente(
 
 // ── UTILIDADES DE FORMATO ────────────────────────────────────
 export function formatCOP(value: number): string {
+  const safeValue = isNaN(value) ? 0 : value;
   return new Intl.NumberFormat("es-CO", {
     style: "currency", currency: "COP",
     minimumFractionDigits: 0, maximumFractionDigits: 0,
-  }).format(value);
+  }).format(safeValue);
 }
 export function formatUVT(value: number): string { return `${value.toFixed(2)} UVT`; }
 export function formatPercent(value: number): string { return `${(value * 100).toFixed(1)}%`; }
@@ -795,8 +842,9 @@ export function encontrarSalarioMagicoAsalariado(
     }
 
     const res = calcularRetencion(mid, anio, numDependientes, afcMid, medicinaPrepagadaMensual, interesesViviendaMensual, 0, 0, bonosMid);
+    const C = CONSTANTES_POR_ANIO[anio];
     
-    if (res.impuestoAnual <= 0) {
+    if (res.baseGravableAnual <= 1090 * C.UVT) {
       best = mid;
       low = mid + 1;
     } else {
@@ -818,24 +866,39 @@ export function encontrarSalarioMagicoIndependiente(
   interesesViviendaMensual: number = 0,
   maximizarAFC: boolean = false,
 ): number {
+  const C = CONSTANTES_POR_ANIO[anio];
+  const targetBaseAnual = 1090 * C.UVT; // Límite inferior del tramo gravado (Art. 241)
+  
   let low = 0;
-  let high = 100_000_000;
+  let high = 100_000_000; // 100M mensual como techo de búsqueda
   let best = 0;
 
   while (low <= high) {
     const mid = Math.floor((low + high) / 2);
     
-    const C = CONSTANTES_POR_ANIO[anio];
+    // REGLA DE ORO: En el Salario Mágico, si no hay costos reales soportados, 
+    // el costo para la DIAN es $0. Los presuntos de la UGPP NO se restan de la renta.
+    const searchCostosDIAN = (actividad === "Costos Reales (Declarados con Soportes)") ? costosRealesCop : 0;
+
     let afcMid = 0;
     if (maximizarAFC) {
-       afcMid = Math.min(mid * 0.30, (C.TOPE_VOLUNTARIOS_UVT_ANUAL * C.UVT) / 12);
+      // Para encontrar el máximo "Mágico", primero hallamos el cupo disponible
+      // mediante una corrida previa sin aportes voluntarios.
+      const resPre = calcularRetencionIndependiente(
+        mid, actividad, aplicaTabla383, tarifaRetencionPlana, anio, numDependientes,
+        searchCostosDIAN, 0, medicinaPrepagadaMensual, interesesViviendaMensual
+      );
+      afcMid = resPre.aporteAFCOptimoMes ?? 0;
     }
 
     const res = calcularRetencionIndependiente(
-      mid, actividad, aplicaTabla383, tarifaRetencionPlana, anio, numDependientes, costosRealesCop, afcMid, medicinaPrepagadaMensual, interesesViviendaMensual
+      mid, actividad, aplicaTabla383, tarifaRetencionPlana, anio, numDependientes, 
+      searchCostosDIAN, afcMid, medicinaPrepagadaMensual, interesesViviendaMensual
     );
     
-    if (res.impuestoAnual <= 0 && res.impuestoMes <= 0) {
+    // El objetivo es el salario bruto MÁS ALTO cuya Base Gravable Anual final 
+    // siga siendo menor o igual al tramo exento de 1.090 UVT.
+    if (res.baseGravableAnual <= targetBaseAnual + 10) { // Tolerancia por redondeo
       best = mid;
       low = mid + 1;
     } else {
@@ -871,8 +934,9 @@ export function calcularRST(ingresoBrutoAnual: number, grupo: keyof typeof TARIF
   // Nota: El usuario debe confirmar si es transporte o comida. Por defecto para Grupo 3, aplicar si es comida.
   const impuestoConsumo = (grupo === "3") ? ingresoBrutoAnual * 0.08 : 0;
 
-  const impuestoNeto = Math.max(0, impuestoBruto - descuentoPension - descuentoElectronico) + impuestoConsumo;
+  const descuentoPensionEfectivo = Math.min(descuentoPension, impuestoBruto);
+  const impuestoNeto = Math.max(0, impuestoBruto - descuentoPensionEfectivo - descuentoElectronico) + impuestoConsumo;
 
-  return { tarifa, impuestoBruto, descuentoPension, descuentoElectronico, impuestoConsumo, impuestoNeto };
+  return { tarifa, impuestoBruto, descuentoPension: descuentoPensionEfectivo, descuentoElectronico, impuestoConsumo, impuestoNeto };
 }
 
