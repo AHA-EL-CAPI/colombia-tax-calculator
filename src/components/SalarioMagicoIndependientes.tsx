@@ -375,7 +375,7 @@ export function SalarioMagicoIndependientes({
               <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div><div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 2: (-) Aportes a Seguridad Social (PILA)</div></div>
-                  <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-error, #ef4444)" }}>(-) {formatCOP((resOrg.descuentoSaludMes || 0) + (resOrg.descuentoPensionMes || 0))}</div>
+                  <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-error, #ef4444)" }}>(-) {formatCOP((resOrg.descuentoSaludMes || 0) + (resOrg.descuentoPensionMes || 0) + (resOrg.fspMes || 0))}</div>
                 </div>
                 <div style={{ marginLeft: "12px", marginTop: "8px", padding: "12px", background: "rgba(255,255,255,0.02)", borderRadius: "12px", display: "flex", flexDirection: "column", gap: "6px", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between" }}><span>↳ Ingreso Bruto base:</span><span>{formatCOP(salarioOrg || 0)}</span></div>
@@ -385,6 +385,12 @@ export function SalarioMagicoIndependientes({
                   <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 700, color: resOrg.usandoIBCMinimo ? "#f59e0b" : "var(--text-primary)" }}><span>↳ IBC Final de Cotización: <span style={{ fontWeight: "normal", marginLeft: 4, color: resOrg.usandoIBCMinimo ? "#f59e0b" : "var(--text-success, #10b981)" }}>{resOrg.usandoIBCMinimo ? "⚠️ Ajustado al piso legal de 1 SMMLV" : "✅ Calculado orgánicamente al 40%"}</span></span><span>{formatCOP(resOrg.ibcMes || 0)}</span></div>
                   <div style={{ display: "flex", justifyContent: "space-between" }}><span>↳ Salud (12.5%):</span><span>- {formatCOP(resOrg.descuentoSaludMes || 0)}</span></div>
                   <div style={{ display: "flex", justifyContent: "space-between" }}><span>↳ Pensión (16%):</span><span>- {formatCOP(resOrg.descuentoPensionMes || 0)}</span></div>
+                  { (resOrg.fspMes || 0) > 0 && (
+                    <div style={{ display: "flex", justifyContent: "space-between", color: "#f59e0b", fontWeight: 600 }}>
+                      <span>↳ FSP (Solidaridad y Subsistencia):</span>
+                      <span>- {formatCOP(resOrg.fspMes || 0)}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -469,7 +475,7 @@ export function SalarioMagicoIndependientes({
               <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div><div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 2: (-) Aportes a Seguridad Social (PILA)</div></div>
-                  <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-error, #ef4444)" }}>(-) {formatCOP((resMax.descuentoSaludMes || 0) + (resMax.descuentoPensionMes || 0))}</div>
+                  <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-error, #ef4444)" }}>(-) {formatCOP((resMax.descuentoSaludMes || 0) + (resMax.descuentoPensionMes || 0) + (resMax.fspMes || 0))}</div>
                 </div>
                 <div style={{ marginLeft: "12px", marginTop: "8px", padding: "12px", background: "rgba(255,255,255,0.02)", borderRadius: "12px", display: "flex", flexDirection: "column", gap: "6px", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between" }}><span>↳ Ingreso Bruto base:</span><span>{formatCOP(salarioMax || 0)}</span></div>
@@ -479,6 +485,12 @@ export function SalarioMagicoIndependientes({
                   <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 700, color: resMax.usandoIBCMinimo ? "#f59e0b" : "var(--text-primary)" }}><span>↳ IBC Final de Cotización: <span style={{ fontWeight: "normal", marginLeft: 4, color: resMax.usandoIBCMinimo ? "#f59e0b" : "var(--text-success, #10b981)" }}>{resMax.usandoIBCMinimo ? "⚠️ Ajustado al piso legal de 1 SMMLV" : "✅ Calculado orgánicamente al 40%"}</span></span><span>{formatCOP(resMax.ibcMes || 0)}</span></div>
                   <div style={{ display: "flex", justifyContent: "space-between" }}><span>↳ Salud (12.5%):</span><span>- {formatCOP(resMax.descuentoSaludMes || 0)}</span></div>
                   <div style={{ display: "flex", justifyContent: "space-between" }}><span>↳ Pensión (16%):</span><span>- {formatCOP(resMax.descuentoPensionMes || 0)}</span></div>
+                  { (resMax.fspMes || 0) > 0 && (
+                    <div style={{ display: "flex", justifyContent: "space-between", color: "#f59e0b", fontWeight: 600 }}>
+                      <span>↳ FSP (Solidaridad y Subsistencia):</span>
+                      <span>- {formatCOP(resMax.fspMes || 0)}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 

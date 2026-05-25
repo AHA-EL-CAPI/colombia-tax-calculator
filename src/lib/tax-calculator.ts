@@ -26,6 +26,7 @@ interface ConstantesFiscales {
   DEDUCCION_DEP_ART336_UVT_ANUAL: number;  // 72 UVT/dep/año
   MAX_DEPENDIENTES: number;                 // 4
   TOPE_VOLUNTARIOS_UVT_ANUAL: number;      // 3.800 UVT
+  COMPONENTE_INFLACIONARIO_PCT: number;
 }
 
 export const CONSTANTES_2025: ConstantesFiscales = {
@@ -43,6 +44,7 @@ export const CONSTANTES_2025: ConstantesFiscales = {
   DEDUCCION_DEP_ART336_UVT_ANUAL: 72,
   MAX_DEPENDIENTES: 4,
   TOPE_VOLUNTARIOS_UVT_ANUAL: 3800,
+  COMPONENTE_INFLACIONARIO_PCT: 55.43,
 } as const;
 
 export const CONSTANTES_2026: ConstantesFiscales = {
@@ -60,12 +62,24 @@ export const CONSTANTES_2026: ConstantesFiscales = {
   DEDUCCION_DEP_ART336_UVT_ANUAL: 72,
   MAX_DEPENDIENTES: 4,
   TOPE_VOLUNTARIOS_UVT_ANUAL: 3800,
+  COMPONENTE_INFLACIONARIO_PCT: 55.43,
 } as const;
 
 export const CONSTANTES_POR_ANIO: Record<AnioGravable, ConstantesFiscales> = {
   2025: CONSTANTES_2025,
   2026: CONSTANTES_2026,
 };
+
+export function calcularFSP(ibcMensual: number, smmlv: number): number {
+  const salarios = ibcMensual / smmlv;
+  if (salarios < 4) return 0;
+  if (salarios >= 4 && salarios < 16) return ibcMensual * 0.01;
+  if (salarios >= 16 && salarios < 17) return ibcMensual * 0.012;
+  if (salarios >= 17 && salarios < 18) return ibcMensual * 0.014;
+  if (salarios >= 18 && salarios < 19) return ibcMensual * 0.016;
+  if (salarios >= 19 && salarios < 20) return ibcMensual * 0.018;
+  return ibcMensual * 0.02; // >= 20 SMMLV
+}
 
 // ── UGPP Y COSTOS INDEPENDIENTES ────────────────────────────
 export const PRESUNCION_COSTOS_UGPP: Record<string, number> = {
@@ -153,6 +167,8 @@ export interface ResultadoCalculo {
   // B – Descuentos de ley
   descuentoSaludAnual: number;
   descuentoPensionAnual: number;
+  fspMes: number;
+  fspAnual: number;
   totalDescuentosAnual: number;
   ingresoNetoAnual: number;
 
@@ -296,9 +312,17 @@ export function calcularRetencion(
 
   // ── B: Descuentos de ley ─────────────────────────────────
   // Se calcula sobre el IBC (Base de Cotización) que considera la Ley 1393
-  const descuentoSaludAnual   = ibcMensual * 12 * C.TASA_SALUD;
-  const descuentoPensionAnual = ibcMensual * 12 * C.TASA_PENSION;
-  const totalDescuentosAnual  = descuentoSaludAnual + descuentoPensionAnual;
+  const ibcMes = ibcMensual;
+  const fspMes = calcularFSP(ibcMes, C.SMMLV);
+  const fspAnual = fspMes * 12;
+
+  const descuentoSaludMes = ibcMes * C.TASA_SALUD;
+  const descuentoPensionMes = ibcMes * C.TASA_PENSION;
+  const totalINCRGOMes = descuentoSaludMes + descuentoPensionMes + fspMes;
+
+  const descuentoSaludAnual   = descuentoSaludMes * 12;
+  const descuentoPensionAnual = descuentoPensionMes * 12;
+  const totalDescuentosAnual  = totalINCRGOMes * 12;
   
   // El auxilio de transporte se resta porque es INCRGO (Ingreso No Constitutivo de Renta)
   const auxilioTransporteAnual = auxilioTransporteMensual * 12;
@@ -425,7 +449,7 @@ export function calcularRetencion(
     salarioMensual, anio, numDependientes: nDep, constantes: C,
 
     calificaAuxilio, auxilioTransporteMensual, ingresoBrutoAnual,
-    descuentoSaludAnual, descuentoPensionAnual, totalDescuentosAnual, ingresoNetoAnual,
+    descuentoSaludAnual, descuentoPensionAnual, fspMes, fspAnual, totalDescuentosAnual, ingresoNetoAnual,
     ingresosNoSalarialesMensual,
     ibcMes: ibcMensual,
 
@@ -564,9 +588,13 @@ export function calcularRetencionIndependiente(
     descuentoPensionMes = ibcMes * 0.16;
   }
 
+  const fspMes = tieneCapacidadDePago ? calcularFSP(ibcMes, C.SMMLV) : 0;
+  const fspAnual = fspMes * 12;
+  const totalINCRGOMes = descuentoSaludMes + descuentoPensionMes + fspMes;
+
   const descuentoSaludAnual = descuentoSaludMes * 12;
   const descuentoPensionAnual = descuentoPensionMes * 12;
-  const totalDescuentosAnual = descuentoSaludAnual + descuentoPensionAnual;
+  const totalDescuentosAnual = totalINCRGOMes * 12;
 
   const ibcAnual = ibcMes * 12;
   const ingresoNetoAnual = ingresoBrutoAnual - totalDescuentosAnual;
@@ -600,8 +628,9 @@ export function calcularRetencionIndependiente(
   let topeRentaExentaActivo = false;
   const topeRentaExentaAnual = C.TOPE_RENTA_EXENTA_UVT_ANUAL * C.UVT;
 
-  // Solo aplica si NO tiene costos presuntos/reales y usa tabla 383
-  if (!tieneCostosDIAN && aplicaTabla383) {
+  // Solo aplica si NO tiene costos presuntos/reales (es decir, es Honorarios No Clasificados sin costos) y usa tabla 383
+  const tieneCostos = actividad !== "Honorarios y Servicios Profesionales (No clasificados)";
+  if (!tieneCostos && aplicaTabla383) {
     const baseRentaExenta = Math.max(0, ingresoNetoAnual - deduccionArt387Anual - medicinaPrepagadaAnual - interesesViviendaAnual - aportesVoluntariosValidosAnual);
     rentaExentaBrutaAnual = baseRentaExenta * C.PORCENTAJE_RENTA_EXENTA;
     rentaExentaAnual = Math.min(rentaExentaBrutaAnual, topeRentaExentaAnual);
@@ -746,7 +775,7 @@ export function calcularRetencionIndependiente(
     anio, numDependientes: nDep, constantes: C,
 
     calificaAuxilio: false, auxilioTransporteMensual: 0, ingresoBrutoAnual,
-    descuentoSaludAnual, descuentoPensionAnual, totalDescuentosAnual, ingresoNetoAnual,
+    descuentoSaludAnual, descuentoPensionAnual, fspMes, fspAnual, totalDescuentosAnual, ingresoNetoAnual,
 
     rentaExentaBrutaAnual, topeRentaExentaAnual, rentaExentaAnual, topeRentaExentaActivo,
 
@@ -927,7 +956,8 @@ export function calcularRST(ingresoBrutoAnual: number, grupo: keyof typeof TARIF
 
   const impuestoBruto = ingresoBrutoAnual * tarifa;
   const ibcPension = Math.max(Math.min(ingresoBrutoAnual * 0.40, 25 * smmlv * 12), smmlv * 12);
-  const descuentoPension = ibcPension * 0.16;
+  const fspMensual = calcularFSP(ibcPension / 12, smmlv);
+  const descuentoPension = (ibcPension * 0.16) + (fspMensual * 12);
   const descuentoElectronico = ingresoBrutoAnual * 0.005; // 0.5% bancarizado
   
   // Parágrafo 1 Art 908: +8% INC si es expendio de comidas/bebidas (Dentro del Grupo 3)
@@ -937,6 +967,15 @@ export function calcularRST(ingresoBrutoAnual: number, grupo: keyof typeof TARIF
   const descuentoPensionEfectivo = Math.min(descuentoPension, impuestoBruto);
   const impuestoNeto = Math.max(0, impuestoBruto - descuentoPensionEfectivo - descuentoElectronico) + impuestoConsumo;
 
-  return { tarifa, impuestoBruto, descuentoPension: descuentoPensionEfectivo, descuentoElectronico, impuestoConsumo, impuestoNeto };
+  return { 
+    tarifa, 
+    impuestoBruto, 
+    descuentoPension: descuentoPensionEfectivo, 
+    descuentoElectronico, 
+    impuestoConsumo, 
+    impuestoNeto,
+    salud: ibcPension * 0.125,
+    fsp: fspMensual * 12
+  };
 }
 

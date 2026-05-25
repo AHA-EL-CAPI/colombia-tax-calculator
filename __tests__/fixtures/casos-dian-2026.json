@@ -6,10 +6,10 @@
     },
     "expected": {
       "ingresoBrutoAnual": 120000000,
-      "totalDescuentosAnual": 9600000,
-      "ingresoNetoAnual": 110400000,
-      "rentaExentaAnual": 27600000,
-      "baseGravableAnual": 82800000
+      "totalDescuentosAnual": 10800000,
+      "ingresoNetoAnual": 109200000,
+      "rentaExentaAnual": 27300000,
+      "baseGravableAnual": 81900000
     }
   },
   {
