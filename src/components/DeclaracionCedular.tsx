@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { AnioGravable, CONSTANTES_2025, CONSTANTES_2026, TABLA_ART_241, PRESUNCION_COSTOS_UGPP } from "@/lib/tax-calculator";
+import { AnioGravable, CONSTANTES_2025, CONSTANTES_2026, TABLA_ART_241, PRESUNCION_COSTOS_UGPP, calcularFSP } from "@/lib/tax-calculator";
 import { DependientesInput } from "./DependientesInput";
 
 const formatCOP = (val: number) => 
@@ -98,11 +98,13 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
     // A. Rentas de Trabajo (Laboral)
     const saludLaboralMes = rentasTrabajo.bruto * 0.04;
     const pensionLaboralMes = rentasTrabajo.bruto * 0.04;
-    const INCR_LaboralMes = saludLaboralMes + pensionLaboralMes;
+    const fspLaboralMes = calcularFSP(rentasTrabajo.bruto, C.SMMLV);
+    const INCR_LaboralMes = saludLaboralMes + pensionLaboralMes + fspLaboralMes;
     const netoLaboralMes = Math.max(0, rentasTrabajo.bruto - INCR_LaboralMes);
 
     const saludLaboralAnual = saludLaboralMes * 12;
     const pensionLaboralAnual = pensionLaboralMes * 12;
+    const fspLaboralAnual = fspLaboralMes * 12;
     const INCR_LaboralAnual = INCR_LaboralMes * 12;
     const netoLaboralAnual = netoLaboralMes * 12;
 
@@ -119,7 +121,8 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
 
     const saludHonorariosMes = ibcHonorariosMes * 0.125;
     const pensionHonorariosMes = ibcHonorariosMes * 0.16;
-    const INCR_HonorariosMes = saludHonorariosMes + pensionHonorariosMes;
+    const fspHonorariosMes = ibcHonorariosMes > 0 ? calcularFSP(ibcHonorariosMes, C.SMMLV) : 0;
+    const INCR_HonorariosMes = saludHonorariosMes + pensionHonorariosMes + fspHonorariosMes;
     // netoHonorariosMes: para DIAN, resta costos DIAN (no presuntos) y aportes SS
     const netoHonorariosMes = Math.max(0, honorarios.bruto - costosDIANHonorariosMes - INCR_HonorariosMes);
 
@@ -129,6 +132,7 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
     const ibcHonorariosAnual = ibcHonorariosMes * 12;
     const saludHonorariosAnual = saludHonorariosMes * 12;
     const pensionHonorariosAnual = pensionHonorariosMes * 12;
+    const fspHonorariosAnual = fspHonorariosMes * 12;
     const INCR_HonorariosAnual = INCR_HonorariosMes * 12;
     const netoHonorariosAnual = netoHonorariosMes * 12;
 
@@ -143,7 +147,8 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
 
     const saludCapitalMes = ibcCapitalMes * 0.125;
     const pensionCapitalMes = ibcCapitalMes * 0.16;
-    const INCR_CapitalMes = saludCapitalMes + pensionCapitalMes;
+    const fspCapitalMes = ibcCapitalMes > 0 ? calcularFSP(ibcCapitalMes, C.SMMLV) : 0;
+    const INCR_CapitalMes = saludCapitalMes + pensionCapitalMes + fspCapitalMes;
     const netoCapitalMes = Math.max(0, capital.bruto - costosDIANCapitalMes - INCR_CapitalMes);
 
     const costosUGPPCapitalAnual = costosUGPPCapitalMes * 12;
@@ -152,6 +157,7 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
     const ibcCapitalAnual = ibcCapitalMes * 12;
     const saludCapitalAnual = saludCapitalMes * 12;
     const pensionCapitalAnual = pensionCapitalMes * 12;
+    const fspCapitalAnual = fspCapitalMes * 12;
     const INCR_CapitalAnual = INCR_CapitalMes * 12;
     const netoCapitalAnual = netoCapitalMes * 12;
 
@@ -166,7 +172,8 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
 
     const saludNoLaboralesMes = ibcNoLaboralesMes * 0.125;
     const pensionNoLaboralesMes = ibcNoLaboralesMes * 0.16;
-    const INCR_NoLaboralesMes = saludNoLaboralesMes + pensionNoLaboralesMes;
+    const fspNoLaboralesMes = ibcNoLaboralesMes > 0 ? calcularFSP(ibcNoLaboralesMes, C.SMMLV) : 0;
+    const INCR_NoLaboralesMes = saludNoLaboralesMes + pensionNoLaboralesMes + fspNoLaboralesMes;
     const netoNoLaboralesMes = Math.max(0, noLaborales.bruto - costosDIANNoLaboralesMes - INCR_NoLaboralesMes);
 
     const costosUGPPNoLaboralesAnual = costosUGPPNoLaboralesMes * 12;
@@ -175,6 +182,7 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
     const ibcNoLaboralesAnual = ibcNoLaboralesMes * 12;
     const saludNoLaboralesAnual = saludNoLaboralesMes * 12;
     const pensionNoLaboralesAnual = pensionNoLaboralesMes * 12;
+    const fspNoLaboralesAnual = fspNoLaboralesMes * 12;
     const INCR_NoLaboralesAnual = INCR_NoLaboralesMes * 12;
     const netoNoLaboralesAnual = netoNoLaboralesMes * 12;
 
@@ -325,6 +333,7 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
         ibcMes: ibcHonorariosMes, ibcAnual: ibcHonorariosAnual,
         saludMes: saludHonorariosMes, saludAnual: saludHonorariosAnual,
         pensionMes: pensionHonorariosMes, pensionAnual: pensionHonorariosAnual,
+        fspMes: fspHonorariosMes, fspAnual: fspHonorariosAnual,
         ibcAdjusted: ibcAdjustedHonorarios, ibcType: ibcTypeHonorarios,
         // DIAN (para base gravable renta)
         costosDIANMes: costosDIANHonorariosMes, costosDIANAnual: costosDIANHonorariosAnual,
@@ -336,6 +345,7 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
         ibcMes: ibcCapitalMes, ibcAnual: ibcCapitalAnual,
         saludMes: saludCapitalMes, saludAnual: saludCapitalAnual,
         pensionMes: pensionCapitalMes, pensionAnual: pensionCapitalAnual,
+        fspMes: fspCapitalMes, fspAnual: fspCapitalAnual,
         ibcAdjusted: ibcAdjustedCapital, ibcType: ibcTypeCapital,
         costosDIANMes: costosDIANCapitalMes, costosDIANAnual: costosDIANCapitalAnual,
         usaPresuntos: capital.usaPresuntos,
@@ -346,11 +356,15 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
         ibcMes: ibcNoLaboralesMes, ibcAnual: ibcNoLaboralesAnual,
         saludMes: saludNoLaboralesMes, saludAnual: saludNoLaboralesAnual,
         pensionMes: pensionNoLaboralesMes, pensionAnual: pensionNoLaboralesAnual,
+        fspMes: fspNoLaboralesMes, fspAnual: fspNoLaboralesAnual,
         ibcAdjusted: ibcAdjustedNoLaborales, ibcType: ibcTypeNoLaborales,
         costosDIANMes: costosDIANNoLaboralesMes, costosDIANAnual: costosDIANNoLaboralesAnual,
         usaPresuntos: noLaborales.usaPresuntos,
       },
-      laboral: { saludMes: saludLaboralMes, pensionMes: pensionLaboralMes, saludAnual: saludLaboralAnual, pensionAnual: pensionLaboralAnual }
+      laboral: { 
+        saludMes: saludLaboralMes, pensionMes: pensionLaboralMes, fspMes: fspLaboralMes,
+        saludAnual: saludLaboralAnual, pensionAnual: pensionLaboralAnual, fspAnual: fspLaboralAnual 
+      }
     };
   }, [rentasTrabajo, honorarios, capital, noLaborales, deducciones, numDependientes, gananciasOcasionales, C]);
 
@@ -543,10 +557,18 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
             <div style={{ color: "#f87171" }}>(-) Pensión (4%):</div>
             <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.laboral.pensionMes)}</div>
             <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.laboral.pensionAnual)}</div>
+
+            {calculos.laboral.fspMes > 0 && (
+              <>
+                <div style={{ color: "#f87171" }}>(-) FSP ({((calculos.laboral.fspMes / rentasTrabajo.bruto) * 100).toFixed(1)}% s/ IBC):</div>
+                <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.laboral.fspMes)}</div>
+                <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.laboral.fspAnual)}</div>
+              </>
+            )}
             
             <div style={{ borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700 }}>(=) Neto:</div>
-            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700 }}>{formatCOP(rentasTrabajo.bruto - calculos.laboral.saludMes - calculos.laboral.pensionMes)}</div>
-            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700 }}>{formatCOP((rentasTrabajo.bruto - calculos.laboral.saludMes - calculos.laboral.pensionMes) * 12)}</div>
+            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700 }}>{formatCOP(rentasTrabajo.bruto - calculos.laboral.saludMes - calculos.laboral.pensionMes - calculos.laboral.fspMes)}</div>
+            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700 }}>{formatCOP((rentasTrabajo.bruto - calculos.laboral.saludMes - calculos.laboral.pensionMes - calculos.laboral.fspMes) * 12)}</div>
           </div>
         </details>
 
@@ -665,10 +687,18 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
             <div style={{ color: "#f87171" }}>(-) Pensión (16%):</div>
             <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.honorarios.pensionMes)}</div>
             <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.honorarios.pensionAnual)}</div>
+
+            {calculos.honorarios.fspMes > 0 && (
+              <>
+                <div style={{ color: "#f87171" }}>(-) FSP ({((calculos.honorarios.fspMes / calculos.honorarios.ibcMes) * 100).toFixed(1)}% s/ IBC):</div>
+                <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.honorarios.fspMes)}</div>
+                <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.honorarios.fspAnual)}</div>
+              </>
+            )}
             
             <div style={{ borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700, color: "#34d399" }}>(=) Neto DIAN (Renta):</div>
-            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700, color: "#34d399" }}>{formatCOP(honorarios.bruto - calculos.honorarios.costosDIANMes - calculos.honorarios.saludMes - calculos.honorarios.pensionMes)}</div>
-            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700, color: "#34d399" }}>{formatCOP((honorarios.bruto - calculos.honorarios.costosDIANMes - calculos.honorarios.saludMes - calculos.honorarios.pensionMes) * 12)}</div>
+            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700, color: "#34d399" }}>{formatCOP(honorarios.bruto - calculos.honorarios.costosDIANMes - calculos.honorarios.saludMes - calculos.honorarios.pensionMes - calculos.honorarios.fspMes)}</div>
+            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700, color: "#34d399" }}>{formatCOP((honorarios.bruto - calculos.honorarios.costosDIANMes - calculos.honorarios.saludMes - calculos.honorarios.pensionMes - calculos.honorarios.fspMes) * 12)}</div>
           </div>
         </details>
 
@@ -775,10 +805,18 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
             <div style={{ color: "#f87171" }}>(-) Pensión (16%):</div>
             <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.capital.pensionMes)}</div>
             <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.capital.pensionAnual)}</div>
+
+            {calculos.capital.fspMes > 0 && (
+              <>
+                <div style={{ color: "#f87171" }}>(-) FSP ({((calculos.capital.fspMes / calculos.capital.ibcMes) * 100).toFixed(1)}% s/ IBC):</div>
+                <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.capital.fspMes)}</div>
+                <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.capital.fspAnual)}</div>
+              </>
+            )}
             
             <div style={{ borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700, color: "#34d399" }}>(=) Neto DIAN (Renta):</div>
-            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700, color: "#34d399" }}>{formatCOP(capital.bruto - calculos.capital.costosDIANMes - calculos.capital.saludMes - calculos.capital.pensionMes)}</div>
-            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700, color: "#34d399" }}>{formatCOP((capital.bruto - calculos.capital.costosDIANMes - calculos.capital.saludMes - calculos.capital.pensionMes) * 12)}</div>
+            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700, color: "#34d399" }}>{formatCOP(capital.bruto - calculos.capital.costosDIANMes - calculos.capital.saludMes - calculos.capital.pensionMes - calculos.capital.fspMes)}</div>
+            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700, color: "#34d399" }}>{formatCOP((capital.bruto - calculos.capital.costosDIANMes - calculos.capital.saludMes - calculos.capital.pensionMes - calculos.capital.fspMes) * 12)}</div>
           </div>
         </details>
 
@@ -897,10 +935,18 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
             <div style={{ color: "#f87171" }}>(-) Pensión (16%):</div>
             <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.noLaborales.pensionMes)}</div>
             <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.noLaborales.pensionAnual)}</div>
+
+            {calculos.noLaborales.fspMes > 0 && (
+              <>
+                <div style={{ color: "#f87171" }}>(-) FSP ({((calculos.noLaborales.fspMes / calculos.noLaborales.ibcMes) * 100).toFixed(1)}% s/ IBC):</div>
+                <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.noLaborales.fspMes)}</div>
+                <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.noLaborales.fspAnual)}</div>
+              </>
+            )}
             
             <div style={{ borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700, color: "#34d399" }}>(=) Neto DIAN (Renta):</div>
-            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700, color: "#34d399" }}>{formatCOP(noLaborales.bruto - calculos.noLaborales.costosDIANMes - calculos.noLaborales.saludMes - calculos.noLaborales.pensionMes)}</div>
-            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700, color: "#34d399" }}>{formatCOP((noLaborales.bruto - calculos.noLaborales.costosDIANMes - calculos.noLaborales.saludMes - calculos.noLaborales.pensionMes) * 12)}</div>
+            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700, color: "#34d399" }}>{formatCOP(noLaborales.bruto - calculos.noLaborales.costosDIANMes - calculos.noLaborales.saludMes - calculos.noLaborales.pensionMes - calculos.noLaborales.fspMes)}</div>
+            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700, color: "#34d399" }}>{formatCOP((noLaborales.bruto - calculos.noLaborales.costosDIANMes - calculos.noLaborales.saludMes - calculos.noLaborales.pensionMes - calculos.noLaborales.fspMes) * 12)}</div>
           </div>
         </details>
 
@@ -1038,7 +1084,7 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
         </div>
         
         <div className="result-row" style={{ color: "#f87171" }}>
-          <span>(-) Ingresos No Constitutivos (Salud/Pens):</span>
+          <span>(-) Ingresos No Constitutivos (Salud/Pens/FSP):</span>
           <span className="result-value">{formatCOP(calculos.incrTotales)}</span>
         </div>
         

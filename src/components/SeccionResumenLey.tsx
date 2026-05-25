@@ -59,7 +59,7 @@ export function SeccionResumenLey({ resultado: r, aplicaTabla383 }: Props) {
     
   const costosTotalesMes = r.isIndependiente ? (r.costosDeduciblesMes || 0) : 0;
   const auxTranspMes = r.calificaAuxilio ? r.auxilioTransporteMensual : 0;
-  const granTotalDeduccionesMes = r.descuentoSaludMes + r.descuentoPensionMes + auxTranspMes + costosTotalesMes + r.rentaExentaMes + r.deduccionArt387Mes + r.medicinaPrepagadaMensual + r.interesesViviendaMensual;
+  const granTotalDeduccionesMes = r.descuentoSaludMes + r.descuentoPensionMes + (r.fspMes || 0) + auxTranspMes + costosTotalesMes + r.rentaExentaMes + r.deduccionArt387Mes + r.medicinaPrepagadaMensual + r.interesesViviendaMensual;
 
   return (
     <div className="card animate-fade-up" style={{ gridColumn:"1/-1" }}>
@@ -226,10 +226,17 @@ export function SeccionResumenLey({ resultado: r, aplicaTabla383 }: Props) {
               : `(-) Aporte Pensión (4% de IBC: ${formatCOP(r.ibcMes || 0)})`}
               value={`- ${formatCOP(r.descuentoPensionMes)}`} />
             
+            { (r.fspMes || 0) > 0 && (
+              <Row negative label={r.isIndependiente && r.ibcMes !== undefined
+                ? `(-) Fondo de Solidaridad Pensional (${((r.fspMes / r.ibcMes) * 100).toFixed(1)}% de IBC: ${formatCOP(r.ibcMes)})`
+                : `(-) Fondo de Solidaridad Pensional (${((r.fspMes / (r.ibcMes || r.salarioMensual)) * 100).toFixed(1)}% de IBC: ${formatCOP(r.ibcMes || r.salarioMensual)})`}
+                value={`- ${formatCOP(r.fspMes)}`} />
+            )}
+            
             {/* 3. Subtotal PILA */}
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", fontWeight: 700, borderTop: "1px solid rgba(148, 163, 184, 0.15)", paddingTop: 8, marginTop: 4 }}>
               <span style={{ color: "var(--text-secondary)" }}>(=) Subtotal PILA (Seguridad Social)</span>
-              <span style={{ fontFamily: "JetBrains Mono, monospace", color: "var(--accent-rose)" }}>- {formatCOP(r.descuentoSaludMes + r.descuentoPensionMes)}</span>
+              <span style={{ fontFamily: "JetBrains Mono, monospace", color: "var(--accent-rose)" }}>- {formatCOP(r.descuentoSaludMes + r.descuentoPensionMes + (r.fspMes || 0))}</span>
             </div>
 
             {/* 4. Auxilio de Transporte */}

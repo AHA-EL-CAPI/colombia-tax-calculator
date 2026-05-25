@@ -230,8 +230,14 @@ export function SeccionProyeccionAnual({ resultado: r, aplicaTabla383 }: Props) 
                     value={`- ${formatCOP(r.descuentoSaludAnual)}`} />
                   <Row negative label={`(-) Aporte Pensión (16% de IBC: ${formatCOP(r.ibcMes! * 12)})`}
                     value={`- ${formatCOP(r.descuentoPensionAnual)}`} />
+                  { (r.fspAnual || 0) > 0 && (
+                    <Row negative label={r.isIndependiente && r.ibcMes !== undefined
+                      ? `(-) FSP (${((r.fspAnual / (r.ibcMes * 12)) * 100).toFixed(1)}% de IBC: ${formatCOP(r.ibcMes * 12)})`
+                      : `(-) FSP (${((r.fspAnual / ((r.ibcMes || r.salarioMensual) * 12)) * 100).toFixed(1)}% de IBC: ${formatCOP((r.ibcMes || r.salarioMensual) * 12)})`}
+                      value={`- ${formatCOP(r.fspAnual)}`} />
+                  )}
                   <Row dim label="Subtotal PILA (28.5% sobre IBC)"
-                    value={`- ${formatCOP(r.descuentoSaludAnual + r.descuentoPensionAnual)}`} />
+                    value={`- ${formatCOP(r.descuentoSaludAnual + r.descuentoPensionAnual + (r.fspAnual || 0))}`} />
                 </>
               ) : (
                 <>
@@ -239,6 +245,12 @@ export function SeccionProyeccionAnual({ resultado: r, aplicaTabla383 }: Props) 
                     value={`- ${formatCOP(r.descuentoSaludAnual)}`} />
                   <Row negative label={`(-) Aporte Pensión (4% de IBC: ${formatCOP((r.ibcMes || 0) * 12)})`}
                     value={`- ${formatCOP(r.descuentoPensionAnual)}`} />
+                  { (r.fspAnual || 0) > 0 && (
+                    <Row negative label={r.isIndependiente && r.ibcMes !== undefined
+                      ? `(-) FSP (${((r.fspAnual / (r.ibcMes * 12)) * 100).toFixed(1)}% de IBC: ${formatCOP(r.ibcMes * 12)})`
+                      : `(-) FSP (${((r.fspAnual / ((r.ibcMes || r.salarioMensual) * 12)) * 100).toFixed(1)}% de IBC: ${formatCOP((r.ibcMes || r.salarioMensual) * 12)})`}
+                      value={`- ${formatCOP(r.fspAnual)}`} />
+                  )}
                   {r.calificaAuxilio && (
                     <Row negative label="(-) Auxilio de Transporte (INCRGO)"
                       value={`- ${formatCOP(r.auxilioTransporteMensual * 12)}`} />
@@ -360,7 +372,7 @@ export function SeccionProyeccionAnual({ resultado: r, aplicaTabla383 }: Props) 
               {(() => {
                 const costosTotales = r.isIndependiente ? (r.costosDeduciblesMes || 0) * 12 : 0;
                 const auxTranspAnual = r.calificaAuxilio ? r.auxilioTransporteMensual * 12 : 0;
-                const granTotalDeducciones = r.descuentoSaludAnual + r.descuentoPensionAnual + auxTranspAnual + costosTotales + r.rentaExentaAnual + (r.tieneArt387 ? r.deduccionArt387Anual : 0) + (r.tieneArt336 ? r.deduccionArt336Anual : 0);
+                const granTotalDeducciones = r.descuentoSaludAnual + r.descuentoPensionAnual + (r.fspAnual || 0) + auxTranspAnual + costosTotales + r.rentaExentaAnual + (r.tieneArt387 ? r.deduccionArt387Anual : 0) + (r.tieneArt336 ? r.deduccionArt336Anual : 0);
                 
                 return (
                   <div style={{ display: "flex", flexDirection: "column", gap: 4, padding: "16px 0", marginTop: 8, borderTop: "2px solid var(--accent-rose)" }}>
@@ -394,7 +406,7 @@ export function SeccionProyeccionAnual({ resultado: r, aplicaTabla383 }: Props) 
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
                   <span style={{ color: "var(--text-secondary)" }}>(-) Gran Total Deducciones</span>
-                  <span style={{ fontFamily: "JetBrains Mono, monospace", color: "var(--accent-rose)" }}>- {formatCOP(r.descuentoSaludAnual + r.descuentoPensionAnual + (r.calificaAuxilio ? r.auxilioTransporteMensual * 12 : 0) + (r.isIndependiente ? (r.costosDeduciblesMes || 0) * 12 : 0) + r.rentaExentaAnual + (r.tieneArt387 ? r.deduccionArt387Anual : 0) + (r.tieneArt336 ? r.deduccionArt336Anual : 0))}</span>
+                  <span style={{ fontFamily: "JetBrains Mono, monospace", color: "var(--accent-rose)" }}>- {formatCOP(r.descuentoSaludAnual + r.descuentoPensionAnual + (r.fspAnual || 0) + (r.calificaAuxilio ? r.auxilioTransporteMensual * 12 : 0) + (r.isIndependiente ? (r.costosDeduciblesMes || 0) * 12 : 0) + r.rentaExentaAnual + (r.tieneArt387 ? r.deduccionArt387Anual : 0) + (r.tieneArt336 ? r.deduccionArt336Anual : 0))}</span>
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "1rem", fontWeight: 700, borderTop: "1.5px solid rgba(52, 211, 153, 0.3)", paddingTop: 12, marginTop: 4 }}>
                   <span style={{ color: "var(--text-primary)" }}>(=) Base Gravable Final</span>
