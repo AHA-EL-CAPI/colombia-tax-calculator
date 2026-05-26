@@ -96,6 +96,7 @@ import { SalarioMagicoAsalariados } from "@/components/SalarioMagicoAsalariados"
 import { SalarioMagicoIndependientes } from "@/components/SalarioMagicoIndependientes";
 import { RegimenSimpleIndependientes } from "@/components/RegimenSimpleIndependientes";
 import { DeclaracionCedular } from "@/components/DeclaracionCedular";
+import CompareBrokers from "@/components/CompareBrokers";
 
 // ── Year selector tabs ───────────────────────────────────────────
 const ANIOS: AnioGravable[] = [2025, 2026];
@@ -224,6 +225,7 @@ function SectionDivider({
 
 
 export default function CalculadoraPage() {
+  const [activeTab, setActiveTab] = useState<'taxes' | 'invest'>('taxes');
   const [salarioRaw, setSalarioRaw] = useState<string>("5000000");
   const [tipoVinculacion, setTipoVinculacion] = useState<TipoVinculacion>("asalariados");
   const [anio, setAnio] = useState<AnioGravable>(2026);
@@ -324,8 +326,55 @@ export default function CalculadoraPage() {
         </div>
       </header>
 
-      {/* ══ HERO ═══════════════════════════════════════════════════ */}
-      <div style={{ padding: "44px 24px 0", textAlign: "center" }}>
+      {/* ── TABS DE NAVEGACIÓN ── */}
+      <div style={{ display: "flex", justifyContent: "center", paddingTop: 32, paddingLeft: 24, paddingRight: 24 }}>
+        <div style={{
+          display: "flex",
+          background: "var(--bg-card)",
+          borderRadius: 20,
+          padding: 6,
+          border: "1px solid var(--border-color)",
+          gap: 6
+        }}>
+          <button
+            onClick={() => setActiveTab('taxes')}
+            style={{
+              padding: "10px 24px",
+              borderRadius: 14,
+              fontWeight: 700,
+              fontSize: "0.9rem",
+              transition: "all 0.2s ease",
+              background: activeTab === 'taxes' ? "linear-gradient(135deg, rgba(6,182,212,0.15), rgba(52,211,153,0.1))" : "transparent",
+              color: activeTab === 'taxes' ? "var(--accent-emerald)" : "var(--text-muted)",
+              border: activeTab === 'taxes' ? "1px solid rgba(52,211,153,0.3)" : "1px solid transparent",
+              cursor: "pointer",
+            }}
+          >
+            🏛️ Calculadora de Impuestos
+          </button>
+          <button
+            onClick={() => setActiveTab('invest')}
+            style={{
+              padding: "10px 24px",
+              borderRadius: 14,
+              fontWeight: 700,
+              fontSize: "0.9rem",
+              transition: "all 0.2s ease",
+              background: activeTab === 'invest' ? "linear-gradient(135deg, rgba(59,130,246,0.15), rgba(147,51,234,0.1))" : "transparent",
+              color: activeTab === 'invest' ? "#60a5fa" : "var(--text-muted)",
+              border: activeTab === 'invest' ? "1px solid rgba(96,165,250,0.3)" : "1px solid transparent",
+              cursor: "pointer",
+            }}
+          >
+            📈 Comparador Brokers
+          </button>
+        </div>
+      </div>
+
+      {activeTab === 'taxes' ? (
+        <>
+          {/* ══ HERO ═══════════════════════════════════════════════════ */}
+          <div style={{ padding: "44px 24px 0", textAlign: "center" }}>
         {/* Live badge */}
         <div style={{
           display: "inline-flex", alignItems: "center", gap: 8,
@@ -865,6 +914,12 @@ export default function CalculadoraPage() {
 
       {/* ══ REFERENCIAS LEGALES ════════════════════════════════════ */}
       <SeccionReferenciasLegales anio={anio} />
+        </>
+      ) : (
+        <div className="animate-fade-up">
+          <CompareBrokers />
+        </div>
+      )}
     </div>
   );
 }
