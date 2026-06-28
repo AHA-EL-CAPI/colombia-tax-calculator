@@ -120,7 +120,7 @@ export const brokers: BrokerConfig[] = [
     escalas: [
       { limite_superior: null, tipo: "porcentaje", valor: 0.005 } // 0.5% de tipo de cambio / FX markup oculto por operación
     ],
-    notas_ui: "Corretaje 0% hasta 100k EUR/mes, pero aplica un 0.5% de spread cambiario por operación. Retiros menores a $50 USD cobran una penalidad alta de $30 USD (~117,000 COP).",
+    notas_ui: "Corretaje 0% hasta 100k EUR/mes. El costo es el 0.5% de spread cambiario al convertir COP a USD. Retiros menores a $100 USD cobran penalidad de $30 USD. Depósitos Swift desde COP pueden tener altos costos bancarios.",
     fuente: "https://xas-new-cdn.xtb.com/file/0104/57/79b44b80-d317-4b24-96b1-a1b9736251d0/latam-tabla-de-comisiones-abril-29-2026-docx.pdf"
   },
   {
@@ -129,10 +129,11 @@ export const brokers: BrokerConfig[] = [
     monto_minimo_compra: 39000, // $10 USD por posición
     monto_minimo_venta: 39000,
     iva: 0,
+    costo_fijo_por_operacion: 7800, // $2 USD comisión por trade (apertura/cierre) según recientes actualizaciones
     escalas: [
       { limite_superior: null, tipo: "porcentaje", valor: 0.03 } // 3% de comisión por conversión en pasarelas/monederos para Colombia
     ],
-    notas_ui: "Acciones reales a 0% de comisión. El costo crítico es el 3% por conversión al depositar mediante pasarelas disponibles en Colombia. Retiro fijo de $5 USD y tarifa de inactividad de $10 USD/mes tras 1 año.",
+    notas_ui: "Aplica comisión de hasta $2 USD por trade (según país/activo). El mayor costo oculto es la conversión de divisa al depositar en COP (hasta ~3%). Retiro de $5 USD.",
     fuente: "https://www.etoro.com/es/trading/fees/conversion/"
   },
   {
@@ -141,61 +142,12 @@ export const brokers: BrokerConfig[] = [
     monto_minimo_compra: 3900, // $1 USD permite fracciones
     monto_minimo_venta: 3900,
     iva: 0,
-    costo_fijo_por_operacion: 585, // $0.15 USD de clearing por operación fraccionaria a TRM $3.900
+    costo_fijo_por_operacion: 8346, // Fondeo PSE $1.99 USD (~$7.761 COP) + Clearing $0.15 USD (~$585 COP)
     escalas: [
-      { limite_superior: null, tipo: "porcentaje", valor: 0.017 } // ~1.7% promedio de comisión de depósito por red local/PSE
+      { limite_superior: null, tipo: "porcentaje", valor: 0.0045 } // 0.45% comisión variable de depósito PSE
     ],
-    notas_ui: "Sin comisión de corretaje, pero el fondeo por PSE cuesta ~1.7%. Aplica cobro de clearing de $0.10 o $0.15 USD por transacción. Mantenimiento de $4.99 USD/mes solo si la cuenta tiene menos de $100 y pasa 60 días inactiva.",
+    notas_ui: "Fondeo PSE cobra 0.45% + $1.99 USD. Cobro de clearing de $0.10/$0.15 USD por trade. (Cálculo asume 1 trade por depósito). Retiro local cuesta $4.99 USD.",
     fuente: "https://help.hapi.trade/en/articles/8976002-understanding-the-clearing-house-fee-and-other-fees-on-hapi"
-  },
-  {
-    id: 'xtb-standard',
-    nombre: 'XTB',
-    monto_minimo_compra: 39000,
-    monto_minimo_venta: 39000,
-    iva: 0,
-    escalas: [
-      {
-        limite_superior: null,
-        tipo: 'porcentaje',
-        valor: 0
-      }
-    ],
-    notas_ui: '0% de comisión en acciones al contado hasta 100,000 EUR/mes. Retiros menores a $50 USD incurren en una tarifa fija de $30 USD (aprox. 117,000 COP). Posibles spreads de cambio si se fondea en COP.',
-    fuente: 'https://xas-new-cdn.xtb.com/file/0104/57/79b44b80-d317-4b24-96b1-a1b9736251d0/latam-tabla-de-comisiones-abril-29-2026-docx.pdf'
-  },
-  {
-    id: 'etoro-standard',
-    nombre: 'eToro',
-    monto_minimo_compra: 39000,
-    monto_minimo_venta: 39000,
-    iva: 0,
-    escalas: [
-      {
-        limite_superior: null,
-        tipo: 'porcentaje',
-        valor: 0.015
-      }
-    ],
-    notas_ui: 'Cero comisiones en acciones reales (sin apalancamiento). Retiros tienen cobro fijo de $5 USD (19,500 COP). Inactividad penalizada con $10 USD/mes tras 1 año. Spreads cambiarios cargados al fondear.',
-    fuente: 'https://www.etoro.com/es/trading/fees/?f2&Task=Click'
-  },
-  {
-    id: 'hapi-standard',
-    nombre: 'Hapi',
-    monto_minimo_compra: 3900,
-    monto_minimo_venta: 3900,
-    iva: 0,
-    escalas: [
-      {
-        limite_superior: null,
-        tipo: 'porcentaje',
-        valor: 0
-      }
-    ],
-    costo_fijo_por_operacion: 585,
-    notas_ui: 'Cobra "clearing fee" de $0.10 USD (enteras) o $0.15 USD (fracciones) por trade. Inactividad de $4.99 USD/mes si balance < $100 y 60+ días sin operar. Depósitos/retiros varían según método (cripto o transfer).',
-    fuente: 'https://help.hapi.trade/en/articles/8976002-understanding-the-clearing-house-fee-and-other-fees-on-hapi'
   }
 ];
 
