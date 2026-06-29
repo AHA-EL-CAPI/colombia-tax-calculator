@@ -8,15 +8,16 @@ export interface EscalaComision {
 }
 
 export interface BrokerConfig {
-  id: string; // Buena práctica: un ID único para iterar en React (keys)
+  id: string;
   nombre: string;
   monto_minimo_compra: number;
   monto_minimo_venta: number;
   iva: number;
   escalas: EscalaComision[];
-  costo_suscripcion_mensual?: number; // Opcional: Para brokers como Trii Pro
-  costo_fijo_por_operacion?: number; // NUEVO: Para sumar ACH o mínimos internacionales
-  notas_ui?: string; // Opcional: Para mostrar advertencias en la tarjeta ganadora
+  costo_suscripcion_mensual?: number;
+  costo_fijo_por_operacion?: number;
+  costo_retiro_fijo?: number; // Costo para traer dinero a cuenta Colombia
+  notas_ui?: string;
   fuente: string;
 }
 
@@ -114,45 +115,49 @@ export const brokers: BrokerConfig[] = [
   {
     id: "xtb-latam",
     nombre: "XTB (Acciones Spot)",
-    monto_minimo_compra: 39000, // Aprox $10 USD mínimo operativo
+    monto_minimo_compra: 39000,
     monto_minimo_venta: 39000,
     iva: 0,
     escalas: [
-      { limite_superior: null, tipo: "porcentaje", valor: 0.005 } // 0.5% de tipo de cambio / FX markup oculto por operación
+      { limite_superior: null, tipo: "porcentaje", valor: 0.005 }
     ],
-    notas_ui: "Corretaje 0% hasta 100k EUR/mes. El costo es el 0.5% de spread cambiario al convertir COP a USD. Retiros menores a $100 USD cobran penalidad de $30 USD. Depósitos Swift desde COP pueden tener altos costos bancarios.",
-    fuente: "https://xas-new-cdn.xtb.com/file/0104/57/79b44b80-d317-4b24-96b1-a1b9736251d0/latam-tabla-de-comisiones-abril-29-2026-docx.pdf"
+    costo_retiro_fijo: 117000, // Promedio conservador de costos SWIFT intermediarios ($30 USD)
+    notas_ui: "0% corretaje, pero aplica 0.5% spread. ¡PELIGRO! Retiros vía SWIFT pueden costar entre $58k y $195k COP por bancos intermediarios.",
+    fuente: "https://www.xtb.com/lat/centro-de-ayuda/tarifas-y-comisiones"
   },
   {
     id: "etoro-colombia",
     nombre: "eToro (Monederos Locales)",
-    monto_minimo_compra: 39000, // $10 USD por posición
+    monto_minimo_compra: 39000,
     monto_minimo_venta: 39000,
     iva: 0,
-    costo_fijo_por_operacion: 7800, // $2 USD comisión por trade (apertura/cierre) según recientes actualizaciones
+    costo_fijo_por_operacion: 0, // Acciones spot no cobran comisión fija por trade
+    costo_retiro_fijo: 19500,    // $5 USD fijo
     escalas: [
-      { limite_superior: null, tipo: "porcentaje", valor: 0.03 } // 3% de comisión por conversión en pasarelas/monederos para Colombia
+      { limite_superior: null, tipo: "porcentaje", valor: 0.03 } // 3% conversión
     ],
-    notas_ui: "Aplica comisión de hasta $2 USD por trade (según país/activo). El mayor costo oculto es la conversión de divisa al depositar en COP (hasta ~3%). Retiro de $5 USD.",
+    notas_ui: "El 3% de conversión de divisa al fondear es tu costo principal. Retiro fijo de $5 USD.",
     fuente: "https://www.etoro.com/es/trading/fees/conversion/"
   },
   {
     id: "hapi-pse",
     nombre: "Hapi (Fondeo PSE)",
-    monto_minimo_compra: 3900, // $1 USD permite fracciones
+    monto_minimo_compra: 3900,
     monto_minimo_venta: 3900,
     iva: 0,
-    costo_fijo_por_operacion: 8346, // Fondeo PSE $1.99 USD (~$7.761 COP) + Clearing $0.15 USD (~$585 COP)
+    costo_fijo_por_operacion: 585, // Clearing fee ($0.15 USD)
+    costo_retiro_fijo: 19500,      // $4.99 USD retiro local
     escalas: [
-      { limite_superior: null, tipo: "porcentaje", valor: 0.0045 } // 0.45% comisión variable de depósito PSE
+      { limite_superior: 1794000, tipo: "fija", valor: 11661 }, // Mínimo $2.99 USD PSE
+      { limite_superior: null, tipo: "porcentaje", valor: 0.0065 } // 0.65% PSE
     ],
-    notas_ui: "Fondeo PSE cobra 0.45% + $1.99 USD. Cobro de clearing de $0.10/$0.15 USD por trade. (Cálculo asume 1 trade por depósito). Retiro local cuesta $4.99 USD.",
-    fuente: "https://help.hapi.trade/en/articles/8976002-understanding-the-clearing-house-fee-and-other-fees-on-hapi"
+    notas_ui: "Eficiente para montos medios. Fondeo PSE tiene costo fijo mín. de $2.99 USD. Clearing fee por trade.",
+    fuente: "https://help.hapi.trade/en/articles/8976002"
   }
 ];
 
 // 3. Lógica de Cálculo (Devuelve la info completa para la UI)
-export function calcularComision(monto: number, broker: BrokerConfig, tipoOperacion: 'compra' | 'venta' = 'compra') {
+export function calcularComision(monto: number, broker: BrokerConfig, tipoOperacion: 'compra' | 'venta' = 'compra', incluirSalida = false) {
   const minimoRequerido = tipoOperacion === 'compra' ? broker.monto_minimo_compra : broker.monto_minimo_venta;
 
   if (monto < minimoRequerido) {
@@ -167,15 +172,18 @@ export function calcularComision(monto: number, broker: BrokerConfig, tipoOperac
     }
   }
 
-  // NUEVO CÁLCULO: Se calcula el IVA sobre la comisión base, y se suma el costo fijo (que no lleva IVA)
-  const costoFinal = (costoBase * (1 + broker.iva)) + (broker.costo_fijo_por_operacion || 0);
+  const costoTransaccional = (costoBase * (1 + broker.iva)) + (broker.costo_fijo_por_operacion || 0);
+  const costo_suscripcion = broker.costo_suscripcion_mensual || 0;
+  const costoFinal = costoTransaccional;
+  const costoTotal = costoFinal + costo_suscripcion + (incluirSalida ? (broker.costo_retiro_fijo || 0) : 0);
 
   return {
     error: false,
     costoBase,
+    costoTransaccional,
     costoFinal,
-    // Devolvemos las propiedades especiales para que la UI decida qué hacer con ellas
-    costo_suscripcion: broker.costo_suscripcion_mensual || 0,
+    costo_suscripcion,
+    costoTotal,
     notas_adicionales: broker.notas_ui || null
   };
 }
