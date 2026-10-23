@@ -283,6 +283,20 @@ export interface ResultadoCalculo {
   excesoLey1393?: number;
 }
 
+// Un mismo dependiente no puede generar a la vez la deducción del Art. 387 y las
+// 72 UVT del Art. 336 (Concepto DIAN 11080 de 2023; Art. 23 Ley 383 de 1997).
+// El Art. 387 es una sola deducción con al menos un dependiente, así que se
+// prueban las dos asignaciones y se conserva la de menor impuesto anual.
+function elegirAsignacionDependientes(
+  nDep: number,
+  calcular: (usarArt387: boolean) => ResultadoCalculo,
+): ResultadoCalculo {
+  const sin387 = calcular(false);
+  if (nDep === 0) return sin387;
+  const con387 = calcular(true);
+  return con387.impuestoAnual <= sin387.impuestoAnual ? con387 : sin387;
+}
+
 // ── FUNCIÓN PRINCIPAL ────────────────────────────────────────
 export function calcularRetencion(
   salarioMensual: number,
@@ -297,6 +311,26 @@ export function calcularRetencion(
 ): ResultadoCalculo {
   const C = CONSTANTES_POR_ANIO[anio];
   const nDep = Math.min(Math.max(0, Math.floor(numDependientes)), C.MAX_DEPENDIENTES);
+  return elegirAsignacionDependientes(nDep, (usarArt387) => calcularRetencionAsalariado(
+    salarioMensual, anio, nDep, usarArt387, aportesVoluntariosMensual, medicinaPrepagadaMensual,
+    interesesViviendaMensual, gmfAnual, comprasFacturaElectronicaAnual, ingresosNoSalarialesMensual,
+  ));
+}
+
+function calcularRetencionAsalariado(
+  salarioMensual: number,
+  anio: AnioGravable,
+  nDep: number,
+  usarArt387: boolean,
+  aportesVoluntariosMensual: number,
+  medicinaPrepagadaMensual: number,
+  interesesViviendaMensual: number,
+  gmfAnual: number,
+  comprasFacturaElectronicaAnual: number,
+  ingresosNoSalarialesMensual: number,
+): ResultadoCalculo {
+  const C = CONSTANTES_POR_ANIO[anio];
+  const nDep336 = usarArt387 ? nDep - 1 : nDep;
 
   // ── A: Ingreso Bruto Anual ───────────────────────────────
   const calificaAuxilio = salarioMensual <= 2 * C.SMMLV;
@@ -308,7 +342,8 @@ export function calcularRetencion(
   const totalDevengadoMes = salarioMensual + ingresosNoSalarialesMensual;
   const limite40Ley1393 = totalDevengadoMes * 0.40;
   const excesoLey1393 = Math.max(0, ingresosNoSalarialesMensual - limite40Ley1393);
-  const ibcMensual = salarioMensual + excesoLey1393;
+  // Techo de 25 SMMLV para el IBC (Art. 18 Ley 100 de 1993)
+  const ibcMensual = Math.min(salarioMensual + excesoLey1393, 25 * C.SMMLV);
 
   // ── B: Descuentos de ley ─────────────────────────────────
   // Se calcula sobre el IBC (Base de Cotización) que considera la Ley 1393
@@ -324,14 +359,12 @@ export function calcularRetencion(
   const descuentoPensionAnual = descuentoPensionMes * 12;
   const totalDescuentosAnual  = totalINCRGOMes * 12;
   
-  // El auxilio de transporte se resta porque es INCRGO (Ingreso No Constitutivo de Renta)
-  const auxilioTransporteAnual = auxilioTransporteMensual * 12;
-  const totalINCRGOAnual = totalDescuentosAnual + auxilioTransporteAnual;
-  
-  const ingresoNetoAnual = ingresoBrutoAnual - totalINCRGOAnual;
+  // El auxilio de transporte es un pago laboral gravado (no es INCRGO); solo se
+  // excluye del IBC de seguridad social.
+  const ingresoNetoAnual = ingresoBrutoAnual - totalDescuentosAnual;
 
   // ── D: Deducción Dependientes Art. 387 – DENTRO del 40% ─
-  const tieneArt387              = nDep > 0;
+  const tieneArt387              = nDep > 0 && usarArt387;
   const topeArt387Anual          = C.TOPE_ART387_UVT_MES * 12 * C.UVT; // 384 UVT/año
   const deduccionArt387BrutaAnual = tieneArt387 ? ingresoBrutoAnual * 0.10 : 0;
   const deduccionArt387Anual      = tieneArt387
@@ -355,13 +388,13 @@ export function calcularRetencion(
   const aportesVoluntariosRecortados = aportesVoluntariosAnual > aportesVoluntariosValidosAnual;
   
   // ── C: Renta Exenta 25% (Art. 206 #10) – DENTRO del 40% ─
-  const baseRentaExenta = Math.max(0, ingresoNetoAnual - deduccionArt387Anual - medicinaPrepagadaAnual - interesesViviendaAnual - aportesVoluntariosValidosAnual);
+  const deduccionGMFAnual = gmfAnual * 0.5;
+  const baseRentaExenta = Math.max(0, ingresoNetoAnual - deduccionArt387Anual - medicinaPrepagadaAnual - interesesViviendaAnual - deduccionGMFAnual - aportesVoluntariosValidosAnual);
   const rentaExentaBrutaAnual = baseRentaExenta * C.PORCENTAJE_RENTA_EXENTA;
   const topeRentaExentaAnual  = C.TOPE_RENTA_EXENTA_UVT_ANUAL * C.UVT;
   const rentaExentaAnual      = Math.min(rentaExentaBrutaAnual, topeRentaExentaAnual);
   const topeRentaExentaActivo = rentaExentaBrutaAnual > topeRentaExentaAnual;
 
-  const deduccionGMFAnual = gmfAnual * 0.5;
   const totalDeduccionesParaTechoSinAFC = rentaExentaAnual + deduccionArt387Anual + medicinaPrepagadaAnual + interesesViviendaAnual + deduccionGMFAnual;
   const totalDeduccionesParaTecho  = totalDeduccionesParaTechoSinAFC + aportesVoluntariosValidosAnual;
   const techo40Anual               = ingresoNetoAnual * C.PORCENTAJE_TECHO;
@@ -390,8 +423,8 @@ export function calcularRetencion(
   const baseGravablePreArt336UVT = baseGravablePreArt336 / C.UVT;
 
   // ── G: Deducción Especial Art. 336 – FUERA del 40% ──────
-  const tieneArt336          = nDep > 0;
-  const deduccionArt336AnualUVT = tieneArt336 ? nDep * C.DEDUCCION_DEP_ART336_UVT_ANUAL : 0;
+  const tieneArt336          = nDep336 > 0;
+  const deduccionArt336AnualUVT = tieneArt336 ? nDep336 * C.DEDUCCION_DEP_ART336_UVT_ANUAL : 0;
   const deduccionArt336Anual    = deduccionArt336AnualUVT * C.UVT;
 
   // ── H: Base Gravable Final ───────────────────────────────
@@ -420,13 +453,14 @@ export function calcularRetencion(
   
   const deduccionArt387MensualReal = deduccionArt387Anual / 12; // Ya tiene el tope de 32 UVT anualizado
   
+  // Doble candado mensual (Art. 388): 40% del ingreso neto del mes y 1.340 UVT / 12
+  const techo40Mes = Math.min(ingresoNetoMensual * C.PORCENTAJE_TECHO, topeDeduccion1340Anual / 12);
   const totalDeduccionesMesSinAFC = rentaExentaMes + deduccionArt387MensualReal + medicinaPrepagadaValidaMensual + interesesViviendaValidaMensual;
-  const deduccionesCapadasMesSinAFC = Math.min(totalDeduccionesMesSinAFC, techo40Anual / 12);
+  const deduccionesCapadasMesSinAFC = Math.min(totalDeduccionesMesSinAFC, techo40Mes);
   const baseGravableMesPre336SinAFC = ingresoNetoMensual - deduccionesCapadasMesSinAFC;
   const baseGravableMesSinAFC = Math.max(0, baseGravableMesPre336SinAFC);
 
-  const totalDeduccionesMes = totalDeduccionesMesSinAFC + aportesVoluntariosMensual;
-  const techo40Mes = ingresoNetoMensual * C.PORCENTAJE_TECHO;
+  const totalDeduccionesMes = totalDeduccionesMesSinAFC + aportesVoluntariosValidosAnual / 12;
   const deduccionesCapadasMesLocal = Math.min(totalDeduccionesMes, techo40Mes);
   
   const baseGravableMesPre336Local = ingresoNetoMensual - deduccionesCapadasMesLocal;
@@ -438,12 +472,9 @@ export function calcularRetencion(
   const retencionMensualCOP = Math.round(retencionMensualUVT * C.UVT);
 
   // Lógica de Aporte Óptimo
-  const metaRetencionCero = (1090 * C.UVT) / 12;
-  const reduccionNecesaria = baseGravableMesSinAFC - metaRetencionCero;
-  let aporteSugerido = 0;
-  if (reduccionNecesaria > 0) {
-    aporteSugerido = Math.min(reduccionNecesaria, cupoDisponibleMesSinAFC);
-  }
+  const { reduccionNecesaria, aporteSugerido } = calcularAporteSugerido(
+    C, baseGravableMesSinAFC, cupoDisponibleMesSinAFC, topeRentaExentaActivo, ingresoBrutoAnual,
+  );
 
   return {
     salarioMensual, anio, numDependientes: nDep, constantes: C,
@@ -501,13 +532,33 @@ export function calcularRetencion(
     impuestoMes:              retencionMensualCOP,
 
     isImpuestoCero:  impuestoAnual <= 0,
-    obligadoDeclarar: ingresoBrutoAnual > C.UMBRAL_DECLARAR_UVT * C.UVT,
+    obligadoDeclarar: ingresoBrutoAnual >= C.UMBRAL_DECLARAR_UVT * C.UVT,
 
     // Ley 1393 de 2010 (Asalariados)
     totalDevengadoMes,
     limite40Ley1393,
     excesoLey1393,
   };
+}
+
+// Aporte voluntario mensual que lleva la retención a cero (base ≤ 95 UVT, Art. 383)
+// sin pasar del cupo del 40%. Cada peso de AFC reduce también la base del 25%
+// (Art. 206 num. 10), por lo que reducir la base en R exige aportar R / 0,75
+// mientras la renta exenta no esté topada en 790 UVT.
+function calcularAporteSugerido(
+  C: ConstantesFiscales,
+  baseGravableMesSinAFC: number,
+  cupoDisponibleMesSinAFC: number,
+  topeRentaExentaActivo: boolean,
+  ingresoBrutoAnual: number,
+): { reduccionNecesaria: number; aporteSugerido: number } {
+  const metaRetencionCero = TABLA_ART_383[1].desde * C.UVT;
+  const reduccionNecesaria = baseGravableMesSinAFC - metaRetencionCero;
+  if (reduccionNecesaria <= 0) return { reduccionNecesaria, aporteSugerido: 0 };
+  const factor = topeRentaExentaActivo ? 1 : 1 - C.PORCENTAJE_RENTA_EXENTA;
+  const limiteVoluntariosMes = Math.min(ingresoBrutoAnual * 0.30, C.TOPE_VOLUNTARIOS_UVT_ANUAL * C.UVT) / 12;
+  const aporteSugerido = Math.min(Math.min(reduccionNecesaria, cupoDisponibleMesSinAFC) / factor, limiteVoluntariosMes);
+  return { reduccionNecesaria, aporteSugerido };
 }
 
 // ── TABLA Art. 241 ───────────────────────────────────────────
@@ -539,6 +590,30 @@ export function calcularRetencionIndependiente(
 ): ResultadoCalculo {
   const C = CONSTANTES_POR_ANIO[anio];
   const nDep = Math.min(Math.max(0, Math.floor(numDependientes)), C.MAX_DEPENDIENTES);
+  return elegirAsignacionDependientes(nDep, (usarArt387) => calcularIndependienteConDependientes(
+    ingresosBrutosMes, actividad, aplicaTabla383, tarifaRetencionPlana, anio, nDep, usarArt387,
+    costosRealesCop, aportesVoluntariosMensual, medicinaPrepagadaMensual, interesesViviendaMensual,
+    gmfAnual, comprasFacturaElectronicaAnual,
+  ));
+}
+
+function calcularIndependienteConDependientes(
+  ingresosBrutosMes: number,
+  actividad: ActividadIndependiente,
+  aplicaTabla383: boolean,
+  tarifaRetencionPlana: number,
+  anio: AnioGravable,
+  nDep: number,
+  usarArt387: boolean,
+  costosRealesCop: number | undefined,
+  aportesVoluntariosMensual: number,
+  medicinaPrepagadaMensual: number,
+  interesesViviendaMensual: number,
+  gmfAnual: number,
+  comprasFacturaElectronicaAnual: number,
+): ResultadoCalculo {
+  const C = CONSTANTES_POR_ANIO[anio];
+  const nDep336 = usarArt387 ? nDep - 1 : nDep;
 
   const ingresoBrutoAnual = ingresosBrutosMes * 12;
 
@@ -603,7 +678,7 @@ export function calcularRetencionIndependiente(
   const tieneCostosDIAN = costosDIANAnual > 0;
 
   // Deducción Dependientes Art 387
-  const tieneArt387 = nDep > 0;
+  const tieneArt387 = nDep > 0 && usarArt387;
   const topeArt387Anual = C.TOPE_ART387_UVT_MES * 12 * C.UVT;
   const deduccionArt387BrutaAnual = tieneArt387 ? ingresoBrutoAnual * 0.10 : 0;
   const deduccionArt387Anual = tieneArt387 ? Math.min(deduccionArt387BrutaAnual, topeArt387Anual) : 0;
@@ -628,16 +703,17 @@ export function calcularRetencionIndependiente(
   let topeRentaExentaActivo = false;
   const topeRentaExentaAnual = C.TOPE_RENTA_EXENTA_UVT_ANUAL * C.UVT;
 
-  // Solo aplica si NO tiene costos presuntos/reales (es decir, es Honorarios No Clasificados sin costos) y usa tabla 383
-  const tieneCostos = actividad !== "Honorarios y Servicios Profesionales (No clasificados)";
-  if (!tieneCostos && aplicaTabla383) {
-    const baseRentaExenta = Math.max(0, ingresoNetoAnual - deduccionArt387Anual - medicinaPrepagadaAnual - interesesViviendaAnual - aportesVoluntariosValidosAnual);
+  // Art. 336 par. 5: quien resta costos y gastos reales ante la DIAN no puede tomar el 25%.
+  // La presunción de costos UGPP solo afecta el IBC, así que no excluye el beneficio.
+  // El impuesto anual no depende del método de retención elegido.
+  const deduccionGMFAnual = gmfAnual * 0.5;
+  if (!tieneCostosDIAN) {
+    const baseRentaExenta = Math.max(0, ingresoNetoAnual - deduccionArt387Anual - medicinaPrepagadaAnual - interesesViviendaAnual - deduccionGMFAnual - aportesVoluntariosValidosAnual);
     rentaExentaBrutaAnual = baseRentaExenta * C.PORCENTAJE_RENTA_EXENTA;
     rentaExentaAnual = Math.min(rentaExentaBrutaAnual, topeRentaExentaAnual);
     topeRentaExentaActivo = rentaExentaBrutaAnual > topeRentaExentaAnual;
   }
 
-  const deduccionGMFAnual = gmfAnual * 0.5;
   const totalDeduccionesParaTechoSinAFC = rentaExentaAnual + deduccionArt387Anual + medicinaPrepagadaAnual + interesesViviendaAnual + deduccionGMFAnual;
   const totalDeduccionesParaTecho = totalDeduccionesParaTechoSinAFC + aportesVoluntariosValidosAnual;
   
@@ -676,8 +752,8 @@ export function calcularRetencionIndependiente(
   const baseGravablePreArt336UVT = baseGravablePreArt336 / C.UVT;
 
   // Deducción Especial Art 336 (Fuera del 40%)
-  const tieneArt336 = nDep > 0;
-  const deduccionArt336AnualUVT = tieneArt336 ? nDep * C.DEDUCCION_DEP_ART336_UVT_ANUAL : 0;
+  const tieneArt336 = nDep336 > 0;
+  const deduccionArt336AnualUVT = tieneArt336 ? nDep336 * C.DEDUCCION_DEP_ART336_UVT_ANUAL : 0;
   const deduccionArt336Anual = deduccionArt336AnualUVT * C.UVT;
 
   // Base Gravable Final Anual
@@ -710,7 +786,7 @@ export function calcularRetencionIndependiente(
   const deduccionArt336MesReal = deduccionArt336Anual / 12; // Mostrado en UI aunque no afecte retención mensual Art. 383
   const baseGravableMesSinAFC = Math.max(0, baseGravableMesPre336SinAFC);
 
-  const totalDeduccionesMes = totalDeduccionesMesSinAFC + aportesVoluntariosMensual;
+  const totalDeduccionesMes = totalDeduccionesMesSinAFC + aportesVoluntariosValidosAnual / 12;
   const deduccionesCapadasMesLocal = Math.min(totalDeduccionesMes, techo40Mes);
   
   // costosDIANMes = 0 para presuntos → resta inocua; para costos reales → deduce correctamente
@@ -729,12 +805,9 @@ export function calcularRetencionIndependiente(
   }
 
   // Lógica de Aporte Óptimo
-  const metaRetencionCero = (1090 * C.UVT) / 12;
-  const reduccionNecesaria = baseGravableMesSinAFC - metaRetencionCero;
-  let aporteSugerido = 0;
-  if (reduccionNecesaria > 0) {
-    aporteSugerido = Math.min(reduccionNecesaria, cupoDisponibleMesSinAFC);
-  }
+  const { reduccionNecesaria, aporteSugerido } = calcularAporteSugerido(
+    C, baseGravableMesSinAFC, cupoDisponibleMesSinAFC, topeRentaExentaActivo || tieneCostosDIAN, ingresoBrutoAnual,
+  );
 
   // ── Campos Auditables Mensual (Cascada 6 Pasos) ──────────
   // ingresoNetoDIANMes: base DIAN real = Bruto - SS (costos presuntos NO restan aquí)
@@ -752,7 +825,7 @@ export function calcularRetencionIndependiente(
   // Ecuación: previas + AFC + RE25%(ingresoNeto - AFC - previas) = límite
   // Despejando AFC: AFC = (límite - RE25%*ingresoNeto - (1-RE25%)*previas) / (1 - RE25%) ... solo si costos DIAN = 0
   let aporteAFCOptimoMes = 0;
-  if (!tieneCostosDIAN && aplicaTabla383) {
+  if (!tieneCostosDIAN) {
     const re = C.PORCENTAJE_RENTA_EXENTA; // 0.25
     const candidato = (limiteLegalMensual - re * ingresoNetoDIANMes - (1 - re) * deduccionesPreviasMes) / (1 - re);
     aporteAFCOptimoMes = Math.max(0, candidato);
@@ -832,7 +905,7 @@ export function calcularRetencionIndependiente(
     baseRentaExentaMes,
 
     isImpuestoCero:  impuestoAnual <= 0,
-    obligadoDeclarar: ingresoBrutoAnual > C.UMBRAL_DECLARAR_UVT * C.UVT,
+    obligadoDeclarar: ingresoBrutoAnual >= C.UMBRAL_DECLARAR_UVT * C.UVT,
   };
 }
 
@@ -946,7 +1019,25 @@ export const TARIFAS_RST = {
   "5": { nombre: "Grupo 5: Recolección y reciclaje de desechos", tramos: [{ u: 100000, t: 0.0162 }] }
 };
 
-export function calcularRST(ingresoBrutoAnual: number, grupo: keyof typeof TARIFAS_RST, uvt: number, smmlv: number) {
+export interface OpcionesRST {
+  // Art. 903 par. 4: solo el aporte a pensión A CARGO DEL EMPLEADOR por sus trabajadores
+  // es descontable (Oficio DIAN 15505 de 2026). Las cotizaciones propias no lo son.
+  aportesPensionPatronalesAnual?: number;
+  // Art. 912: 0,5% de los ingresos recibidos por tarjetas u otros medios electrónicos.
+  ingresosElectronicosAnual?: number;
+  // Art. 908 par. 1: el 8% de impuesto al consumo aplica al expendio de comidas y bebidas,
+  // no al transporte que comparte el mismo grupo.
+  esExpendioComidas?: boolean;
+}
+
+export function calcularRST(
+  ingresoBrutoAnual: number,
+  grupo: keyof typeof TARIFAS_RST,
+  uvt: number,
+  smmlv: number,
+  opciones: OpcionesRST = {},
+) {
+  const { aportesPensionPatronalesAnual = 0, ingresosElectronicosAnual = 0, esExpendioComidas = false } = opciones;
   const baseUvt = ingresoBrutoAnual / uvt;
   if (baseUvt > 100000) return null;
 
@@ -954,28 +1045,28 @@ export function calcularRST(ingresoBrutoAnual: number, grupo: keyof typeof TARIF
   let tarifa = conf.tramos[conf.tramos.length - 1].t;
   for (const tramo of conf.tramos) { if (baseUvt < tramo.u) { tarifa = tramo.t; break; } }
 
+  // Art. 904: la base es la totalidad de los ingresos brutos del periodo
   const impuestoBruto = ingresoBrutoAnual * tarifa;
   const ibcPension = Math.max(Math.min(ingresoBrutoAnual * 0.40, 25 * smmlv * 12), smmlv * 12);
   const fspMensual = calcularFSP(ibcPension / 12, smmlv);
-  const descuentoPension = (ibcPension * 0.16) + (fspMensual * 12);
-  const descuentoElectronico = ingresoBrutoAnual * 0.005; // 0.5% bancarizado
-  
-  // Parágrafo 1 Art 908: +8% INC si es expendio de comidas/bebidas (Dentro del Grupo 3)
-  // Nota: El usuario debe confirmar si es transporte o comida. Por defecto para Grupo 3, aplicar si es comida.
-  const impuestoConsumo = (grupo === "3") ? ingresoBrutoAnual * 0.08 : 0;
 
-  const descuentoPensionEfectivo = Math.min(descuentoPension, impuestoBruto);
-  const impuestoNeto = Math.max(0, impuestoBruto - descuentoPensionEfectivo - descuentoElectronico) + impuestoConsumo;
+  const descuentoPension = Math.min(Math.max(0, aportesPensionPatronalesAnual), impuestoBruto);
+  const descuentoElectronico = Math.min(
+    Math.min(Math.max(0, ingresosElectronicosAnual), ingresoBrutoAnual) * 0.005,
+    impuestoBruto - descuentoPension,
+  );
+  const impuestoConsumo = esExpendioComidas ? ingresoBrutoAnual * 0.08 : 0;
+  const impuestoNeto = Math.max(0, impuestoBruto - descuentoPension - descuentoElectronico) + impuestoConsumo;
 
-  return { 
-    tarifa, 
-    impuestoBruto, 
-    descuentoPension: descuentoPensionEfectivo, 
-    descuentoElectronico, 
-    impuestoConsumo, 
+  return {
+    tarifa,
+    impuestoBruto,
+    descuentoPension,
+    descuentoElectronico,
+    impuestoConsumo,
     impuestoNeto,
     salud: ibcPension * 0.125,
+    pension: ibcPension * 0.16,
     fsp: fspMensual * 12
   };
 }
-

@@ -6,6 +6,7 @@ import {
   CONSTANTES_POR_ANIO,
   PRESUNCION_COSTOS_UGPP,
   TARIFAS_RST,
+  calcularRST,
   encontrarSalarioMagicoIndependiente,
   calcularRetencionIndependiente,
 } from "@/lib/tax-calculator";
@@ -135,102 +136,42 @@ function BentoIndicator({ label, value, color, description }: { label: string; v
 
 // --- HOOKS ---
 
-export function useSalarioMagicoRST(anio: AnioGravable, actividadUGPP: ActividadIndependiente) {
+// En el SIMPLE no hay tramo exento ni descuento por la cotización propia a pensión
+// (Art. 903 par. 4 solo admite el aporte patronal), así que el impuesto se causa
+// desde el primer peso. Se liquida con el mismo ingreso del escenario orgánico
+// para comparar, asumiendo que todo se recibe por medios electrónicos (Art. 912).
+export function calcularDesgloseRST(anio: AnioGravable, actividadUGPP: ActividadIndependiente, ingresoMensual: number) {
   const C = CONSTANTES_POR_ANIO[anio];
-  const uvt = C.UVT;
-  const smmlv = C.SMMLV;
-
   const porcentajeUGPP = PRESUNCION_COSTOS_UGPP[actividadUGPP] || 0;
-  const grupoRST = MAPEO_UGPP_A_RST[actividadUGPP] || "2";
+  const grupoRST = (MAPEO_UGPP_A_RST[actividadUGPP] || "2") as keyof typeof TARIFAS_RST;
 
-  function getExpression(G: number) {
-    const costosPresuntos = G * porcentajeUGPP;
-    const ingresoNetoUgpp = G - costosPresuntos;
-    const ibc = Math.max(ingresoNetoUgpp * 0.40, smmlv);
-    
-    const salud = ibc * 0.125;
-    
-    const baseGravableRST = Math.max(0, G - salud);
-    const baseGravableRSTAnual = baseGravableRST * 12;
-    const baseUvt = baseGravableRSTAnual / uvt;
-    
-    const conf = TARIFAS_RST[grupoRST as keyof typeof TARIFAS_RST];
-    let tarifa = conf.tramos[conf.tramos.length - 1].t;
-    for (const tramo of conf.tramos) {
-      if (baseUvt < tramo.u) {
-        tarifa = tramo.t;
-        break;
-      }
-    }
-    
-    const impuestoBrutoAnual = baseGravableRSTAnual * tarifa;
-    const descuentoPensionAnual = ibc * 0.16 * 12;
-    const descuentoElectronicoAnual = G * 12 * 0.005;
-    
-    const descuentoPensionEfectivo = Math.min(descuentoPensionAnual, impuestoBrutoAnual);
-    const impuestoNetoAnual = Math.max(0, impuestoBrutoAnual - descuentoPensionEfectivo - descuentoElectronicoAnual);
-    
-    return impuestoNetoAnual;
-  }
-
-  let low = 0;
-  let high = 150000000; 
-  let optimalG = 0;
-
-  for (let i = 0; i < 60; i++) {
-    const mid = (low + high) / 2;
-    if (getExpression(mid) <= 0) {
-      optimalG = mid;
-      low = mid;
-    } else {
-      high = mid;
-    }
-  }
-
-  const costosPresuntos = optimalG * porcentajeUGPP;
-  const ingresoNetoUgpp = optimalG - costosPresuntos;
-  const ibc = Math.max(ingresoNetoUgpp * 0.40, smmlv);
+  const costosPresuntos = ingresoMensual * porcentajeUGPP;
+  const ingresoNetoUgpp = ingresoMensual - costosPresuntos;
+  const ibc = Math.min(Math.max(ingresoNetoUgpp * 0.40, C.SMMLV), 25 * C.SMMLV);
   const salud = ibc * 0.125;
   const pensionTotal = ibc * 0.16;
-  
-  const baseGravableRST = Math.max(0, optimalG - salud);
-  const baseGravableRSTAnual = baseGravableRST * 12;
-  const baseUvt = baseGravableRSTAnual / uvt;
 
-  const conf = TARIFAS_RST[grupoRST as keyof typeof TARIFAS_RST];
-  let tarifa = conf.tramos[conf.tramos.length - 1].t;
-  for (const tramo of conf.tramos) {
-    if (baseUvt < tramo.u) {
-      tarifa = tramo.t;
-      break;
-    }
-  }
-
-  const impuestoBrutoAnual = baseGravableRSTAnual * tarifa;
-  const descuentoPensionAnual = pensionTotal * 12;
-  const descuentoElectronicoAnual = optimalG * 12 * 0.005;
-
-  const descuentoPensionEfectivo = Math.min(descuentoPensionAnual, impuestoBrutoAnual);
-  const impuestoNetoAnual = Math.max(0, impuestoBrutoAnual - descuentoPensionEfectivo - descuentoElectronicoAnual);
+  const rst = calcularRST(ingresoMensual * 12, grupoRST, C.UVT, C.SMMLV, {
+    ingresosElectronicosAnual: ingresoMensual * 12,
+    esExpendioComidas: actividadUGPP === "I. Alojamiento y servicios de comida",
+  });
 
   return {
-    optimalG,
-    breakdown: {
-      porcentajeUGPP,
-      grupoRST,
-      tarifa,
-      costosPresuntos,
-      ingresoNetoUgpp,
-      ibcMensual: ibc,
-      salud,
-      pensionTotal,
-      baseGravableRST,
-      baseGravableRSTAnual,
-      impuestoBruto: impuestoBrutoAnual,
-      descuentoPension: descuentoPensionEfectivo,
-      descuentoElectronico: descuentoElectronicoAnual,
-      impuestoNeto: impuestoNetoAnual
-    }
+    porcentajeUGPP,
+    grupoRST,
+    tarifa: rst?.tarifa ?? 0,
+    costosPresuntos,
+    ingresoNetoUgpp,
+    ibcMensual: ibc,
+    salud,
+    pensionTotal,
+    baseGravableRST: ingresoMensual,
+    baseGravableRSTAnual: ingresoMensual * 12,
+    impuestoBruto: rst?.impuestoBruto ?? 0,
+    descuentoPension: rst?.descuentoPension ?? 0,
+    descuentoElectronico: rst?.descuentoElectronico ?? 0,
+    impuestoConsumo: rst?.impuestoConsumo ?? 0,
+    impuestoNeto: rst?.impuestoNeto ?? 0,
   };
 }
 
@@ -267,8 +208,6 @@ export function SalarioMagicoIndependientes({
   const isCostosReales = actividad === "Costos Reales (Declarados con Soportes)";
   const C = CONSTANTES_POR_ANIO[anio];
 
-  const { optimalG: optimalGRST, breakdown: breakdownRST } = useSalarioMagicoRST(anio, actividad);
-
   // --- ESCENARIO A: ORGÁNICO ---
   const { salarioOrg, resOrg } = useMemo(() => {
     const searchCostos = isCostosReales ? (costosRealesCop || 0) : 0;
@@ -292,6 +231,8 @@ export function SalarioMagicoIndependientes({
 
   const netoOrg = (salarioOrg || 0) - (resOrg.descuentoSaludMes || 0) - (resOrg.descuentoPensionMes || 0);
   const netoMax = (salarioMax || 0) - (resMax.descuentoSaludMes || 0) - (resMax.descuentoPensionMes || 0) - (resMax.afcOptimo || 0);
+  const optimalGRST = salarioOrg;
+  const breakdownRST = calcularDesgloseRST(anio, actividad, salarioOrg);
   const netoRST = (optimalGRST || 0) - (breakdownRST.salud || 0) - (breakdownRST.pensionTotal || 0) - ((breakdownRST.impuestoNeto || 0) / 12);
 
   if (!aplicaTabla383) {
@@ -433,7 +374,7 @@ export function SalarioMagicoIndependientes({
                     <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-error, #ef4444)" }}>(-) {formatCOP(resOrg.deduccionArt336Mes || 0)}</div>
                   </div>
                   <div style={{ marginLeft: "12px", marginTop: "8px", padding: "12px", background: "rgba(255,255,255,0.02)", borderRadius: "12px", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
-                    <div>↳ Dependientes Adicionales (Ley 2277): {numDependientes * 6} UVT mensuales = - {formatCOP(resOrg.deduccionArt336Mes || 0)}</div>
+                    <div>↳ Dependientes Adicionales (Art. 336, sin repetir el del Art. 387): {(resOrg.deduccionArt336AnualUVT || 0) / 12} UVT mensuales = - {formatCOP(resOrg.deduccionArt336Mes || 0)}</div>
                   </div>
                 </div>
               )}
@@ -536,7 +477,7 @@ export function SalarioMagicoIndependientes({
                     <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-error, #ef4444)" }}>(-) {formatCOP(resMax.deduccionArt336Mes || 0)}</div>
                   </div>
                   <div style={{ marginLeft: "12px", marginTop: "8px", padding: "12px", background: "rgba(255,255,255,0.02)", borderRadius: "12px", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
-                    <div>↳ Dependientes Adicionales (Ley 2277): {numDependientes * 6} UVT mensuales = - {formatCOP(resMax.deduccionArt336Mes || 0)}</div>
+                    <div>↳ Dependientes Adicionales (Art. 336, sin repetir el del Art. 387): {(resMax.deduccionArt336AnualUVT || 0) / 12} UVT mensuales = - {formatCOP(resMax.deduccionArt336Mes || 0)}</div>
                   </div>
                 </div>
               )}
@@ -553,14 +494,14 @@ export function SalarioMagicoIndependientes({
         {/* ESCENARIO C: RST */}
         <div style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: 32, overflow: "hidden", boxShadow: "0 20px 50px -20px rgba(0,0,0,0.2)" }}>
           <div style={{ background: "linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)", padding: "40px", textAlign: 'center', color: 'white' }}>
-            <div style={{ fontSize: "0.8rem", fontWeight: 800, opacity: 0.8, textTransform: 'uppercase', marginBottom: 8 }}>Alternativa: Régimen Simple (RST)</div>
+            <div style={{ fontSize: "0.8rem", fontWeight: 800, opacity: 0.8, textTransform: 'uppercase', marginBottom: 8 }}>Comparación: Régimen Simple (RST) con el mismo ingreso</div>
             <div style={{ fontSize: "3rem", fontWeight: 950, fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(optimalGRST || 0)}</div>
-            <div style={{ fontSize: "0.9rem", fontWeight: 600, opacity: 0.9, marginTop: 4 }}>Ingreso bruto máximo con Impuesto Neto RST = $0</div>
+            <div style={{ fontSize: "0.9rem", fontWeight: 600, opacity: 0.9, marginTop: 4 }}>En el SIMPLE no existe salario mágico: impuesto neto {formatCOP(breakdownRST.impuestoNeto)}/año</div>
           </div>
           
           <div style={{ padding: 40 }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 40 }}>
-              <BentoIndicator label="Neto Disponible" value={formatCOP(netoRST || 0)} color="#06b6d4" description="Tras pagar Salud y Pensión (Impuesto Simple compensado)." />
+              <BentoIndicator label="Neto Disponible" value={formatCOP(netoRST || 0)} color="#06b6d4" description="Tras pagar salud, pensión e impuesto Simple." />
               <BentoIndicator label="Tarifa Simple" value={((breakdownRST.tarifa || 0) * 100).toFixed(1) + "%"} color="var(--text-primary)" description={`Para Grupo ${breakdownRST.grupoRST} en este tramo.`} />
             </div>
 
@@ -574,8 +515,8 @@ export function SalarioMagicoIndependientes({
               />
               <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div><div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 2: (-) Aporte Salud (PILA)</div></div>
-                  <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-error, #ef4444)" }}>- {formatCOP(breakdownRST.salud || 0)}</div>
+                  <div><div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 2: Seguridad Social (se paga aparte, no reduce la base)</div></div>
+                  <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-secondary)" }}>{formatCOP((breakdownRST.salud || 0) + (breakdownRST.pensionTotal || 0))}</div>
                 </div>
                 <div style={{ marginLeft: "12px", marginTop: "8px", padding: "12px", background: "rgba(255,255,255,0.02)", borderRadius: "12px", display: "flex", flexDirection: "column", gap: "8px", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between" }}><span>↳ Ingreso Bruto base:</span><span>{formatCOP(optimalGRST || 0)}</span></div>
@@ -592,7 +533,7 @@ export function SalarioMagicoIndependientes({
                     <span>{formatCOP(breakdownRST.ibcMensual || 0)}</span>
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", color: "var(--text-error, #ef4444)" }}><span>↳ Salud (12.5%):</span><span>- {formatCOP(breakdownRST.salud || 0)}</span></div>
-                  <div style={{ display: "flex", justifyContent: "space-between", color: "#10b981" }}><span>↳ Pensión (16%): <span style={{ fontSize: "0.65rem", fontStyle: "italic", opacity: 0.8 }}>(Se resta del impuesto, no de la base)</span></span><span>- {formatCOP(breakdownRST.pensionTotal || 0)}</span></div>
+                  <div style={{ display: "flex", justifyContent: "space-between", color: "var(--text-error, #ef4444)" }}><span>↳ Pensión (16%): <span style={{ fontSize: "0.65rem", fontStyle: "italic", opacity: 0.8 }}>(Cotización propia: no es descontable del SIMPLE)</span></span><span>- {formatCOP(breakdownRST.pensionTotal || 0)}</span></div>
                 </div>
               </div>
               <CascadaItem 
@@ -610,11 +551,11 @@ export function SalarioMagicoIndependientes({
               />
               <CascadaItem 
                 step={5} 
-                label="(-) Descuento Pensión (Art. 903)" 
-                value={-(breakdownRST.descuentoPension || 0) / 12} 
+                label="(-) Descuento 0,5% Pagos Electrónicos (Art. 912)" 
+                value={-(breakdownRST.descuentoElectronico || 0) / 12} 
                 color="#10b981" 
                 isSpecial 
-                subtitle="El 100% de tu aporte a pensión resta directamente el impuesto." 
+                subtitle="Asume que todo el ingreso llega por medios electrónicos. Solo el aporte patronal a pensión de tus empleados sería descontable (Art. 903 par. 4)." 
               />
               <CascadaItem 
                 step={6} 
@@ -622,16 +563,8 @@ export function SalarioMagicoIndependientes({
                 value={(breakdownRST.impuestoNeto || 0) / 12} 
                 highlight 
                 highlightColor="#06b6d4" 
-                subtitle="Optimizado al punto de equilibrio cero." 
+                subtitle={breakdownRST.impuestoConsumo > 0 ? "Impuesto unificado (incluye ICA) más 8% de impuesto al consumo." : "Impuesto unificado (incluye ICA)."} 
               />
-              {breakdownRST.impuestoNeto === 0 && (
-                <div style={{ marginTop: "16px", padding: "12px", background: "rgba(56, 189, 248, 0.05)", border: "1px dashed rgba(56, 189, 248, 0.2)", borderRadius: "8px", fontSize: "0.75rem", color: "var(--text-secondary)", lineHeight: "1.4" }}>
-                  <div style={{ fontWeight: 700, color: "#38bdf8", marginBottom: "4px", display: "flex", alignItems: "center", gap: "6px" }}>
-                    🛑 Límite de Optimización por Tramo RST alcanzado
-                  </div>
-                  A pesar de que el aporte a Pensión es matemáticamente superior al impuesto, el Salario Mágico se detiene exactamente aquí porque el ingreso anual proyectado ha alcanzado las <strong>6.000 UVT</strong>. Si se incrementa el ingreso, se cambia automáticamente a la siguiente categoría/tramo del RST, incrementando la tarifa base del <strong>5.9% al 7.3%</strong> e impidiendo lograr un impuesto neto de cero.
-                </div>
-              )}
             </div>
           </div>
         </div>

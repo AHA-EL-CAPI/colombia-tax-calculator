@@ -56,7 +56,7 @@ export function DependientesInput({ value, onChange }: DependientesInputProps) {
       <div style={{ fontSize:"0.68rem", color:"var(--text-muted)", lineHeight:1.5 }}>
         {value === 0
           ? "Sin beneficio por dependientes"
-          : <>Art. 387: 10% bruto (≤32 UVT/mes) · Art. 336: {value}×72 UVT/año</>}
+          : <>Art. 387 o 72 UVT/año (Art. 336) por dependiente, sin repetir el mismo dependiente. Se elige la combinación de menor impuesto.</>}
       </div>
     </div>
   );
