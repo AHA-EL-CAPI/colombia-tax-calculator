@@ -1,0 +1,17 @@
+<USER_REQUEST>
+Modifica de forma coordinada los archivos `tax-calculator.ts` y `DeclaracionCedular.tsx` para incorporar el desglose multi-entidad de rendimientos financieros y el beneficio del componente inflacionario (Art. 38 E.T.) usando el dato oficial del 55.43%.
+
+Fase 1: Actualiza `tax-calculator.ts`
+1. En la interfaz `ConstantesFiscales`, añade la propiedad: `COMPONENTE_INFLACIONARIO_PCT: number;`
+2. En `CONSTANTES_2025`, añade: `COMPONENTE_INFLACIONARIO_PCT: 55.43,`
+3. En `CONSTANTES_2026`, añade: `COMPONENTE_INFLACIONARIO_PCT: 55.43,` (como valor provisional equivalente al del año anterior).
+
+Fase 2: Actualiza `DeclaracionCedular.tsx`
+1. Modifica el estado inicial de `capital` dentro del componente para soportar la lista dinámica de bancos y un control de porcentaje que por defecto sea null:
+const [capital, setCapital] = useState({ 
+  bruto: 0, 
+  costosReales: 0, 
+  retenciones: 0, 
+  usaPresuntos: true,
+  listaRendimientos: [] as Array<{ id: string, entidad: string, valorMes: number }>,
+<truncated 3797 bytes>

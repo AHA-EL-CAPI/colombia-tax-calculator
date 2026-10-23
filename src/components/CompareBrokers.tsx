@@ -1,0 +1,331 @@
+"use client";
+
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { brokers, calcularComision } from '../lib/brokers-data';
+
+export default function CompareBrokers() {
+  const [montoStr, setMontoStr] = useState<string>('1000000');
+  const [selectedRow, setSelectedRow] = useState<number | null>(null);
+  const [openSource, setOpenSource] = useState<string | null>(null);
+
+  const toggleSource = (id: string) => setOpenSource((current) => (current === id ? null : id));
+  const monto = Number(montoStr);
+
+  const resultados = useMemo(() => {
+    return brokers.map((broker) => ({
+      broker,
+      resultado: calcularComision(monto, broker, 'compra')
+    }));
+  }, [monto]);
+
+  type ResultadoExitoso = {
+    error: false;
+    costoBase: number;
+    costoFinal: number;
+    costoTransaccional: number;
+    costo_suscripcion: number;
+    costoTotal: number;
+    notas_adicionales: string | null;
+  };
+
+  const validResultados = resultados.filter((r) => !r.resultado.error) as {
+    broker: typeof brokers[0];
+    resultado: ResultadoExitoso;
+  }[];
+
+  let ganador = null;
+  if (validResultados.length > 0) {
+    ganador = validResultados.reduce((prev, curr) => {
+      const totalPrev = prev.resultado.costoFinal + prev.resultado.costo_suscripcion;
+      const totalCurr = curr.resultado.costoFinal + curr.resultado.costo_suscripcion;
+      return totalCurr < totalPrev ? curr : prev;
+    });
+  }
+
+  const saltos = useMemo(() => {
+    const s = [] as number[];
+    for (let i = 100000; i <= 1000000; i += 100000) s.push(i);
+    for (let i = 1500000; i <= 5000000; i += 500000) s.push(i);
+    for (let i = 6000000; i <= 10000000; i += 1000000) s.push(i);
+    for (let i = 15000000; i <= 50000000; i += 5000000) s.push(i);
+    return s;
+  }, []);
+
+  const formatCOP = (val: number) =>
+    new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(val);
+
+  const tableRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (tableRef.current && !tableRef.current.contains(event.target as Node)) {
+        setSelectedRow(null);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div className="w-full flex flex-col items-center font-sans">
+      <div className="w-full max-w-6xl space-y-8">
+        <section className="bg-gray-800 rounded-2xl p-6 md:p-8 border border-gray-700 shadow-2xl flex flex-col items-center text-center">
+          <h2 className="text-2xl font-bold text-white mb-6">Comparador Brokers</h2>
+          <div className="mb-8 w-full flex flex-col items-center">
+            <label className="block text-sm font-medium text-gray-400 mb-2">Monto a Invertir (COP)</label>
+            <div className="relative flex items-center justify-center w-full max-w-md">
+              <span className="absolute left-4 text-emerald-400 font-bold text-xl">$</span>
+              <input
+                type="text"
+                className="w-full bg-gray-900 border border-gray-600 rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors text-center font-mono text-2xl tracking-wider"
+                value={montoStr ? new Intl.NumberFormat('es-CO').format(Number(montoStr)) : ''}
+                onChange={(e) => setMontoStr(e.target.value.replace(/\D/g, ''))}
+              />
+            </div>
+          </div>
+
+          {ganador ? (
+            <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 md:p-8 border border-gray-700 relative overflow-hidden shadow-lg w-full max-w-3xl">
+              <div className="absolute -top-4 -right-4 p-8 text-8xl opacity-5 transform rotate-12">📊</div>
+              <h3 className="text-sm tracking-wider uppercase text-blue-400 font-bold mb-2">Ganador Recomendado</h3>
+              <div className="text-3xl md:text-4xl font-bold text-white mb-6">{ganador.broker.nombre}</div>
+
+              <div className="flex flex-wrap gap-8 mb-6 justify-center">
+                <div>
+                  <div className="text-xs uppercase tracking-wider text-gray-500 mb-1">Costo Total Neto</div>
+                  <div className="text-3xl font-mono text-green-400 font-semibold">
+                    {formatCOP(ganador.resultado.costoFinal + ganador.resultado.costo_suscripcion)}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs uppercase tracking-wider text-gray-500 mb-1">Impacto</div>
+                  <div className="text-3xl font-mono text-blue-400 font-semibold">
+                    {monto > 0 ? (((ganador.resultado.costoFinal + ganador.resultado.costo_suscripcion) / monto) * 100).toFixed(2) : '0.00'}%
+                  </div>
+                </div>
+              </div>
+
+              {ganador.resultado.costo_suscripcion > 0 && (
+                <div className="mt-6 bg-red-900/20 border border-red-900/50 rounded-lg p-4 flex flex-col gap-2">
+                  <span className="flex items-center gap-2 text-red-400 font-bold">
+                    ⚠️ Más mensualidad de {formatCOP(ganador.resultado.costo_suscripcion)}
+                  </span>
+                  {ganador.resultado.notas_adicionales && (
+                    <span className="text-red-300/80 text-sm leading-relaxed">{ganador.resultado.notas_adicionales}</span>
+                  )}
+                </div>
+              )}
+
+              <div className="mt-6 pt-6 border-t border-gray-700/50 text-sm text-gray-400 flex items-start gap-2">
+                <span className="text-xl">ℹ️</span>
+                <p>
+                  Nota: El monto mínimo requerido para futuras ventas en esta plataforma es de{' '}
+                  <strong className="text-gray-300">{formatCOP(ganador.broker.monto_minimo_venta)}</strong> COP.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-red-900/20 border border-red-800/50 rounded-xl p-6 text-red-400 text-center font-medium">
+              El monto ingresado es menor al mínimo de compra requerido por todos los brokers disponibles.
+            </div>
+          )}
+        </section>
+
+        <section className="bg-gray-800 rounded-2xl p-6 md:p-8 border border-gray-700 shadow-2xl overflow-x-auto">
+          <h2 className="text-xl font-bold text-white mb-6">Matriz Comparativa de Comisiones</h2>
+          <div ref={tableRef} className="w-full overflow-x-auto">
+            <table className="w-full text-left border-collapse text-sm whitespace-nowrap min-w-max">
+              <thead>
+                <tr className="border-b border-gray-700 divide-x divide-gray-600">
+                  <th className="py-4 !px-8 whitespace-nowrap font-semibold text-gray-400 uppercase tracking-wider text-xs">Monto</th>
+                  {brokers.map((b) => (
+                    <th key={`${b.id}-nom`} className="py-4 !px-8 whitespace-nowrap font-semibold text-gray-400 uppercase tracking-wider text-xs text-right">
+                      {b.nombre} ($) {b.costo_suscripcion_mensual ? '*' : ''}
+                    </th>
+                  ))}
+                  {brokers.map((b) => (
+                    <th key={`${b.id}-pct`} className="py-4 !px-8 whitespace-nowrap font-semibold text-gray-400 uppercase tracking-wider text-xs text-right">
+                      {b.nombre} (%) {b.costo_suscripcion_mensual ? '*' : ''}
+                    </th>
+                  ))}
+                  <th className="py-4 !px-8 whitespace-nowrap font-semibold text-gray-400 uppercase tracking-wider text-xs pl-8">🏁 Ganador</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-700/50">
+                {saltos.map((m) => {
+                  const filaResultados = brokers.map((b) => ({
+                    broker: b,
+                    res: calcularComision(m, b, 'compra')
+                  }));
+                  const filaValidos = filaResultados.filter((r) => !r.res.error) as {
+                    broker: typeof brokers[0];
+                    res: ResultadoExitoso;
+                  }[];
+                  const ganadorFila = filaValidos.length > 0
+                    ? filaValidos.reduce((prev, curr) => {
+                        const totalPrev = prev.res.costoFinal + prev.res.costo_suscripcion;
+                        const totalCurr = curr.res.costoFinal + curr.res.costo_suscripcion;
+                        return totalCurr < totalPrev ? curr : prev;
+                      })
+                    : null;
+
+                  return (
+                    <tr
+                      key={m}
+                      className={`divide-x divide-gray-600 transition-all cursor-pointer ${selectedRow === m ? 'bg-gray-700 ring-2 ring-inset ring-blue-500 shadow-lg relative z-10' : 'bg-transparent hover:bg-gray-700/60'}`}
+                      onClick={() => setSelectedRow((current) => (current === m ? null : m))}
+                    >
+                      <td className="py-3 !px-8 whitespace-nowrap font-mono text-gray-300 font-medium">{formatCOP(m)}</td>
+                      {filaResultados.map(({ broker, res }) => {
+                        if (res.error) {
+                          return <td key={`${broker.id}-nom`} className="py-3 !px-8 whitespace-nowrap text-right text-gray-600 font-mono text-xs">N/A</td>;
+                        }
+                        const r = res as ResultadoExitoso;
+                        const isWinner = ganadorFila?.broker.id === broker.id;
+                        return (
+                          <td key={`${broker.id}-nom`} className={`py-3 !px-8 whitespace-nowrap text-right font-mono ${isWinner ? 'text-green-400 font-bold' : 'text-gray-400'}`}>
+                            {formatCOP(r.costoFinal + r.costo_suscripcion)}
+                          </td>
+                        );
+                      })}
+                      {filaResultados.map(({ broker, res }) => {
+                        if (res.error) {
+                          return <td key={`${broker.id}-pct`} className="py-3 !px-8 whitespace-nowrap text-right text-gray-600 font-mono text-xs">N/A</td>;
+                        }
+                        const r = res as ResultadoExitoso;
+                        const p = (((r.costoFinal + r.costo_suscripcion) / m) * 100).toFixed(2);
+                        const isWinner = ganadorFila?.broker.id === broker.id;
+                        return (
+                          <td key={`${broker.id}-pct`} className={`py-3 !px-8 whitespace-nowrap text-right font-mono ${isWinner ? 'text-green-400 font-bold' : 'text-gray-400'}`}>
+                            {p}%
+                          </td>
+                        );
+                      })}
+                      <td className="py-3 !px-8 whitespace-nowrap pl-8">
+                        {ganadorFila ? (
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold shadow-sm border ${
+                            ganadorFila.broker.nombre.toLowerCase().includes('trii')
+                              ? 'bg-green-900/20 text-green-400 border-green-800/50'
+                              : ganadorFila.broker.nombre.toLowerCase().includes('bancolombia')
+                                ? 'bg-yellow-900/20 text-yellow-400 border-yellow-800/50'
+                                : 'bg-blue-900/20 text-blue-400 border-blue-800/50'
+                          }`}>
+                            {ganadorFila.broker.nombre}
+                          </span>
+                        ) : (
+                          <span className="text-gray-600 text-xs font-medium">N/A</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <div className="text-xs text-gray-400 bg-gray-800/50 p-4 rounded-xl border border-gray-700 mt-6 mb-8 space-y-2 leading-relaxed">
+          <p>
+            <span className="text-yellow-500 font-bold">Nota sobre tarifas:</span> Los valores calculados corresponden a comisiones de corretaje con IVA incluido. (*) Indica plataformas con costo de suscripción mensual independiente.
+          </p>
+          <p>
+            <span className="text-blue-400 font-bold">Realidad de ejecución en la BVC:</span> En el mercado colombiano no es posible comprar fracciones de acciones. El monto exacto invertido será una aproximación basada en el precio de mercado del activo multiplicada por unidades enteras. Además, la falta de liquidez en ciertos activos genera un spread que representa un costo implícito no reflejado aquí.
+          </p>
+          <p>
+            <span className="text-red-400 font-bold">Impacto Tributario (Brokers Internacionales):</span> Las inversiones en plataformas extranjeras no gozan del beneficio tributario de la BVC. Si vendes acciones con menos de 2 años de tenencia, la utilidad entra a tu Cédula General tributando a la tarifa marginal progresiva. Si mantienes la inversión por más de 2 años ininterrumpidos, tributarás como Ganancia Ocasional al 15%.
+          </p>
+        </div>
+
+        <section className="bg-gray-800 rounded-2xl p-6 md:p-8 border border-gray-700 shadow-2xl">
+          <h2 className="text-xl font-bold text-white mb-6">Fuentes de Información y Tarifas Oficiales</h2>
+          <div className="space-y-4">
+            {[
+              {
+                id: 'trii',
+                title: 'Trii (Básico y Pro)',
+                body: (
+                  <div className="space-y-2">
+                    <p>Trii aplica comisiones fijas para montos menores a $5.000.000 y tarifas porcentuales por encima de ese umbral.</p>
+                    <p>Trii Pro agrega una suscripción mensual y usa una escala más baja para el mismo monto.</p>
+                    <p className="text-blue-400">Fuente: <a href="https://trii.co/" target="_blank" rel="noreferrer" className="underline">Trii</a></p>
+                  </div>
+                )
+              },
+              {
+                id: 'bancolombia',
+                title: 'Bancolombia eTrading',
+                body: (
+                  <div className="space-y-2">
+                    <p>Bancolombia cobra tarifas fijas o porcentuales según el monto y el plan elegido, con IVA incluido.</p>
+                    <p>Se usaron los rangos promocionales y estándar reportados para el comparador.</p>
+                    <p className="text-blue-400">Fuente: tarifa publicada en la plataforma eTrading de Bancolombia.</p>
+                  </div>
+                )
+              },
+              {
+                id: 'davivienda',
+                title: 'Davivienda Homebroker',
+                body: (
+                  <div className="space-y-2">
+                    <p>Davivienda Homebroker usa una tarifa escalonada por monto y aplica una comisión fija o porcentual según el rango.</p>
+                    <p>El comparador refleja la estructura general del tarifario disponible para operaciones en la plataforma.</p>
+                    <p className="text-blue-400">Fuente: tarifario público de Davivienda Homebroker.</p>
+                  </div>
+                )
+              },
+              {
+                id: 'xtb',
+                title: 'XTB',
+                body: (
+                  <div className="space-y-2">
+                    <p>XTB se modela con un spread estimado de 0,5% sobre el monto y un costo de retiro vía SWIFT conservador.</p>
+                    <p>El cálculo incluye el costo adicional de salida, que puede ser relevante en transferencias internacionales.</p>
+                    <p className="text-blue-400">Fuente: <a href="https://www.xtb.com/lat/centro-de-ayuda/tarifas-y-comisiones" target="_blank" rel="noreferrer" className="underline">XTB tarifas y comisiones</a></p>
+                  </div>
+                )
+              },
+              {
+                id: 'etoro',
+                title: 'eToro',
+                body: (
+                  <div className="space-y-2">
+                    <p>eToro se modela con un costo de conversión de divisa de 3% y un retiro fijo local aproximado.</p>
+                    <p>Este costo suele impactar más que la comisión directa en operaciones de montos pequeños y medianos.</p>
+                    <p className="text-blue-400">Fuente: <a href="https://www.etoro.com/es/trading/fees/conversion/" target="_blank" rel="noreferrer" className="underline">eToro fees and conversion</a></p>
+                  </div>
+                )
+              },
+              {
+                id: 'hapi',
+                title: 'Hapi',
+                body: (
+                  <div className="space-y-2">
+                    <p>Hapi se modela con un costo mínimo de fondeo PSE y un porcentaje adicional sobre la operación.</p>
+                    <p>También se incluye el costo fijo asociado a retiro local y la comisión de clearing.</p>
+                    <p className="text-blue-400">Fuente: <a href="https://help.hapi.trade/en/articles/8976002" target="_blank" rel="noreferrer" className="underline">Hapi help center</a></p>
+                  </div>
+                )
+              }
+            ].map((item) => (
+              <div key={item.id} className="border border-gray-700 rounded-lg overflow-hidden transition-all">
+                <button
+                  onClick={() => toggleSource(item.id)}
+                  className="w-full bg-gray-800/60 hover:bg-gray-800 px-6 py-4 flex justify-between items-center text-left transition-colors"
+                >
+                  <span className="font-semibold text-gray-200">{item.title}</span>
+                  <span className="text-gray-400">{openSource === item.id ? '▾' : '▸'}</span>
+                </button>
+                {openSource === item.id && (
+                  <div className="p-6 bg-gray-900 border-t border-gray-700 text-sm text-gray-300 leading-relaxed">
+                    {item.body}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
