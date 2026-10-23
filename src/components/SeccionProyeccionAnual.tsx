@@ -239,10 +239,6 @@ export function SeccionProyeccionAnual({ resultado: r, aplicaTabla383 }: Props) 
                     value={`- ${formatCOP(r.descuentoSaludAnual)}`} />
                   <Row negative label={`(-) Aporte Pensión (4% de IBC: ${formatCOP((r.ibcMes || 0) * 12)})`}
                     value={`- ${formatCOP(r.descuentoPensionAnual)}`} />
-                  {r.calificaAuxilio && (
-                    <Row negative label="(-) Auxilio de Transporte (INCRGO)"
-                      value={`- ${formatCOP(r.auxilioTransporteMensual * 12)}`} />
-                  )}
                 </>
               )}
 
@@ -262,9 +258,6 @@ export function SeccionProyeccionAnual({ resultado: r, aplicaTabla383 }: Props) 
                     <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
                       <div style={{ opacity: 0.85 }}>• Ingreso Bruto Anual: <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(r.ingresoBrutoAnual)}</span></div>
                       <div style={{ opacity: 0.85 }}>(–) Aportes PILA Obligatorios (Salud + Pensión): <span style={{ fontFamily: "JetBrains Mono, monospace", color: "var(--accent-rose)" }}>- {formatCOP(r.descuentoSaludAnual + r.descuentoPensionAnual)}</span></div>
-                      {r.calificaAuxilio && (
-                        <div style={{ opacity: 0.85 }}>(–) Auxilio de Transporte (INCRGO): <span style={{ fontFamily: "JetBrains Mono, monospace", color: "var(--accent-rose)" }}>- {formatCOP(r.auxilioTransporteMensual * 12)}</span></div>
-                      )}
                       <div style={{ borderTop: "1px dashed rgba(245, 158, 11, 0.2)", margin: "4px 0" }} />
                       <div style={{ fontWeight: 600, color: "var(--text-primary)", marginBottom: "6px" }}>(=) Renta Líquida Base: <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(r.ingresoNetoAnual)}</span></div>
                       <div>(–) Dependientes Art. 387: <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(r.deduccionArt387Anual || 0)}</span></div>
@@ -359,8 +352,7 @@ export function SeccionProyeccionAnual({ resultado: r, aplicaTabla383 }: Props) 
               {/* 2. EL GRAN TOTAL DE DEDUCCIONES */}
               {(() => {
                 const costosTotales = r.isIndependiente ? (r.costosDeduciblesMes || 0) * 12 : 0;
-                const auxTranspAnual = r.calificaAuxilio ? r.auxilioTransporteMensual * 12 : 0;
-                const granTotalDeducciones = r.descuentoSaludAnual + r.descuentoPensionAnual + auxTranspAnual + costosTotales + r.rentaExentaAnual + (r.tieneArt387 ? r.deduccionArt387Anual : 0) + (r.tieneArt336 ? r.deduccionArt336Anual : 0);
+                const granTotalDeducciones = r.descuentoSaludAnual + r.descuentoPensionAnual + costosTotales + r.rentaExentaAnual + (r.tieneArt387 ? r.deduccionArt387Anual : 0) + (r.tieneArt336 ? r.deduccionArt336Anual : 0);
                 
                 return (
                   <div style={{ display: "flex", flexDirection: "column", gap: 4, padding: "16px 0", marginTop: 8, borderTop: "2px solid var(--accent-rose)" }}>
@@ -394,7 +386,7 @@ export function SeccionProyeccionAnual({ resultado: r, aplicaTabla383 }: Props) 
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
                   <span style={{ color: "var(--text-secondary)" }}>(-) Gran Total Deducciones</span>
-                  <span style={{ fontFamily: "JetBrains Mono, monospace", color: "var(--accent-rose)" }}>- {formatCOP(r.descuentoSaludAnual + r.descuentoPensionAnual + (r.calificaAuxilio ? r.auxilioTransporteMensual * 12 : 0) + (r.isIndependiente ? (r.costosDeduciblesMes || 0) * 12 : 0) + r.rentaExentaAnual + (r.tieneArt387 ? r.deduccionArt387Anual : 0) + (r.tieneArt336 ? r.deduccionArt336Anual : 0))}</span>
+                  <span style={{ fontFamily: "JetBrains Mono, monospace", color: "var(--accent-rose)" }}>- {formatCOP(r.descuentoSaludAnual + r.descuentoPensionAnual + (r.isIndependiente ? (r.costosDeduciblesMes || 0) * 12 : 0) + r.rentaExentaAnual + (r.tieneArt387 ? r.deduccionArt387Anual : 0) + (r.tieneArt336 ? r.deduccionArt336Anual : 0))}</span>
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "1rem", fontWeight: 700, borderTop: "1.5px solid rgba(52, 211, 153, 0.3)", paddingTop: 12, marginTop: 4 }}>
                   <span style={{ color: "var(--text-primary)" }}>(=) Base Gravable Final</span>

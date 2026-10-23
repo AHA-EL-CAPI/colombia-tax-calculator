@@ -6,6 +6,7 @@ import {
   TARIFAS_RST, 
   PRESUNCION_COSTOS_UGPP,
   calcularRetencionIndependiente,
+  calcularRST,
   type AnioGravable,
   type ActividadIndependiente
 } from "@/lib/tax-calculator";
@@ -46,6 +47,8 @@ const MAPEO_UGPP_A_RST: Record<string, keyof typeof TARIFAS_RST> = {
 export function RegimenSimpleIndependientes({ anio, uvt, smmlv }: RegimenSimpleIndependientesProps) {
   const [ingresoMensual, setIngresoMensual] = useState<number>(5000000);
   const [actividadUGPP, setActividadUGPP] = useState<ActividadIndependiente>("M. Actividades profesionales, científicas y técnicas");
+  const [porcentajeElectronico, setPorcentajeElectronico] = useState<number>(100);
+  const [pensionPatronalMensual, setPensionPatronalMensual] = useState<number>(0);
 
   const ingresoAnual = ingresoMensual * 12;
   const porcentajeUGPP = PRESUNCION_COSTOS_UGPP[actividadUGPP] || 0.6288;
@@ -53,26 +56,24 @@ export function RegimenSimpleIndependientes({ anio, uvt, smmlv }: RegimenSimpleI
   const ingresoNetoUgpp = ingresoAnual - costosPresuntos;
   const ibcAnual = Math.max(ingresoNetoUgpp * 0.40, smmlv * 12);
   const salud = ibcAnual * 0.125;
-  const pension = ibcAnual * 0.16;
-  const baseGravableRST = ingresoAnual - salud;
+  // Art. 904: la base del SIMPLE son los ingresos brutos; los aportes propios a seguridad social no la reducen
+  const baseGravableRST = ingresoAnual;
 
   const grupoRST = MAPEO_UGPP_A_RST[actividadUGPP] || "2";
   const confRST = TARIFAS_RST[grupoRST];
-  
-  const baseUvt = ingresoAnual / uvt;
-  let tarifaRST = confRST.tramos[confRST.tramos.length - 1].t;
-  for (const tramo of confRST.tramos) {
-    if (baseUvt < tramo.u) {
-      tarifaRST = tramo.t;
-      break;
-    }
-  }
+  const esExpendioComidas = actividadUGPP === "I. Alojamiento y servicios de comida";
 
-  const impuestoBrutoRST = baseGravableRST * tarifaRST;
-  const descuentoElectronico = ingresoAnual * 0.005;
-  const impuestoConsumo = (grupoRST === "3") ? ingresoAnual * 0.08 : 0;
-  
-  const impuestoNeto = Math.max(0, impuestoBrutoRST - pension - descuentoElectronico) + impuestoConsumo;
+  const rst = calcularRST(ingresoAnual, grupoRST, uvt, smmlv, {
+    aportesPensionPatronalesAnual: pensionPatronalMensual * 12,
+    ingresosElectronicosAnual: ingresoAnual * (Math.min(100, Math.max(0, porcentajeElectronico)) / 100),
+    esExpendioComidas,
+  });
+  const tarifaRST = rst?.tarifa ?? 0;
+  const impuestoBrutoRST = rst?.impuestoBruto ?? 0;
+  const descuentoPension = rst?.descuentoPension ?? 0;
+  const descuentoElectronico = rst?.descuentoElectronico ?? 0;
+  const impuestoConsumo = rst?.impuestoConsumo ?? 0;
+  const impuestoNeto = rst?.impuestoNeto ?? 0;
 
   const resultadoOrdinario = useMemo(() => {
     return calcularRetencionIndependiente(
@@ -159,6 +160,37 @@ export function RegimenSimpleIndependientes({ anio, uvt, smmlv }: RegimenSimpleI
               ↳ Automáticamente asignado al RST: Grupo {grupoRST} - {confRST.nombre}
             </div>
           </div>
+          <div>
+            <label style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)", display: "block", marginBottom: 8 }}>
+              % de ingresos recibidos por tarjetas o medios electrónicos
+            </label>
+            <input
+              type="number"
+              min={0}
+              max={100}
+              value={porcentajeElectronico}
+              onChange={(e) => setPorcentajeElectronico(Number(e.target.value))}
+              style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--border-color)", background: "var(--bg-input)", color: "var(--text-primary)", fontSize: "0.9rem" }}
+            />
+            <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginTop: 4 }}>
+              ↳ Da derecho al descuento del 0,5% (Art. 912 E.T.), con certificado de la entidad financiera.
+            </div>
+          </div>
+          <div>
+            <label style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)", display: "block", marginBottom: 8 }}>
+              Aportes a pensión de tus empleados a tu cargo (mensual)
+            </label>
+            <input
+              type="number"
+              min={0}
+              value={pensionPatronalMensual}
+              onChange={(e) => setPensionPatronalMensual(Number(e.target.value))}
+              style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--border-color)", background: "var(--bg-input)", color: "var(--text-primary)", fontSize: "0.9rem" }}
+            />
+            <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginTop: 4 }}>
+              ↳ Solo el aporte patronal (12%) por trabajadores con contrato laboral es descontable (Art. 903 par. 4). Tu propia cotización no lo es.
+            </div>
+          </div>
         </div>
       </div>
 
@@ -192,8 +224,8 @@ export function RegimenSimpleIndependientes({ anio, uvt, smmlv }: RegimenSimpleI
 
           {/* Paso 2 */}
           <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
-            <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 2: (-) Ingresos No Constitutivos de Renta (Salud)</div>
-            <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: "4px 0" }}>Tu aporte a salud se calcula sobre el IBC (Ingreso Neto depurado por costos UGPP) y no integra la base gravable del RST (Art. 904 E.T.).</p>
+            <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 2: Seguridad Social (informativo)</div>
+            <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: "4px 0" }}>Tus aportes a salud y pensión se pagan aparte sobre el IBC (ingreso neto depurado por costos UGPP). No reducen la base del RST, que son los ingresos brutos (Art. 904 E.T.).</p>
             {/* Caja de desglose del IBC */}
             <div style={{
               margin: "8px 0 12px 16px",
@@ -222,7 +254,7 @@ export function RegimenSimpleIndependientes({ anio, uvt, smmlv }: RegimenSimpleI
             <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginLeft: 12 }}>
               ↳ Aporte a Salud (12.5%): {formatCOP(salud)}
             </div>
-            <strong style={{ fontSize: "1rem", fontFamily: "JetBrains Mono, monospace", color: "var(--accent-red)" }}>(-) {formatCOP(salud)}</strong>
+            <strong style={{ fontSize: "1rem", fontFamily: "JetBrains Mono, monospace", color: "var(--text-secondary)" }}>{formatCOP(salud)}</strong>
           </div>
 
           {/* Paso 3 */}
@@ -244,29 +276,29 @@ export function RegimenSimpleIndependientes({ anio, uvt, smmlv }: RegimenSimpleI
 
           {/* Paso 5 */}
           <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
-            <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 5: (-) Descuento por Aportes a Pensión</div>
-            <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: "4px 0" }}>El 100% de lo que pagas a pensión se descuenta directo del impuesto (Art. 912 E.T.).</p>
+            <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 5: (-) Descuento por Aportes Patronales a Pensión</div>
+            <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: "4px 0" }}>Solo el aporte a pensión a cargo del empleador por sus trabajadores se descuenta del impuesto (Art. 903 par. 4 E.T., Oficio DIAN 15505 de 2026). No cubre la parte del ICA.</p>
             <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginLeft: 12 }}>
-              ↳ Aporte a Pensión (16% del IBC): {formatCOP(pension)}
+              ↳ Aportes patronales del año: {formatCOP(pensionPatronalMensual * 12)}
             </div>
-            <strong style={{ fontSize: "1rem", fontFamily: "JetBrains Mono, monospace", color: "var(--accent-red)" }}>(-) {formatCOP(pension)}</strong>
+            <strong style={{ fontSize: "1rem", fontFamily: "JetBrains Mono, monospace", color: "var(--accent-red)" }}>(-) {formatCOP(descuentoPension)}</strong>
           </div>
 
           {/* Paso 6 */}
           <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
             <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 6: (-) Descuento por Pagos Electrónicos</div>
-            <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: "4px 0" }}>Beneficio del 0.5% por recibir ingresos vía transferencias.</p>
+            <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: "4px 0" }}>0,5% de los ingresos recibidos por tarjetas u otros medios electrónicos (Art. 912 E.T.).</p>
             <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginLeft: 12 }}>
-              ↳ Cálculo: {formatCOP(ingresoAnual)} × 0.5%
+              ↳ Cálculo: {formatCOP(ingresoAnual * Math.min(100, Math.max(0, porcentajeElectronico)) / 100)} × 0.5%
             </div>
             <strong style={{ fontSize: "1rem", fontFamily: "JetBrains Mono, monospace", color: "var(--accent-red)" }}>(-) {formatCOP(descuentoElectronico)}</strong>
           </div>
 
           {/* Paso 6.5 */}
-          {grupoRST === "3" && (
+          {esExpendioComidas && (
             <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
               <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 6.5: (+) Impuesto Nacional al Consumo</div>
-              <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: "4px 0" }}>Exceso de comidas y bebidas (8%).</p>
+              <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: "4px 0" }}>Expendio de comidas y bebidas (8%, Art. 908 par. 1 E.T.).</p>
               <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginLeft: 12 }}>
                 ↳ Cálculo: {formatCOP(ingresoAnual)} × 8%
               </div>
@@ -279,7 +311,7 @@ export function RegimenSimpleIndependientes({ anio, uvt, smmlv }: RegimenSimpleI
             <div style={{ fontSize: "0.9rem", fontWeight: 800, color: "var(--accent-purple)" }}>Paso 7: (=) Impuesto Total a Pagar (RST)</div>
             <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: "4px 0" }}>Impuesto consolidado (Incluye ICA).</p>
             <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginLeft: 12 }}>
-              ↳ Ecuación: {formatCOP(impuestoBrutoRST)} - {formatCOP(pension)} - {formatCOP(descuentoElectronico)} {grupoRST === "3" ? `+ ${formatCOP(impuestoConsumo)}` : ""}
+              ↳ Ecuación: {formatCOP(impuestoBrutoRST)} - {formatCOP(descuentoPension)} - {formatCOP(descuentoElectronico)} {esExpendioComidas ? `+ ${formatCOP(impuestoConsumo)}` : ""}
             </div>
             <strong style={{ fontSize: "1.1rem", fontFamily: "JetBrains Mono, monospace", color: "var(--accent-purple)" }}>(=) {formatCOP(impuestoNeto)}</strong>
           </div>
@@ -369,15 +401,15 @@ export function RegimenSimpleIndependientes({ anio, uvt, smmlv }: RegimenSimpleI
         </div>
         <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid var(--border-color)", borderRadius: 12, padding: 16 }}>
           <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>Art. 904 E.T.</div>
-          <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>Base gravable del RST y exclusión de aportes a Salud (INCRGO).</div>
+          <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>Base gravable del RST: totalidad de los ingresos brutos.</div>
         </div>
         <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid var(--border-color)", borderRadius: 12, padding: 16 }}>
           <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>Art. 912 E.T.</div>
-          <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>Descuento tributario por aportes a pensiones y pagos electrónicos.</div>
+          <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>Descuento del 0,5% por ingresos recibidos por medios electrónicos.</div>
         </div>
         <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid var(--border-color)", borderRadius: 12, padding: 16 }}>
           <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>Sentencia C-540/23</div>
-          <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>Revivió tope de 100.000 UVT para Profesiones Liberales.</div>
+          <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>Revivió las tarifas del grupo de profesiones liberales hasta 100.000 UVT.</div>
         </div>
       </div>
 

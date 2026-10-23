@@ -45,7 +45,7 @@ const REFERENCIAS: Referencia[] = [
   {
     articulo: "Art. 336",
     titulo: "Deducción Especial 72 UVT/Dependiente (Fuera del 40%)",
-    descripcion: "Introducida por la Ley 2277 de 2022. Por cada dependiente (máximo 4), se restan 72 UVT anuales de la base gravable después de aplicar el tope del 40%. No computa en dicho límite.",
+    descripcion: "Introducida por la Ley 2277 de 2022. Por cada dependiente (máximo 4), se restan 72 UVT anuales de la base gravable después de aplicar el tope del 40%. No computa en dicho límite. Según la DIAN (Concepto 11080 de 2023), un mismo dependiente no puede usarse a la vez para esta deducción y la del Art. 387.",
     color: "#fb923c",
     bg: "rgba(251,146,60,0.06)",
     border: "rgba(251,146,60,0.18)",
@@ -128,7 +128,7 @@ export function SeccionReferenciasLegales({ anio }: { anio: number }) {
         <strong style={{ color: "var(--text-primary)" }}>📐 Límite Global del 40% (Art. 336 párr. 3):</strong>{" "}
         La suma de la renta exenta del 25% <em>más</em> las deducciones que incluyan el Art. 387 no puede
         exceder el <strong>40% del ingreso neto</strong>, ni superar <strong>1.340 UVT anuales</strong>.
-        Las deducciones del Art. 336 (72 UVT/dependiente) se aplican <em>después</em> de este techo y son adicionales.
+        Las deducciones del Art. 336 (72 UVT/dependiente) se aplican <em>después</em> de este techo y son adicionales, pero no por el mismo dependiente usado en el Art. 387.
       </div>
 
       {/* Disclaimer */}

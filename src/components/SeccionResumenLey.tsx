@@ -58,8 +58,7 @@ export function SeccionResumenLey({ resultado: r, aplicaTabla383 }: Props) {
     ?? TABLA_ART_383[TABLA_ART_383.length - 1];
     
   const costosTotalesMes = r.isIndependiente ? (r.costosDeduciblesMes || 0) : 0;
-  const auxTranspMes = r.calificaAuxilio ? r.auxilioTransporteMensual : 0;
-  const granTotalDeduccionesMes = r.descuentoSaludMes + r.descuentoPensionMes + auxTranspMes + costosTotalesMes + r.rentaExentaMes + r.deduccionArt387Mes + r.medicinaPrepagadaMensual + r.interesesViviendaMensual;
+  const granTotalDeduccionesMes = r.descuentoSaludMes + r.descuentoPensionMes + costosTotalesMes + r.rentaExentaMes + r.deduccionArt387Mes + r.medicinaPrepagadaMensual + r.interesesViviendaMensual;
 
   return (
     <div className="card animate-fade-up" style={{ gridColumn:"1/-1" }}>
@@ -232,11 +231,6 @@ export function SeccionResumenLey({ resultado: r, aplicaTabla383 }: Props) {
               <span style={{ fontFamily: "JetBrains Mono, monospace", color: "var(--accent-rose)" }}>- {formatCOP(r.descuentoSaludMes + r.descuentoPensionMes)}</span>
             </div>
 
-            {/* 4. Auxilio de Transporte */}
-            {r.calificaAuxilio && (
-              <Row negative label="(-) Auxilio de Transporte (INCRGO)"
-                value={`- ${formatCOP(r.auxilioTransporteMensual)}`} />
-            )}
 
             {/* 5. Medicina Prepagada */}
             <Row negative label="(-) Medicina Prepagada / Seguros" value={`- ${formatCOP(r.medicinaPrepagadaMensual)}`} dim={r.medicinaPrepagadaMensual === 0} />

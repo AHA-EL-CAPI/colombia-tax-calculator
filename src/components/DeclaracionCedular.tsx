@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { AnioGravable, CONSTANTES_2025, CONSTANTES_2026, TABLA_ART_241, PRESUNCION_COSTOS_UGPP } from "@/lib/tax-calculator";
+import { AnioGravable, CONSTANTES_2025, CONSTANTES_2026, TABLA_ART_241, PRESUNCION_COSTOS_UGPP, calcularFSP } from "@/lib/tax-calculator";
 import { DependientesInput } from "./DependientesInput";
 
 const formatCOP = (val: number) => 
@@ -96,9 +96,12 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
     };
 
     // A. Rentas de Trabajo (Laboral)
-    const saludLaboralMes = rentasTrabajo.bruto * 0.04;
-    const pensionLaboralMes = rentasTrabajo.bruto * 0.04;
-    const INCR_LaboralMes = saludLaboralMes + pensionLaboralMes;
+    // IBC con techo de 25 SMMLV (Art. 18 Ley 100) y FSP (Art. 27 Ley 100)
+    const ibcLaboralMes = Math.min(rentasTrabajo.bruto, 25 * C.SMMLV);
+    const saludLaboralMes = ibcLaboralMes * 0.04;
+    const pensionLaboralMes = ibcLaboralMes * 0.04;
+    const fspLaboralMes = calcularFSP(ibcLaboralMes, C.SMMLV);
+    const INCR_LaboralMes = saludLaboralMes + pensionLaboralMes + fspLaboralMes;
     const netoLaboralMes = Math.max(0, rentasTrabajo.bruto - INCR_LaboralMes);
 
     const saludLaboralAnual = saludLaboralMes * 12;
@@ -181,17 +184,26 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
     // Totales Cédula General (Anual)
     const ingresosBrutosTotales = (rentasTrabajo.bruto + honorarios.bruto + capital.bruto + noLaborales.bruto) * 12;
     const incrTotales = INCR_LaboralAnual + INCR_HonorariosAnual + INCR_CapitalAnual + INCR_NoLaboralesAnual;
-    const rentaLiquidaTotal = netoLaboralAnual + netoHonorariosAnual + netoCapitalAnual + netoNoLaboralesAnual;
+    // Activos poseídos menos de 2 años: su utilidad es renta ordinaria, no ganancia ocasional (Art. 300)
+    const utilidadActivosCortoPlazo = gananciasOcasionales
+      .filter(g => g.tiempo < 2 && !g.esBVC)
+      .reduce((acc, g) => acc + g.utilidad, 0);
+    const rentaLiquidaTotal = netoLaboralAnual + netoHonorariosAnual + netoCapitalAnual + netoNoLaboralesAnual + utilidadActivosCortoPlazo;
 
     // Deducciones
     const deduccionPrepagadaAnual = Math.min(deducciones.prepagada * 12, 16 * 12 * C.UVT);
     const deduccionViviendaAnual = Math.min(deducciones.interesesVivienda * 12, 100 * 12 * C.UVT);
-    const aportesAFCAnual = deducciones.afc * 12;
+    // AFC/FVP: máximo 30% del ingreso del año y 3.800 UVT (Arts. 126-1 y 126-4)
+    const aportesAFCAnual = Math.min(deducciones.afc * 12, ingresosBrutosTotales * 0.30, C.TOPE_VOLUNTARIOS_UVT_ANUAL * C.UVT);
 
     // Dependientes (Art. 387) - Tope 32 UVT/mes -> 384 UVT/año
     const brutoParaDependientes = rentasTrabajo.bruto + (honorarios.usaPresuntos ? honorarios.bruto : 0);
-    const deduccionDependientes387Bruta = numDependientes > 0 ? (brutoParaDependientes * 12) * 0.10 : 0;
-    const deduccionDependientes387Anual = Math.min(deduccionDependientes387Bruta, 384 * C.UVT);
+    // Un mismo dependiente no puede dar lugar al Art. 387 y a las 72 UVT del Art. 336 (Concepto DIAN 11080 de 2023).
+    // El Art. 387 se usa para el primer dependiente cuando su efecto neto (descontando la reducción del 25%) supera 72 UVT.
+    const deduccion387Potencial = Math.min((brutoParaDependientes * 12) * 0.10, 384 * C.UVT);
+    const usaArt387 = numDependientes > 0 && deduccion387Potencial * 0.75 > 72 * C.UVT;
+    const deduccionDependientes387Anual = usaArt387 ? deduccion387Potencial : 0;
+    const dependientesArt336 = usaArt387 ? numDependientes - 1 : numDependientes;
 
     // Deducción por compras con factura electrónica (1% de compras, máx 240 UVT anuales - Art. 336 E.T.)
     const deduccionFacturaAnual = Math.min(deducciones.factura * 0.01, 240 * C.UVT);
@@ -215,7 +227,7 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
     const deduccionesLimitadasAnual = Math.min(deduccionesSujetasAnual, limiteMaximoDeducciones);
     
     // Deducciones fuera de tope
-    const deduccionDependientes336Anual = numDependientes * 72 * C.UVT; // 72 UVT anuales por dep (Art. 336)
+    const deduccionDependientes336Anual = dependientesArt336 * 72 * C.UVT; // 72 UVT anuales por dep (Art. 336)
     
     const baseGravable = Math.max(0, rentaLiquidaTotal - deduccionesLimitadasAnual - deduccionDependientes336Anual - deduccionFacturaAnual);
     const baseGravableUVT = baseGravable / C.UVT;
@@ -278,7 +290,7 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
     // Ganancias Ocasionales
     let impuestoGananciasOcasionales = 0;
     gananciasOcasionales.forEach(g => {
-      if (g.tiempo > 2 && !g.esBVC) {
+      if (g.tiempo >= 2 && !g.esBVC) {
         impuestoGananciasOcasionales += g.utilidad * 0.15;
       }
     });
@@ -350,7 +362,7 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
         costosDIANMes: costosDIANNoLaboralesMes, costosDIANAnual: costosDIANNoLaboralesAnual,
         usaPresuntos: noLaborales.usaPresuntos,
       },
-      laboral: { saludMes: saludLaboralMes, pensionMes: pensionLaboralMes, saludAnual: saludLaboralAnual, pensionAnual: pensionLaboralAnual }
+      laboral: { saludMes: saludLaboralMes, pensionMes: pensionLaboralMes, fspMes: fspLaboralMes, saludAnual: saludLaboralAnual, pensionAnual: pensionLaboralAnual }
     };
   }, [rentasTrabajo, honorarios, capital, noLaborales, deducciones, numDependientes, gananciasOcasionales, C]);
 
@@ -543,10 +555,18 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
             <div style={{ color: "#f87171" }}>(-) Pensión (4%):</div>
             <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.laboral.pensionMes)}</div>
             <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.laboral.pensionAnual)}</div>
+
+            {calculos.laboral.fspMes > 0 && (
+              <>
+                <div style={{ color: "#f87171" }}>(-) Fondo de Solidaridad Pensional:</div>
+                <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.laboral.fspMes)}</div>
+                <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.laboral.fspMes * 12)}</div>
+              </>
+            )}
             
             <div style={{ borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700 }}>(=) Neto:</div>
-            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700 }}>{formatCOP(rentasTrabajo.bruto - calculos.laboral.saludMes - calculos.laboral.pensionMes)}</div>
-            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700 }}>{formatCOP((rentasTrabajo.bruto - calculos.laboral.saludMes - calculos.laboral.pensionMes) * 12)}</div>
+            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700 }}>{formatCOP(rentasTrabajo.bruto - calculos.laboral.saludMes - calculos.laboral.pensionMes - calculos.laboral.fspMes)}</div>
+            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700 }}>{formatCOP((rentasTrabajo.bruto - calculos.laboral.saludMes - calculos.laboral.pensionMes - calculos.laboral.fspMes) * 12)}</div>
           </div>
         </details>
 
