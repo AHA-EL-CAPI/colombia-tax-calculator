@@ -65,7 +65,7 @@ export function SalarioMagicoAsalariados({
           <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
             Escenario Orgánico (Sin aportes voluntarios)
           </div>
-          <div style={{ fontSize: "2.5rem", fontWeight: 800, color: "var(--accent-emerald)", fontFamily: "JetBrains Mono, monospace", marginBottom: 8 }}>
+          <div style={{ fontSize: "2.5rem", fontWeight: 800, color: "var(--accent-emerald)", fontFamily: "var(--font-jetbrains), monospace", marginBottom: 8 }}>
             {formatCOP(salarioOrg)}
           </div>
           <div style={{ fontSize: "0.9rem", color: "var(--text-secondary)" }}>
@@ -81,7 +81,7 @@ export function SalarioMagicoAsalariados({
           <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", color: "var(--text-primary)", fontWeight: 700 }}>
               <span>(=) Base de Cotización (IBC):</span>
-              <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(resOrg.ingresoBrutoMes)}</span>
+              <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(resOrg.ingresoBrutoMes)}</span>
             </div>
           </div>
 
@@ -92,7 +92,7 @@ export function SalarioMagicoAsalariados({
                 <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 2: (-) Salud y Pensión</div>
                 <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Aportes obligatorios</div>
               </div>
-              <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-error, #ef4444)", textAlign: "right" }}>
+              <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "var(--font-jetbrains), monospace", color: "var(--text-error, #ef4444)", textAlign: "right" }}>
                 (-) {formatCOP(resOrg.descuentoSaludMes + resOrg.descuentoPensionMes + (resOrg.fspMes || 0))}
               </div>
             </div>
@@ -100,21 +100,21 @@ export function SalarioMagicoAsalariados({
             <div style={{ marginLeft: "12px", marginTop: "4px", padding: "8px", background: "rgba(255,255,255,0.02)", borderRadius: 8, display: "flex", flexDirection: "column", gap: 4 }}>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
                 <span>↳ Salud (4% de IBC):</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(resOrg.descuentoSaludMes)}</span>
+                <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(resOrg.descuentoSaludMes)}</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
                 <span>↳ Pensión (4% de IBC):</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(resOrg.descuentoPensionMes)}</span>
+                <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(resOrg.descuentoPensionMes)}</span>
               </div>
               { (resOrg.fspMes || 0) > 0 && (
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "#f59e0b", fontWeight: 600 }}>
                   <span>↳ FSP (Solidaridad y Subsistencia):</span>
-                  <span style={{ fontFamily: "JetBrains Mono, monospace" }}>- {formatCOP(resOrg.fspMes || 0)}</span>
+                  <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>- {formatCOP(resOrg.fspMes || 0)}</span>
                 </div>
               )}
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-primary)", fontWeight: 700, borderTop: "1px solid var(--border-color)", paddingTop: 4, marginTop: 4 }}>
                 <span>(=) Total Aportes (Salud + Pensión + FSP):</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(resOrg.descuentoSaludMes + resOrg.descuentoPensionMes + (resOrg.fspMes || 0))}</span>
+                <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(resOrg.descuentoSaludMes + resOrg.descuentoPensionMes + (resOrg.fspMes || 0))}</span>
               </div>
             </div>
           </div>
@@ -125,7 +125,7 @@ export function SalarioMagicoAsalariados({
               <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 3: (=) Ingreso Neto</div>
               <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Base para calcular deducciones</div>
             </div>
-            <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-primary)", textAlign: "right" }}>
+            <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "var(--font-jetbrains), monospace", color: "var(--text-primary)", textAlign: "right" }}>
               (=) {formatCOP(resOrg.ingresoNetoMes)}
             </div>
           </div>
@@ -137,19 +137,19 @@ export function SalarioMagicoAsalariados({
             <div style={{ marginLeft: "12px", display: "flex", flexDirection: "column", gap: 4 }}>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
                 <span>↳ Renta Exenta (25%):</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>(-) {formatCOP(resOrg.rentaExentaMes)}</span>
+                <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>(-) {formatCOP(resOrg.rentaExentaMes)}</span>
               </div>
               
               {resOrg.deduccionArt387Mes > 0 && (
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
                   <span>↳ Dependientes Art. 387:</span>
-                  <span style={{ fontFamily: "JetBrains Mono, monospace" }}>(-) {formatCOP(resOrg.deduccionArt387Mes)}</span>
+                  <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>(-) {formatCOP(resOrg.deduccionArt387Mes)}</span>
                 </div>
               )}
               
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-primary)", fontWeight: 700, borderTop: "1px dashed var(--border-color)", paddingTop: 4, marginTop: 4 }}>
                 <span>(=) Total Deducciones Aplicadas (Max 40%):</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>(-) {formatCOP(resOrg.deduccionesCapadasMes + resOrg.deduccionArt336Mes)}</span>
+                <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>(-) {formatCOP(resOrg.deduccionesCapadasMes + resOrg.deduccionArt336Mes)}</span>
               </div>
             </div>
           </div>
@@ -160,7 +160,7 @@ export function SalarioMagicoAsalariados({
               <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 5: (=) Base Gravable Final</div>
               <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Monto sobre el que se calcula el impuesto (90.83 UVT mensuales | 1090 UVT anuales con UVT = {formatCOP(C.UVT)})</div>
             </div>
-            <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-primary)", textAlign: "right" }}>
+            <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "var(--font-jetbrains), monospace", color: "var(--text-primary)", textAlign: "right" }}>
               (=) {formatCOP(resOrg.baseGravableMes)}
             </div>
           </div>
@@ -171,7 +171,7 @@ export function SalarioMagicoAsalariados({
               <div style={{ fontSize: "0.9rem", fontWeight: 800, color: "var(--accent-emerald)" }}>Impuesto Calculado</div>
               <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Retención en la fuente mensual</div>
             </div>
-            <div style={{ fontSize: "1.1rem", fontWeight: 800, fontFamily: "JetBrains Mono, monospace", color: "var(--accent-emerald)", textAlign: "right" }}>
+            <div style={{ fontSize: "1.1rem", fontWeight: 800, fontFamily: "var(--font-jetbrains), monospace", color: "var(--accent-emerald)", textAlign: "right" }}>
               {formatCOP(resOrg.impuestoMes)}
             </div>
           </div>
@@ -186,7 +186,7 @@ export function SalarioMagicoAsalariados({
           <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
             Escenario Maximizado (Con tope 40%)
           </div>
-          <div style={{ fontSize: "2.5rem", fontWeight: 800, color: "var(--accent-blue)", fontFamily: "JetBrains Mono, monospace", marginBottom: 8 }}>
+          <div style={{ fontSize: "2.5rem", fontWeight: 800, color: "var(--accent-blue)", fontFamily: "var(--font-jetbrains), monospace", marginBottom: 8 }}>
             {formatCOP(salarioMax)}
           </div>
           <div style={{ fontSize: "0.9rem", color: "var(--text-secondary)" }}>
@@ -202,7 +202,7 @@ export function SalarioMagicoAsalariados({
           <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", color: "var(--text-primary)", fontWeight: 700 }}>
               <span>(=) Base de Cotización (IBC):</span>
-              <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(resMax.ingresoBrutoMes)}</span>
+              <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(resMax.ingresoBrutoMes)}</span>
             </div>
           </div>
 
@@ -213,7 +213,7 @@ export function SalarioMagicoAsalariados({
                 <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 2: (-) Salud y Pensión</div>
                 <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Aportes obligatorios</div>
               </div>
-              <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-error, #ef4444)", textAlign: "right" }}>
+              <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "var(--font-jetbrains), monospace", color: "var(--text-error, #ef4444)", textAlign: "right" }}>
                 (-) {formatCOP(resMax.descuentoSaludMes + resMax.descuentoPensionMes + (resMax.fspMes || 0))}
               </div>
             </div>
@@ -221,21 +221,21 @@ export function SalarioMagicoAsalariados({
             <div style={{ marginLeft: "12px", marginTop: "4px", padding: "8px", background: "rgba(255,255,255,0.02)", borderRadius: 8, display: "flex", flexDirection: "column", gap: 4 }}>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
                 <span>↳ Salud (4% de IBC):</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(resMax.descuentoSaludMes)}</span>
+                <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(resMax.descuentoSaludMes)}</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
                 <span>↳ Pensión (4% de IBC):</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(resMax.descuentoPensionMes)}</span>
+                <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(resMax.descuentoPensionMes)}</span>
               </div>
               { (resMax.fspMes || 0) > 0 && (
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "#f59e0b", fontWeight: 600 }}>
                   <span>↳ FSP (Solidaridad y Subsistencia):</span>
-                  <span style={{ fontFamily: "JetBrains Mono, monospace" }}>- {formatCOP(resMax.fspMes || 0)}</span>
+                  <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>- {formatCOP(resMax.fspMes || 0)}</span>
                 </div>
               )}
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-primary)", fontWeight: 700, borderTop: "1px solid var(--border-color)", paddingTop: 4, marginTop: 4 }}>
                 <span>(=) Total Aportes (Salud + Pensión + FSP):</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(resMax.descuentoSaludMes + resMax.descuentoPensionMes + (resMax.fspMes || 0))}</span>
+                <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(resMax.descuentoSaludMes + resMax.descuentoPensionMes + (resMax.fspMes || 0))}</span>
               </div>
             </div>
           </div>
@@ -246,7 +246,7 @@ export function SalarioMagicoAsalariados({
               <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 3: (=) Ingreso Neto</div>
               <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Base para calcular deducciones</div>
             </div>
-            <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-primary)", textAlign: "right" }}>
+            <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "var(--font-jetbrains), monospace", color: "var(--text-primary)", textAlign: "right" }}>
               (=) {formatCOP(resMax.ingresoNetoMes)}
             </div>
           </div>
@@ -258,13 +258,13 @@ export function SalarioMagicoAsalariados({
             <div style={{ marginLeft: "12px", display: "flex", flexDirection: "column", gap: 4 }}>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
                 <span>↳ Renta Exenta (25%):</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>(-) {formatCOP(resMax.rentaExentaMes)}</span>
+                <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>(-) {formatCOP(resMax.rentaExentaMes)}</span>
               </div>
               
               {resMax.deduccionArt387Mes > 0 && (
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
                   <span>↳ Dependientes Art. 387:</span>
-                  <span style={{ fontFamily: "JetBrains Mono, monospace" }}>(-) {formatCOP(resMax.deduccionArt387Mes)}</span>
+                  <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>(-) {formatCOP(resMax.deduccionArt387Mes)}</span>
                 </div>
               )}
               
@@ -272,7 +272,7 @@ export function SalarioMagicoAsalariados({
                 <>
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
                     <span>↳ Aportes Voluntarios:</span>
-                    <span style={{ fontFamily: "JetBrains Mono, monospace" }}>(-) {formatCOP(resMax.aportesVoluntariosMensual)}</span>
+                    <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>(-) {formatCOP(resMax.aportesVoluntariosMensual)}</span>
                   </div>
                   {resMax.aportesVoluntariosRecortados && (
                     <div style={{ fontSize: "0.65rem", color: "var(--text-secondary)", fontStyle: "italic", textAlign: "right" }}>
@@ -284,7 +284,7 @@ export function SalarioMagicoAsalariados({
               
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-primary)", fontWeight: 700, borderTop: "1px dashed var(--border-color)", paddingTop: 4, marginTop: 4 }}>
                 <span>(=) Total Deducciones Aplicadas (Max 40%):</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>(-) {formatCOP(resMax.deduccionesCapadasMes + resMax.deduccionArt336Mes)}</span>
+                <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>(-) {formatCOP(resMax.deduccionesCapadasMes + resMax.deduccionArt336Mes)}</span>
               </div>
             </div>
           </div>
@@ -295,7 +295,7 @@ export function SalarioMagicoAsalariados({
               <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 5: (=) Base Gravable Final</div>
               <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Monto sobre el que se calcula el impuesto (90.83 UVT mensuales | 1090 UVT anuales con UVT = {formatCOP(C.UVT)})</div>
             </div>
-            <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-primary)", textAlign: "right" }}>
+            <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "var(--font-jetbrains), monospace", color: "var(--text-primary)", textAlign: "right" }}>
               (=) {formatCOP(resMax.baseGravableMes)}
             </div>
           </div>
@@ -306,7 +306,7 @@ export function SalarioMagicoAsalariados({
               <div style={{ fontSize: "0.9rem", fontWeight: 800, color: "var(--accent-blue)" }}>Impuesto Calculado</div>
               <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Retención en la fuente mensual</div>
             </div>
-            <div style={{ fontSize: "1.1rem", fontWeight: 800, fontFamily: "JetBrains Mono, monospace", color: "var(--accent-blue)", textAlign: "right" }}>
+            <div style={{ fontSize: "1.1rem", fontWeight: 800, fontFamily: "var(--font-jetbrains), monospace", color: "var(--accent-blue)", textAlign: "right" }}>
               {formatCOP(resMax.impuestoMes)}
             </div>
           </div>
@@ -320,7 +320,7 @@ export function SalarioMagicoAsalariados({
           <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
             Escenario Mix Salarial (Optimización IBC)
           </div>
-          <div style={{ fontSize: "2.5rem", fontWeight: 800, color: "var(--accent-purple)", fontFamily: "JetBrains Mono, monospace", marginBottom: 8 }}>
+          <div style={{ fontSize: "2.5rem", fontWeight: 800, color: "var(--accent-purple)", fontFamily: "var(--font-jetbrains), monospace", marginBottom: 8 }}>
             {formatCOP(totalDevengadoMix)}
           </div>
           <div style={{ fontSize: "0.9rem", color: "var(--text-secondary)" }}>
@@ -344,15 +344,15 @@ export function SalarioMagicoAsalariados({
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
                 <span>↳ Salario Base:</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(resMix.ingresoBrutoMes - (resMix.ingresosNoSalarialesMensual || 0))}</span>
+                <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(resMix.ingresoBrutoMes - (resMix.ingresosNoSalarialesMensual || 0))}</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
                 <span>↳ Ingresos No Salariales / Bonos (Ley 1393: Máximo 40% de Ingreso bruto, no contribuyen para IBC):</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(resMix.ingresosNoSalarialesMensual || 0)}</span>
+                <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(resMix.ingresosNoSalarialesMensual || 0)}</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-primary)", fontWeight: 700, borderTop: "1px solid var(--border-color)", paddingTop: 4, marginTop: 4 }}>
                 <span>(=) Base de Cotización (IBC):</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(resMix.ibcMes || 0)}</span>
+                <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(resMix.ibcMes || 0)}</span>
               </div>
             </div>
           </div>
@@ -364,7 +364,7 @@ export function SalarioMagicoAsalariados({
                 <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 2: (-) Salud y Pensión</div>
                 <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Aportes obligatorios</div>
               </div>
-              <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-error, #ef4444)", textAlign: "right" }}>
+              <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "var(--font-jetbrains), monospace", color: "var(--text-error, #ef4444)", textAlign: "right" }}>
                 (-) {formatCOP(resMix.descuentoSaludMes + resMix.descuentoPensionMes + (resMix.fspMes || 0))}
               </div>
             </div>
@@ -372,21 +372,21 @@ export function SalarioMagicoAsalariados({
             <div style={{ marginLeft: "12px", marginTop: "4px", padding: "8px", background: "rgba(255,255,255,0.02)", borderRadius: 8, display: "flex", flexDirection: "column", gap: 4 }}>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
                 <span>↳ Salud (4% de IBC):</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(resMix.descuentoSaludMes)}</span>
+                <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(resMix.descuentoSaludMes)}</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
                 <span>↳ Pensión (4% de IBC):</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(resMix.descuentoPensionMes)}</span>
+                <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(resMix.descuentoPensionMes)}</span>
               </div>
               { (resMix.fspMes || 0) > 0 && (
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "#f59e0b", fontWeight: 600 }}>
                   <span>↳ FSP (Solidaridad y Subsistencia):</span>
-                  <span style={{ fontFamily: "JetBrains Mono, monospace" }}>- {formatCOP(resMix.fspMes || 0)}</span>
+                  <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>- {formatCOP(resMix.fspMes || 0)}</span>
                 </div>
               )}
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-primary)", fontWeight: 700, borderTop: "1px solid var(--border-color)", paddingTop: 4, marginTop: 4 }}>
                 <span>(=) Total Aportes (Salud + Pensión + FSP):</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(resMix.descuentoSaludMes + resMix.descuentoPensionMes + (resMix.fspMes || 0))}</span>
+                <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(resMix.descuentoSaludMes + resMix.descuentoPensionMes + (resMix.fspMes || 0))}</span>
               </div>
             </div>
           </div>
@@ -397,7 +397,7 @@ export function SalarioMagicoAsalariados({
               <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 3: (=) Ingreso Neto</div>
               <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Base para calcular deducciones</div>
             </div>
-            <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-primary)", textAlign: "right" }}>
+            <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "var(--font-jetbrains), monospace", color: "var(--text-primary)", textAlign: "right" }}>
               (=) {formatCOP(resMix.ingresoNetoMes)}
             </div>
           </div>
@@ -409,19 +409,19 @@ export function SalarioMagicoAsalariados({
             <div style={{ marginLeft: "12px", display: "flex", flexDirection: "column", gap: 4 }}>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
                 <span>↳ Renta Exenta (25%):</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>(-) {formatCOP(resMix.rentaExentaMes)}</span>
+                <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>(-) {formatCOP(resMix.rentaExentaMes)}</span>
               </div>
               
               {resMix.deduccionArt387Mes > 0 && (
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
                   <span>↳ Dependientes Art. 387:</span>
-                  <span style={{ fontFamily: "JetBrains Mono, monospace" }}>(-) {formatCOP(resMix.deduccionArt387Mes)}</span>
+                  <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>(-) {formatCOP(resMix.deduccionArt387Mes)}</span>
                 </div>
               )}
               
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-primary)", fontWeight: 700, borderTop: "1px dashed var(--border-color)", paddingTop: 4, marginTop: 4 }}>
                 <span>(=) Total Deducciones Aplicadas (Max 40%):</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>(-) {formatCOP(resMix.deduccionesCapadasMes + resMix.deduccionArt336Mes)}</span>
+                <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>(-) {formatCOP(resMix.deduccionesCapadasMes + resMix.deduccionArt336Mes)}</span>
               </div>
             </div>
           </div>
@@ -432,7 +432,7 @@ export function SalarioMagicoAsalariados({
               <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 5: (=) Base Gravable Final</div>
               <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Monto sobre el que se calcula el impuesto (90.83 UVT mensuales | 1090 UVT anuales con UVT = {formatCOP(C.UVT)})</div>
             </div>
-            <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-primary)", textAlign: "right" }}>
+            <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "var(--font-jetbrains), monospace", color: "var(--text-primary)", textAlign: "right" }}>
               (=) {formatCOP(resMix.baseGravableMes)}
             </div>
           </div>
@@ -443,7 +443,7 @@ export function SalarioMagicoAsalariados({
               <div style={{ fontSize: "0.9rem", fontWeight: 800, color: "var(--accent-purple)" }}>Impuesto Calculado</div>
               <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Retención en la fuente mensual</div>
             </div>
-            <div style={{ fontSize: "1.1rem", fontWeight: 800, fontFamily: "JetBrains Mono, monospace", color: "var(--accent-purple)", textAlign: "right" }}>
+            <div style={{ fontSize: "1.1rem", fontWeight: 800, fontFamily: "var(--font-jetbrains), monospace", color: "var(--accent-purple)", textAlign: "right" }}>
               {formatCOP(resMix.impuestoMes)}
             </div>
           </div>
@@ -458,7 +458,7 @@ export function SalarioMagicoAsalariados({
           <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
             Escenario Óptimo (Ley 1393 + Tope AFC)
           </div>
-          <div style={{ fontSize: "2.5rem", fontWeight: 800, color: "#f59e0b", fontFamily: "JetBrains Mono, monospace", marginBottom: 8 }}>
+          <div style={{ fontSize: "2.5rem", fontWeight: 800, color: "#f59e0b", fontFamily: "var(--font-jetbrains), monospace", marginBottom: 8 }}>
             {formatCOP(totalDevengadoMixMax)}
           </div>
           <div style={{ fontSize: "0.9rem", color: "var(--text-secondary)" }}>
@@ -475,15 +475,15 @@ export function SalarioMagicoAsalariados({
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
                 <span>↳ Salario Base:</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(resMixMax.ingresoBrutoMes - (resMixMax.ingresosNoSalarialesMensual || 0))}</span>
+                <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(resMixMax.ingresoBrutoMes - (resMixMax.ingresosNoSalarialesMensual || 0))}</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
                 <span>↳ Ingresos No Salariales / Bonos (Ley 1393: Máximo 40% de Ingreso bruto, no contribuyen para IBC):</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(resMixMax.ingresosNoSalarialesMensual || 0)}</span>
+                <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(resMixMax.ingresosNoSalarialesMensual || 0)}</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-primary)", fontWeight: 700, borderTop: "1px solid var(--border-color)", paddingTop: 4, marginTop: 4 }}>
                 <span>(=) Base de Cotización (IBC):</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(resMixMax.ibcMes || 0)}</span>
+                <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(resMixMax.ibcMes || 0)}</span>
               </div>
             </div>
           </div>
@@ -495,7 +495,7 @@ export function SalarioMagicoAsalariados({
                 <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 2: (-) Salud y Pensión</div>
                 <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Aportes obligatorios</div>
               </div>
-              <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-error, #ef4444)", textAlign: "right" }}>
+              <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "var(--font-jetbrains), monospace", color: "var(--text-error, #ef4444)", textAlign: "right" }}>
                 (-) {formatCOP(resMixMax.descuentoSaludMes + resMixMax.descuentoPensionMes + (resMixMax.fspMes || 0))}
               </div>
             </div>
@@ -503,21 +503,21 @@ export function SalarioMagicoAsalariados({
             <div style={{ marginLeft: "12px", marginTop: "4px", padding: "8px", background: "rgba(255,255,255,0.02)", borderRadius: 8, display: "flex", flexDirection: "column", gap: 4 }}>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
                 <span>↳ Salud (4% de IBC):</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(resMixMax.descuentoSaludMes)}</span>
+                <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(resMixMax.descuentoSaludMes)}</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
                 <span>↳ Pensión (4% de IBC):</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(resMixMax.descuentoPensionMes)}</span>
+                <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(resMixMax.descuentoPensionMes)}</span>
               </div>
               { (resMixMax.fspMes || 0) > 0 && (
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "#f59e0b", fontWeight: 600 }}>
                   <span>↳ FSP (Solidaridad y Subsistencia):</span>
-                  <span style={{ fontFamily: "JetBrains Mono, monospace" }}>- {formatCOP(resMixMax.fspMes || 0)}</span>
+                  <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>- {formatCOP(resMixMax.fspMes || 0)}</span>
                 </div>
               )}
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-primary)", fontWeight: 700, borderTop: "1px solid var(--border-color)", paddingTop: 4, marginTop: 4 }}>
                 <span>(=) Total Aportes (Salud + Pensión + FSP):</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(resMixMax.descuentoSaludMes + resMixMax.descuentoPensionMes + (resMixMax.fspMes || 0))}</span>
+                <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(resMixMax.descuentoSaludMes + resMixMax.descuentoPensionMes + (resMixMax.fspMes || 0))}</span>
               </div>
             </div>
           </div>
@@ -528,7 +528,7 @@ export function SalarioMagicoAsalariados({
               <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 3: (=) Ingreso Neto</div>
               <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Base para calcular deducciones</div>
             </div>
-            <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-primary)", textAlign: "right" }}>
+            <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "var(--font-jetbrains), monospace", color: "var(--text-primary)", textAlign: "right" }}>
               (=) {formatCOP(resMixMax.ingresoNetoMes)}
             </div>
           </div>
@@ -540,13 +540,13 @@ export function SalarioMagicoAsalariados({
             <div style={{ marginLeft: "12px", display: "flex", flexDirection: "column", gap: 4 }}>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
                 <span>↳ Renta Exenta (25%):</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>(-) {formatCOP(resMixMax.rentaExentaMes)}</span>
+                <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>(-) {formatCOP(resMixMax.rentaExentaMes)}</span>
               </div>
               
               {resMixMax.deduccionArt387Mes > 0 && (
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
                   <span>↳ Dependientes Art. 387:</span>
-                  <span style={{ fontFamily: "JetBrains Mono, monospace" }}>(-) {formatCOP(resMixMax.deduccionArt387Mes)}</span>
+                  <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>(-) {formatCOP(resMixMax.deduccionArt387Mes)}</span>
                 </div>
               )}
 
@@ -554,7 +554,7 @@ export function SalarioMagicoAsalariados({
                 <>
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
                     <span>↳ Aportes Voluntarios:</span>
-                    <span style={{ fontFamily: "JetBrains Mono, monospace" }}>(-) {formatCOP(resMixMax.aportesVoluntariosMensual)}</span>
+                    <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>(-) {formatCOP(resMixMax.aportesVoluntariosMensual)}</span>
                   </div>
                   {resMixMax.aportesVoluntariosRecortados && (
                     <div style={{ fontSize: "0.65rem", color: "var(--text-secondary)", fontStyle: "italic", textAlign: "right" }}>
@@ -566,7 +566,7 @@ export function SalarioMagicoAsalariados({
               
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-primary)", fontWeight: 700, borderTop: "1px dashed var(--border-color)", paddingTop: 4, marginTop: 4 }}>
                 <span>(=) Total Deducciones Aplicadas (Max 40%):</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace" }}>(-) {formatCOP(resMixMax.deduccionesCapadasMes + resMixMax.deduccionArt336Mes)}</span>
+                <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>(-) {formatCOP(resMixMax.deduccionesCapadasMes + resMixMax.deduccionArt336Mes)}</span>
               </div>
             </div>
           </div>
@@ -577,7 +577,7 @@ export function SalarioMagicoAsalariados({
               <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 5: (=) Base Gravable Final</div>
               <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Monto sobre el que se calcula el impuesto (90.83 UVT mensuales | 1090 UVT anuales con UVT = {formatCOP(C.UVT)})</div>
             </div>
-            <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-primary)", textAlign: "right" }}>
+            <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "var(--font-jetbrains), monospace", color: "var(--text-primary)", textAlign: "right" }}>
               (=) {formatCOP(resMixMax.baseGravableMes)}
             </div>
           </div>
@@ -588,7 +588,7 @@ export function SalarioMagicoAsalariados({
               <div style={{ fontSize: "0.9rem", fontWeight: 800, color: "var(--accent-purple)" }}>Impuesto Calculado</div>
               <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Retención en la fuente mensual</div>
             </div>
-            <div style={{ fontSize: "1.1rem", fontWeight: 800, fontFamily: "JetBrains Mono, monospace", color: "var(--accent-purple)", textAlign: "right" }}>
+            <div style={{ fontSize: "1.1rem", fontWeight: 800, fontFamily: "var(--font-jetbrains), monospace", color: "var(--accent-purple)", textAlign: "right" }}>
               {formatCOP(resMixMax.impuestoMes)}
             </div>
           </div>

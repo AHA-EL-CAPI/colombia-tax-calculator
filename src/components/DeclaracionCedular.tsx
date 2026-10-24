@@ -389,17 +389,32 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
           display: grid;
           grid-template-columns: 2fr 1fr;
           gap: 24px;
-          color: #f8fafc;
-          font-family: system-ui, -apple-system, sans-serif;
+          color: var(--text-primary);
+          
+        }
+        .declaracion-container > * {
+          min-width: 0;
         }
         @media (max-width: 1024px) {
           .declaracion-container {
+            grid-template-columns: minmax(0, 1fr);
+          }
+        }
+        @media (max-width: 640px) {
+          .declaracion-container .input-group {
             grid-template-columns: 1fr;
+          }
+          .declaracion-container .section-box,
+          .declaracion-container .sidebar {
+            padding: 16px;
+          }
+          .declaracion-container .desglose-box {
+            overflow-x: auto;
           }
         }
         .section-box {
-          background: #0f172a;
-          border: 1px solid #1e293b;
+          background: var(--bg-card);
+          border: 1px solid var(--border-color);
           border-radius: 16px;
           padding: 20px;
           margin-bottom: 16px;
@@ -411,11 +426,11 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
           cursor: pointer;
           font-size: 1.1rem;
           font-weight: 700;
-          color: #38bdf8;
+          color: var(--text-primary);
         }
         .tip-text {
           font-size: 0.85rem;
-          color: #94a3b8;
+          color: var(--text-secondary);
           margin-top: 4px;
           font-style: italic;
         }
@@ -432,22 +447,22 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
         }
         .input-field label {
           font-size: 0.85rem;
-          color: #94a3b8;
+          color: var(--text-secondary);
         }
         .input-field input, .input-field select {
-          background: #1e293b;
-          border: 1px solid #334155;
+          background: var(--bg-primary);
+          border: 1px solid var(--border-color);
           border-radius: 8px;
           padding: 10px;
-          color: #f8fafc;
+          color: var(--text-primary);
           font-size: 0.95rem;
         }
         .sidebar {
           position: sticky;
           top: 20px;
           height: fit-content;
-          background: #0f172a;
-          border: 1.5px solid #334155;
+          background: var(--bg-card);
+          border: 1.5px solid var(--border-color);
           border-radius: 16px;
           padding: 24px;
           box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
@@ -464,7 +479,7 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
         .total-box {
           margin-top: 20px;
           padding-top: 16px;
-          border-top: 1px solid #334155;
+          border-top: 1px solid var(--border-color);
           text-align: center;
         }
         .total-value {
@@ -489,26 +504,26 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
           margin-top: 10px;
         }
         .toggle-btn {
-          background: #334155;
+          background: var(--bg-card-hover);
           border: none;
           padding: 6px 12px;
           border-radius: 6px;
           cursor: pointer;
-          color: #94a3b8;
+          color: var(--text-secondary);
           font-size: 0.85rem;
           transition: all 0.2s;
         }
         .toggle-btn.active {
-          background: #06b6d4;
+          background: var(--accent-cyan);
           color: white;
         }
         .desglose-box {
-          background: #1e293b;
+          background: var(--bg-primary);
           border-radius: 8px;
           padding: 12px;
           margin-top: 12px;
           font-size: 0.85rem;
-          color: #cbd5e1;
+          color: var(--text-secondary);
         }
         .desglose-row {
           display: flex;
@@ -516,8 +531,8 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
           margin-bottom: 6px;
         }
         .optimization-box {
-          background: rgba(6, 182, 212, 0.1);
-          border: 1px solid #06b6d4;
+          background: rgba(52,211,153, 0.1);
+          border: 1px solid var(--accent-cyan);
           border-radius: 8px;
           padding: 16px;
           margin-top: 16px;
@@ -527,7 +542,7 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
       {/* ── COLUMNA PRINCIPAL (FORMULARIOS) ──────────────────────── */}
       <div className="main-content">
         
-        <h2 style={{ color: "#f8fafc", marginBottom: "20px", fontSize: "1.5rem", fontWeight: 800 }}>Cédula General</h2>
+        <h2 style={{ color: "var(--text-primary)", marginBottom: "20px", fontSize: "1.5rem", fontWeight: 800 }}>Cédula General</h2>
 
         {/* A. Rentas de Trabajo (Laboral) */}
         <details className="section-box" open>
@@ -577,9 +592,9 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
               </>
             )}
             
-            <div style={{ borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700 }}>(=) Neto:</div>
-            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700 }}>{formatCOP(rentasTrabajo.bruto - calculos.laboral.saludMes - calculos.laboral.pensionMes - calculos.laboral.fspMes)}</div>
-            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700 }}>{formatCOP((rentasTrabajo.bruto - calculos.laboral.saludMes - calculos.laboral.pensionMes - calculos.laboral.fspMes) * 12)}</div>
+            <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "4px", fontWeight: 700 }}>(=) Neto:</div>
+            <div style={{ textAlign: "right", borderTop: "1px solid var(--border-color)", paddingTop: "4px", fontWeight: 700 }}>{formatCOP(rentasTrabajo.bruto - calculos.laboral.saludMes - calculos.laboral.pensionMes - calculos.laboral.fspMes)}</div>
+            <div style={{ textAlign: "right", borderTop: "1px solid var(--border-color)", paddingTop: "4px", fontWeight: 700 }}>{formatCOP((rentasTrabajo.bruto - calculos.laboral.saludMes - calculos.laboral.pensionMes - calculos.laboral.fspMes) * 12)}</div>
           </div>
         </details>
 
@@ -658,13 +673,13 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
             <div style={{ textAlign: "right" }}>{formatCOP(honorarios.bruto)}</div>
             <div style={{ textAlign: "right" }}>{formatCOP(honorarios.bruto * 12)}</div>
             
-            <div style={{ color: "#64748b", fontStyle: "italic" }}>(-) Costos UGPP (SS):</div>
-            <div style={{ textAlign: "right", color: "#64748b" }}>{formatCOP(calculos.honorarios.costosUGPPMes)}</div>
-            <div style={{ textAlign: "right", color: "#64748b" }}>{formatCOP(calculos.honorarios.costosUGPPAnual)}</div>
+            <div style={{ color: "var(--text-muted)", fontStyle: "italic" }}>(-) Costos UGPP (SS):</div>
+            <div style={{ textAlign: "right", color: "var(--text-muted)" }}>{formatCOP(calculos.honorarios.costosUGPPMes)}</div>
+            <div style={{ textAlign: "right", color: "var(--text-muted)" }}>{formatCOP(calculos.honorarios.costosUGPPAnual)}</div>
             
-            <div style={{ borderTop: "1px solid #334155", paddingTop: "4px" }}>(=) Ingreso Neto UGPP:</div>
-            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px" }}>{formatCOP(calculos.honorarios.netoUGPPMes)}</div>
-            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px" }}>{formatCOP(calculos.honorarios.netoUGPPAnual)}</div>
+            <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "4px" }}>(=) Ingreso Neto UGPP:</div>
+            <div style={{ textAlign: "right", borderTop: "1px solid var(--border-color)", paddingTop: "4px" }}>{formatCOP(calculos.honorarios.netoUGPPMes)}</div>
+            <div style={{ textAlign: "right", borderTop: "1px solid var(--border-color)", paddingTop: "4px" }}>{formatCOP(calculos.honorarios.netoUGPPAnual)}</div>
             
             <div style={{ color: "#f87171" }}>(-) Costos DIAN (Reales):</div>
             <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.honorarios.costosDIANMes)}</div>
@@ -707,9 +722,9 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
               </>
             )}
             
-            <div style={{ borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700, color: "#34d399" }}>(=) Neto DIAN (Renta):</div>
-            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700, color: "#34d399" }}>{formatCOP(honorarios.bruto - calculos.honorarios.costosDIANMes - calculos.honorarios.saludMes - calculos.honorarios.pensionMes - calculos.honorarios.fspMes)}</div>
-            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700, color: "#34d399" }}>{formatCOP((honorarios.bruto - calculos.honorarios.costosDIANMes - calculos.honorarios.saludMes - calculos.honorarios.pensionMes - calculos.honorarios.fspMes) * 12)}</div>
+            <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "4px", fontWeight: 700, color: "var(--accent-emerald)" }}>(=) Neto DIAN (Renta):</div>
+            <div style={{ textAlign: "right", borderTop: "1px solid var(--border-color)", paddingTop: "4px", fontWeight: 700, color: "var(--accent-emerald)" }}>{formatCOP(honorarios.bruto - calculos.honorarios.costosDIANMes - calculos.honorarios.saludMes - calculos.honorarios.pensionMes - calculos.honorarios.fspMes)}</div>
+            <div style={{ textAlign: "right", borderTop: "1px solid var(--border-color)", paddingTop: "4px", fontWeight: 700, color: "var(--accent-emerald)" }}>{formatCOP((honorarios.bruto - calculos.honorarios.costosDIANMes - calculos.honorarios.saludMes - calculos.honorarios.pensionMes - calculos.honorarios.fspMes) * 12)}</div>
           </div>
         </details>
 
@@ -776,13 +791,13 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
             <div style={{ textAlign: "right" }}>{formatCOP(capital.bruto)}</div>
             <div style={{ textAlign: "right" }}>{formatCOP(capital.bruto * 12)}</div>
             
-            <div style={{ color: "#64748b", fontStyle: "italic" }}>(-) Costos UGPP (SS):</div>
-            <div style={{ textAlign: "right", color: "#64748b" }}>{formatCOP(calculos.capital.costosUGPPMes)}</div>
-            <div style={{ textAlign: "right", color: "#64748b" }}>{formatCOP(calculos.capital.costosUGPPAnual)}</div>
+            <div style={{ color: "var(--text-muted)", fontStyle: "italic" }}>(-) Costos UGPP (SS):</div>
+            <div style={{ textAlign: "right", color: "var(--text-muted)" }}>{formatCOP(calculos.capital.costosUGPPMes)}</div>
+            <div style={{ textAlign: "right", color: "var(--text-muted)" }}>{formatCOP(calculos.capital.costosUGPPAnual)}</div>
             
-            <div style={{ borderTop: "1px solid #334155", paddingTop: "4px" }}>(=) Ingreso Neto UGPP:</div>
-            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px" }}>{formatCOP(calculos.capital.netoUGPPMes)}</div>
-            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px" }}>{formatCOP(calculos.capital.netoUGPPAnual)}</div>
+            <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "4px" }}>(=) Ingreso Neto UGPP:</div>
+            <div style={{ textAlign: "right", borderTop: "1px solid var(--border-color)", paddingTop: "4px" }}>{formatCOP(calculos.capital.netoUGPPMes)}</div>
+            <div style={{ textAlign: "right", borderTop: "1px solid var(--border-color)", paddingTop: "4px" }}>{formatCOP(calculos.capital.netoUGPPAnual)}</div>
             
             <div style={{ color: "#f87171" }}>(-) Costos DIAN (Reales):</div>
             <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.capital.costosDIANMes)}</div>
@@ -825,9 +840,9 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
               </>
             )}
             
-            <div style={{ borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700, color: "#34d399" }}>(=) Neto DIAN (Renta):</div>
-            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700, color: "#34d399" }}>{formatCOP(capital.bruto - calculos.capital.costosDIANMes - calculos.capital.saludMes - calculos.capital.pensionMes - calculos.capital.fspMes)}</div>
-            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700, color: "#34d399" }}>{formatCOP((capital.bruto - calculos.capital.costosDIANMes - calculos.capital.saludMes - calculos.capital.pensionMes - calculos.capital.fspMes) * 12)}</div>
+            <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "4px", fontWeight: 700, color: "var(--accent-emerald)" }}>(=) Neto DIAN (Renta):</div>
+            <div style={{ textAlign: "right", borderTop: "1px solid var(--border-color)", paddingTop: "4px", fontWeight: 700, color: "var(--accent-emerald)" }}>{formatCOP(capital.bruto - calculos.capital.costosDIANMes - calculos.capital.saludMes - calculos.capital.pensionMes - calculos.capital.fspMes)}</div>
+            <div style={{ textAlign: "right", borderTop: "1px solid var(--border-color)", paddingTop: "4px", fontWeight: 700, color: "var(--accent-emerald)" }}>{formatCOP((capital.bruto - calculos.capital.costosDIANMes - calculos.capital.saludMes - calculos.capital.pensionMes - calculos.capital.fspMes) * 12)}</div>
           </div>
         </details>
 
@@ -906,13 +921,13 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
             <div style={{ textAlign: "right" }}>{formatCOP(noLaborales.bruto)}</div>
             <div style={{ textAlign: "right" }}>{formatCOP(noLaborales.bruto * 12)}</div>
             
-            <div style={{ color: "#64748b", fontStyle: "italic" }}>(-) Costos UGPP (SS):</div>
-            <div style={{ textAlign: "right", color: "#64748b" }}>{formatCOP(calculos.noLaborales.costosUGPPMes)}</div>
-            <div style={{ textAlign: "right", color: "#64748b" }}>{formatCOP(calculos.noLaborales.costosUGPPAnual)}</div>
+            <div style={{ color: "var(--text-muted)", fontStyle: "italic" }}>(-) Costos UGPP (SS):</div>
+            <div style={{ textAlign: "right", color: "var(--text-muted)" }}>{formatCOP(calculos.noLaborales.costosUGPPMes)}</div>
+            <div style={{ textAlign: "right", color: "var(--text-muted)" }}>{formatCOP(calculos.noLaborales.costosUGPPAnual)}</div>
             
-            <div style={{ borderTop: "1px solid #334155", paddingTop: "4px" }}>(=) Ingreso Neto UGPP:</div>
-            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px" }}>{formatCOP(calculos.noLaborales.netoUGPPNoLaboralesMes)}</div>
-            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px" }}>{formatCOP(calculos.noLaborales.netoUGPPAnual)}</div>
+            <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "4px" }}>(=) Ingreso Neto UGPP:</div>
+            <div style={{ textAlign: "right", borderTop: "1px solid var(--border-color)", paddingTop: "4px" }}>{formatCOP(calculos.noLaborales.netoUGPPNoLaboralesMes)}</div>
+            <div style={{ textAlign: "right", borderTop: "1px solid var(--border-color)", paddingTop: "4px" }}>{formatCOP(calculos.noLaborales.netoUGPPAnual)}</div>
             
             <div style={{ color: "#f87171" }}>(-) Costos DIAN (Reales):</div>
             <div style={{ textAlign: "right", color: "#f87171" }}>{formatCOP(calculos.noLaborales.costosDIANMes)}</div>
@@ -955,15 +970,15 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
               </>
             )}
             
-            <div style={{ borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700, color: "#34d399" }}>(=) Neto DIAN (Renta):</div>
-            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700, color: "#34d399" }}>{formatCOP(noLaborales.bruto - calculos.noLaborales.costosDIANMes - calculos.noLaborales.saludMes - calculos.noLaborales.pensionMes - calculos.noLaborales.fspMes)}</div>
-            <div style={{ textAlign: "right", borderTop: "1px solid #334155", paddingTop: "4px", fontWeight: 700, color: "#34d399" }}>{formatCOP((noLaborales.bruto - calculos.noLaborales.costosDIANMes - calculos.noLaborales.saludMes - calculos.noLaborales.pensionMes - calculos.noLaborales.fspMes) * 12)}</div>
+            <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "4px", fontWeight: 700, color: "var(--accent-emerald)" }}>(=) Neto DIAN (Renta):</div>
+            <div style={{ textAlign: "right", borderTop: "1px solid var(--border-color)", paddingTop: "4px", fontWeight: 700, color: "var(--accent-emerald)" }}>{formatCOP(noLaborales.bruto - calculos.noLaborales.costosDIANMes - calculos.noLaborales.saludMes - calculos.noLaborales.pensionMes - calculos.noLaborales.fspMes)}</div>
+            <div style={{ textAlign: "right", borderTop: "1px solid var(--border-color)", paddingTop: "4px", fontWeight: 700, color: "var(--accent-emerald)" }}>{formatCOP((noLaborales.bruto - calculos.noLaborales.costosDIANMes - calculos.noLaborales.saludMes - calculos.noLaborales.pensionMes - calculos.noLaborales.fspMes) * 12)}</div>
           </div>
         </details>
 
         {/* 3. BLOQUE DE DEDUCCIONES Y OPTIMIZACIÓN */}
         <div className="section-box">
-          <h3 style={{ color: "#38bdf8", marginBottom: "16px", fontSize: "1.2rem", fontWeight: 700 }}>Deducciones y Optimización</h3>
+          <h3 style={{ color: "var(--text-primary)", marginBottom: "16px", fontSize: "1.2rem", fontWeight: 700 }}>Deducciones y Optimización</h3>
           
           <div className="input-group">
             <MoneyInput 
@@ -1001,7 +1016,7 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
                 value={rentabilidadEsperada}
                 onChange={(e) => setRentabilidadEsperada(parseFloat(e.target.value) || 0)}
                 placeholder="10"
-                style={{ background: "#1e293b", color: "#f8fafc", border: "1px solid #334155", borderRadius: "4px", padding: "8px" }}
+                style={{ background: "var(--bg-primary)", color: "var(--text-primary)", border: "1px solid var(--border-color)", borderRadius: "4px", padding: "8px" }}
               />
             </div>
             <MoneyInput 
@@ -1044,7 +1059,7 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
             </div>
             
             <div className="toggle-group">
-              <span style={{ fontSize: "0.85rem", color: "#94a3b8" }}>¿Fue en la BVC?</span>
+              <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>¿Fue en la BVC?</span>
               <button 
                 className={`toggle-btn ${nuevoActivo.esBVC ? "active" : ""}`}
                 onClick={() => setNuevoActivo({ ...nuevoActivo, esBVC: true })}
@@ -1071,8 +1086,8 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
 
             {gananciasOcasionales.length > 0 && (
               <div style={{ marginTop: "16px" }}>
-                <h5 style={{ color: "#e2e8f0" }}>Activos Agregados:</h5>
-                <ul style={{ fontSize: "0.85rem", color: "#94a3b8", paddingLeft: "16px" }}>
+                <h5 style={{ color: "var(--text-primary)" }}>Activos Agregados:</h5>
+                <ul style={{ fontSize: "0.85rem", color: "var(--text-secondary)", paddingLeft: "16px" }}>
                   {gananciasOcasionales.map((g, index) => (
                     <li key={index}>
                       {g.tipo}: {formatCOP(g.utilidad)} | BVC: {g.esBVC ? "Sí" : "No"} | {g.tiempo} años
@@ -1087,7 +1102,7 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
 
       {/* ── COLUMNA SECUNDARIA (STICKY SIDEBAR) ─────────────────── */}
       <div className="sidebar">
-        <h3 style={{ color: "#38bdf8", marginBottom: "20px", fontSize: "1.2rem", fontWeight: 800 }}>Resumen de Liquidación</h3>
+        <h3 style={{ color: "var(--text-primary)", marginBottom: "20px", fontSize: "1.2rem", fontWeight: 800 }}>Resumen de Liquidación</h3>
         
         <div className="result-row">
           <span>(+) Ingresos Brutos Totales:</span>
@@ -1113,7 +1128,7 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
           <span>(-) Deducciones Aplicadas (Topadas al 40% o 1340 UVT):</span>
           <span className="result-value">{formatCOP(calculos.deduccionesLimitadas)}</span>
         </div>
-        <div style={{ paddingLeft: "16px", fontSize: "0.85rem", color: "#94a3b8", marginBottom: "8px" }}>
+        <div style={{ paddingLeft: "16px", fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "8px" }}>
           <div style={{ display: "flex", justifyContent: "space-between" }}>
             <span>↳ Renta Exenta Laboral (25%):</span>
             <span>{formatCOP(calculos.rentaExentaLaboralAnual)}</span>
@@ -1141,7 +1156,7 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
           <span className="result-value">{formatCOP(calculos.deduccionDependientes336)}</span>
         </div>
         
-        <div className="result-row" style={{ borderTop: "1px solid #334155", paddingTop: "8px" }}>
+        <div className="result-row" style={{ borderTop: "1px solid var(--border-color)", paddingTop: "8px" }}>
           <span>(=) Base Gravable Final:</span>
           <span className="result-value" style={{ color: "#38bdf8" }}>{formatCOP(calculos.baseGravable)}</span>
         </div>
@@ -1158,11 +1173,11 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
 
         <div className="result-row">
           <span>Retenciones Practicadas:</span>
-          <span className="result-value" style={{ color: "#34d399" }}>{formatCOP(calculos.retencionesTotales)}</span>
+          <span className="result-value" style={{ color: "var(--accent-emerald)" }}>{formatCOP(calculos.retencionesTotales)}</span>
         </div>
 
         <div className="total-box">
-          <div style={{ fontSize: "0.9rem", color: "#94a3b8" }}>Saldo Final:</div>
+          <div style={{ fontSize: "0.9rem", color: "var(--text-secondary)" }}>Saldo Final:</div>
           <div className="total-value" style={{ color: calculos.saldoFinal > 0 ? "#ef4444" : "#10b981" }}>
             {formatCOP(Math.abs(calculos.saldoFinal))}
             <div style={{ fontSize: "0.8rem", marginTop: "4px" }}>
@@ -1171,20 +1186,20 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
           </div>
         </div>
 
-        <div className="optimization-box" style={{ marginTop: "16px", background: "#1e293b", padding: "16px", borderRadius: "8px", border: "1px solid #334155" }}>
-          <h4 style={{ color: "#06b6d4", marginBottom: "8px", fontWeight: 700 }}>💡 Optimización AFC / FPV</h4>
+        <div className="optimization-box" style={{ marginTop: "16px", background: "var(--bg-primary)", padding: "16px", borderRadius: "8px", border: "1px solid var(--border-color)" }}>
+          <h4 style={{ color: "var(--accent-cyan)", marginBottom: "8px", fontWeight: 700 }}>💡 Optimización AFC / FPV</h4>
           
           {/* Sunk Cost Analysis */}
-          <p style={{ fontSize: "0.9rem", color: "#e2e8f0", marginBottom: "12px", borderLeft: "4px solid #06b6d4", paddingLeft: "8px" }}>
+          <p style={{ fontSize: "0.9rem", color: "var(--text-primary)", marginBottom: "12px", borderLeft: "4px solid var(--accent-cyan)", paddingLeft: "8px" }}>
             💡 Eficiencia Proactiva: Antes de inmovilizar capital en AFC, considera que los aportes a Medicina Prepagada o Intereses de Vivienda reducen tu impuesto con dinero que ya &apos;gastas&apos; mensualmente. Esto libera tu flujo de caja para inversiones líquidas.
           </p>
 
-          <p style={{ fontSize: "0.9rem", color: "#e2e8f0" }}>
-            Si inviertes el tope legal de <span style={{ fontWeight: 700, color: "#34d399" }}>{formatCOP(calculos.cupoDisponible)}</span> al año (<span style={{ fontWeight: 700, color: "#22c55e" }}>{formatCOP(calculos.cupoDisponible / 12)} / mes</span>) en un fondo AFC/FPV, tu impuesto proyectado bajaría a <span style={{ fontWeight: 700, color: "#38bdf8" }}>{formatCOP(calculos.impuestoOptimizado)}</span>.
+          <p style={{ fontSize: "0.9rem", color: "var(--text-primary)" }}>
+            Si inviertes el tope legal de <span style={{ fontWeight: 700, color: "var(--accent-emerald)" }}>{formatCOP(calculos.cupoDisponible)}</span> al año (<span style={{ fontWeight: 700, color: "#22c55e" }}>{formatCOP(calculos.cupoDisponible / 12)} / mes</span>) en un fondo AFC/FPV, tu impuesto proyectado bajaría a <span style={{ fontWeight: 700, color: "#38bdf8" }}>{formatCOP(calculos.impuestoOptimizado)}</span>.
           </p>
           
           {/* Dynamic Breakeven Analysis */}
-          <p style={{ fontSize: "0.9rem", color: "#e2e8f0", marginTop: "8px" }}>
+          <p style={{ fontSize: "0.9rem", color: "var(--text-primary)", marginTop: "8px" }}>
             {rentabilidadEsperada / 100 > calculos.rentabilidadBreakevenAnual ? (
               <span>Si tu inversión propia rinde más del {(calculos.rentabilidadBreakevenAnual * 100).toFixed(2)}% anual, podría ser financieramente mejor pagar el impuesto hoy y mantener la liquidez para invertir libremente en bolsa, en lugar de inmovilizar el dinero a 10 años en un FPV.</span>
             ) : (
@@ -1192,8 +1207,8 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
             )}
           </p>
 
-          <div style={{ marginTop: "12px", padding: "12px", background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(6, 182, 212, 0.2)", borderRadius: "8px", fontSize: "0.75rem", color: "#cbd5e1", lineHeight: "1.45" }}>
-            <span style={{ color: "#06b6d4", fontWeight: 700, display: "block", marginBottom: "4px" }}>🔍 Entendiendo el Algebra de la Tasa de Equilibrio ({(calculos.rentabilidadBreakevenAnual * 100).toFixed(2)}%):</span>
+          <div style={{ marginTop: "12px", padding: "12px", background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(52,211,153, 0.2)", borderRadius: "8px", fontSize: "0.75rem", color: "var(--text-secondary)", lineHeight: "1.45" }}>
+            <span style={{ color: "var(--accent-cyan)", fontWeight: 700, display: "block", marginBottom: "4px" }}>🔍 Entendiendo el Algebra de la Tasa de Equilibrio ({(calculos.rentabilidadBreakevenAnual * 100).toFixed(2)}%):</span>
             <p style={{ margin: 0 }}>
               Representa el <strong>costo de oportunidad</strong> de tu liquidez a 10 años (tiempo de permanencia legal del beneficio). Si decides NO aportar a la AFC para invertir libremente en bolsa, la DIAN te retendrá hoy el <strong>{(calculos.tramoMarginal * 100).toFixed(0)}%</strong> en tu tarifa marginal, dejando solo el <strong>{((1 - calculos.tramoMarginal) * 100).toFixed(0)}%</strong> de tu capital neto disponible.
               <br /><br />
@@ -1201,7 +1216,7 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
             </p>
           </div>
 
-          <p style={{ fontSize: "0.8rem", color: "#94a3b8", marginTop: "8px" }}>
+          <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "8px" }}>
             {(() => {
               const limite40 = calculos.rentaLiquidaTotal * 0.40;
               const limite1340 = 1340 * C.UVT;
@@ -1219,23 +1234,23 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
               );
             })()}
           </p>
-          <div style={{ marginTop: "12px", background: "rgba(52, 211, 153, 0.1)", border: "1px solid rgba(52, 211, 153, 0.2)", borderRadius: "4px", padding: "8px", textAlign: "center", fontWeight: 700, color: "#34d399" }}>
+          <div style={{ marginTop: "12px", background: "rgba(52, 211, 153, 0.1)", border: "1px solid rgba(52, 211, 153, 0.2)", borderRadius: "4px", padding: "8px", textAlign: "center", fontWeight: 700, color: "var(--accent-emerald)" }}>
             🔥 TU AHORRO TRIBUTARIO NETO: {formatCOP(calculos.ahorroNeto)} / año.
           </div>
 
           {/* Housing Warning */}
           {deducciones.interesesVivienda > 0 && (
-            <p style={{ fontSize: "0.85rem", color: "#f87171", marginTop: "12px", borderTop: "1px solid #334155", paddingTop: "8px" }}>
+            <p style={{ fontSize: "0.85rem", color: "#f87171", marginTop: "12px", borderTop: "1px solid var(--border-color)", paddingTop: "8px" }}>
               ⚠️ Nota de Analista: Estás pagando {formatCOP(deducciones.interesesVivienda * 12)} en intereses. Aunque te ahorran {formatCOP(deducciones.interesesVivienda * 12 * calculos.tramoMarginal)} en impuestos, el costo neto de tu deuda es del {(calculos.costoNetoDeuda * 100).toFixed(2)}%. Asegúrate de que la valorización de tu activo compense este spread negativo.
             </p>
           )}
 
           {/* Comparison Table */}
-          <div style={{ marginTop: "16px", borderTop: "1px solid #334155", paddingTop: "12px" }}>
-            <h5 style={{ color: "#e2e8f0", marginBottom: "8px" }}>Comparativa de Estrategias</h5>
-            <table style={{ width: "100%", fontSize: "0.8rem", color: "#94a3b8" }}>
+          <div style={{ marginTop: "16px", borderTop: "1px solid var(--border-color)", paddingTop: "12px" }}>
+            <h5 style={{ color: "var(--text-primary)", marginBottom: "8px" }}>Comparativa de Estrategias</h5>
+            <table style={{ width: "100%", fontSize: "0.8rem", color: "var(--text-secondary)" }}>
               <thead>
-                <tr style={{ borderBottom: "1px solid #334155" }}>
+                <tr style={{ borderBottom: "1px solid var(--border-color)" }}>
                   <th style={{ textAlign: "left", padding: "4px" }}>Acción</th>
                   <th style={{ textAlign: "left", padding: "4px" }}>Impacto en Impuesto</th>
                   <th style={{ textAlign: "left", padding: "4px" }}>Impacto en Liquidez</th>
@@ -1250,7 +1265,7 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
                 <tr>
                   <td style={{ padding: "4px" }}>Pago Impuesto + Bolsa</td>
                   <td style={{ padding: "4px" }}>$ 0</td>
-                  <td style={{ padding: "4px", color: "#34d399" }}>100% Líquido</td>
+                  <td style={{ padding: "4px", color: "var(--accent-emerald)" }}>100% Líquido</td>
                 </tr>
               </tbody>
             </table>
@@ -1258,7 +1273,7 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
         </div>
 
 
-        <div style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "20px", textAlign: "center" }}>
+        <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "20px", textAlign: "center" }}>
           UVT {anio}: {formatCOP(C.UVT)} | Tarifa Marginal: {Math.round(calculos.tramoMarginal * 100)}%
         </div>
       </div>

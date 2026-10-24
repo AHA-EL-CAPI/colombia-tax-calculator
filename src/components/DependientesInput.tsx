@@ -11,8 +11,7 @@ export function DependientesInput({ value, onChange }: DependientesInputProps) {
   const MAX = 4;
   return (
     <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
-      <label style={{ fontSize:"0.75rem", fontWeight:700, color:"var(--text-secondary)",
-        letterSpacing:"0.04em", textTransform:"uppercase" }}>
+      <label className="field-label">
         Dependientes (Arts. 387 y 336)
       </label>
       {/* Hidden input exposes stepper value to Playwright / form APIs */}
@@ -37,7 +36,7 @@ export function DependientesInput({ value, onChange }: DependientesInputProps) {
             fontSize:"1.1rem", fontWeight:700, color: value===0?"var(--text-muted)":"var(--text-secondary)",
             transition:"color 0.15s" }}>−</button>
         <div style={{ minWidth:48, textAlign:"center",
-          fontFamily:"JetBrains Mono, monospace", fontSize:"1rem", fontWeight:700,
+          fontFamily:"var(--font-jetbrains), monospace", fontSize:"1rem", fontWeight:700,
           color:"var(--text-primary)", padding:"0 4px",
           borderLeft:"1px solid var(--border-color)",
           borderRight:"1px solid var(--border-color)" }}>
@@ -50,7 +49,7 @@ export function DependientesInput({ value, onChange }: DependientesInputProps) {
           disabled={value === MAX}
           style={{ padding:"10px 16px", background:"transparent", border:"none",
             cursor: value===MAX?"not-allowed":"pointer",
-            fontSize:"1.1rem", fontWeight:700, color: value===MAX?"var(--text-muted)":"#34d399",
+            fontSize:"1.1rem", fontWeight:700, color: value===MAX?"var(--text-muted)":"var(--accent-emerald)",
             transition:"color 0.15s" }}>+</button>
       </div>
       <div style={{ fontSize:"0.68rem", color:"var(--text-muted)", lineHeight:1.5 }}>

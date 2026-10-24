@@ -33,7 +33,7 @@ function Row({ label, value, sub, bold, accent, negative, dim, highlight, valueC
       <span style={{ fontSize:"0.78rem", color: dim?"var(--text-muted)":"var(--text-secondary)", flex:1 }}>{label}</span>
       <div style={{ textAlign:"right" }}>
         <span data-testid={valueTestId} style={{ fontSize:"0.82rem", fontWeight:bold?700:500,
-          fontFamily:"JetBrains Mono, monospace", color }}>{value}</span>
+          fontFamily:"var(--font-jetbrains), monospace", color }}>{value}</span>
         {sub && <span data-testid={subTestId} style={{ display:"block", fontSize:"0.68rem", color:"var(--text-muted)" }}>{sub}</span>}
       </div>
     </div>
@@ -69,7 +69,7 @@ export function SeccionResumenLey({ resultado: r, aplicaTabla383 }: Props) {
           border:"1px solid rgba(52,211,153,0.2)",
           display:"flex", alignItems:"center", justifyContent:"center" }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-            stroke="#34d399" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            stroke="var(--accent-emerald)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
             <line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
           </svg>
@@ -94,12 +94,12 @@ export function SeccionResumenLey({ resultado: r, aplicaTabla383 }: Props) {
       <div className="main-grid" style={{ marginTop: 24 }}>
 
         {/* TARJETA 1: DEPURACIÓN UGPP / CÁLCULO IBC MENSUAL */}
-        <div style={{ padding: 32, borderRadius: 20, background: "rgba(6, 182, 212, 0.06)", border: "1px solid rgba(6, 182, 212, 0.15)" }}>
-          <SectionHead title="DEPURACIÓN UGPP / CÁLCULO IBC MENSUAL" color="#06b6d4"/>
+        <div style={{ padding: 32, borderRadius: 20, background: "rgba(52,211,153, 0.06)", border: "1px solid rgba(52,211,153, 0.15)" }}>
+          <SectionHead title="DEPURACIÓN UGPP / CÁLCULO IBC MENSUAL" color="var(--accent-cyan)"/>
           
           {!r.isIndependiente ? (
             <>
-              <Row label="Salario Base" value={formatCOP(r.salarioMensual)} valueColor="#06b6d4"/>
+              <Row label="Salario Base" value={formatCOP(r.salarioMensual)} valueColor="var(--accent-cyan)"/>
               {r.totalDevengadoMes !== undefined && (r.totalDevengadoMes - r.salarioMensual) > 0 && (
                 <Row label="(+) Ingresos No Salariales / Bonos" value={formatCOP(r.totalDevengadoMes - r.salarioMensual)}/>
               )}
@@ -159,7 +159,7 @@ export function SeccionResumenLey({ resultado: r, aplicaTabla383 }: Props) {
                       )}
                     </div>
                     <div style={{ textAlign: "right" }}>
-                      <span style={{ fontSize: "0.82rem", fontWeight: 500, fontFamily: "JetBrains Mono, monospace", color: "var(--accent-rose)" }}>
+                      <span style={{ fontSize: "0.82rem", fontWeight: 500, fontFamily: "var(--font-jetbrains), monospace", color: "var(--accent-rose)" }}>
                         − {formatCOP(costoUGPPMesVisual)}
                       </span>
                     </div>
@@ -176,7 +176,7 @@ export function SeccionResumenLey({ resultado: r, aplicaTabla383 }: Props) {
                   ⚠️ <strong>Sin Capacidad de Pago:</strong> Tus ingresos netos son inferiores a 1 SMMLV. No estás obligado a cotizar a seguridad social.
                 </div>
               ) : (
-                <div style={{ margin: "12px 0", padding: "10px 14px", borderRadius: 8, background: "rgba(52, 211, 153, 0.1)", border: "1px solid rgba(52, 211, 153, 0.3)", color: "#34d399", fontSize: "0.75rem" }}>
+                <div style={{ margin: "12px 0", padding: "10px 14px", borderRadius: 8, background: "rgba(52, 211, 153, 0.1)", border: "1px solid rgba(52, 211, 153, 0.3)", color: "var(--accent-emerald)", fontSize: "0.75rem" }}>
                   ✅ <strong>Con Capacidad de Pago:</strong> Tus ingresos netos son superiores a 1 SMMLV. Es obligatorio cotizar sobre el IBC calculado.
                 </div>
               )}
@@ -201,7 +201,7 @@ export function SeccionResumenLey({ resultado: r, aplicaTabla383 }: Props) {
                   <div style={{ fontWeight: 700, fontSize: "0.85rem" }}>Base de Cotización Final (IBC Mensual)</div>
                   <div style={{ fontSize: "0.7rem", color: "var(--text-secondary)" }}>Valor definitivo para cotización</div>
                 </div>
-                <div style={{ fontWeight: 800, fontSize: "1.05rem", fontFamily: "JetBrains Mono, monospace", color: "var(--text-primary)" }}>
+                <div style={{ fontWeight: 800, fontSize: "1.05rem", fontFamily: "var(--font-jetbrains), monospace", color: "var(--text-primary)" }}>
                   {formatCOP(r.ibcMes!)}
                 </div>
               </div>
@@ -235,7 +235,7 @@ export function SeccionResumenLey({ resultado: r, aplicaTabla383 }: Props) {
             {/* 3. Subtotal PILA */}
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", fontWeight: 700, borderTop: "1px solid rgba(148, 163, 184, 0.15)", paddingTop: 8, marginTop: 4 }}>
               <span style={{ color: "var(--text-secondary)" }}>(=) Subtotal PILA (Seguridad Social)</span>
-              <span style={{ fontFamily: "JetBrains Mono, monospace", color: "var(--accent-rose)" }}>- {formatCOP(r.descuentoSaludMes + r.descuentoPensionMes + (r.fspMes || 0))}</span>
+              <span style={{ fontFamily: "var(--font-jetbrains), monospace", color: "var(--accent-rose)" }}>- {formatCOP(r.descuentoSaludMes + r.descuentoPensionMes + (r.fspMes || 0))}</span>
             </div>
 
 
@@ -256,15 +256,15 @@ export function SeccionResumenLey({ resultado: r, aplicaTabla383 }: Props) {
               <div style={{ padding: "12px", borderRadius: "8px", background: "rgba(245, 158, 11, 0.03)", border: "1px solid rgba(245, 158, 11, 0.1)", marginTop: "4px", marginBottom: "4px", fontSize: "0.72rem", color: "var(--text-secondary)" }}>
                 <div style={{ fontWeight: 700, marginBottom: "6px", color: "#f59e0b" }}>⚙️ Auditoría de Base Renta Exenta (Mensual):</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
-                  <div>Renta Líquida Mensual: <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(r.ingresoNetoMes)}</span></div>
-                  <div>(–) Dependientes Art. 387: <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(r.deduccionArt387Mes || 0)}</span></div>
-                  <div>(–) Medicina Prepagada: <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(r.medicinaPrepagadaMensual || 0)}</span></div>
-                  <div>(–) Intereses Vivienda: <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(r.interesesViviendaMensual || 0)}</span></div>
-                  <div>(–) Aportes AFC / FPV: <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(r.aportesVoluntariosMensual || 0)}</span></div>
+                  <div>Renta Líquida Mensual: <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(r.ingresoNetoMes)}</span></div>
+                  <div>(–) Dependientes Art. 387: <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(r.deduccionArt387Mes || 0)}</span></div>
+                  <div>(–) Medicina Prepagada: <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(r.medicinaPrepagadaMensual || 0)}</span></div>
+                  <div>(–) Intereses Vivienda: <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(r.interesesViviendaMensual || 0)}</span></div>
+                  <div>(–) Aportes AFC / FPV: <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(r.aportesVoluntariosMensual || 0)}</span></div>
                   <div style={{ borderTop: "1px solid rgba(245,158,11,0.2)", marginTop: "4px", paddingTop: "4px", fontWeight: 600 }}>
-                    (=) Base Depurada Mensual: <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(Math.max(0, r.ingresoNetoMes - (r.deduccionArt387Mes || 0) - (r.medicinaPrepagadaMensual || 0) - (r.interesesViviendaMensual || 0) - (r.aportesVoluntariosMensual || 0)))}</span>
+                    (=) Base Depurada Mensual: <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(Math.max(0, r.ingresoNetoMes - (r.deduccionArt387Mes || 0) - (r.medicinaPrepagadaMensual || 0) - (r.interesesViviendaMensual || 0) - (r.aportesVoluntariosMensual || 0)))}</span>
                   </div>
-                  <div>(×) 25% de Ley = <span style={{ fontFamily: "JetBrains Mono, monospace", color: "#f59e0b" }}>{formatCOP(r.rentaExentaMes)}</span> {r.topeRentaExentaActivo ? <span style={{ color: "#fb923c" }}>(Topado a 790 UVT anuales)</span> : ""}</div>
+                  <div>(×) 25% de Ley = <span style={{ fontFamily: "var(--font-jetbrains), monospace", color: "#f59e0b" }}>{formatCOP(r.rentaExentaMes)}</span> {r.topeRentaExentaActivo ? <span style={{ color: "#fb923c" }}>(Topado a 790 UVT anuales)</span> : ""}</div>
                 </div>
               </div>
             )}
@@ -275,7 +275,7 @@ export function SeccionResumenLey({ resultado: r, aplicaTabla383 }: Props) {
                 background: "rgba(148,163,184,0.05)", border: "1px solid rgba(148,163,184,0.15)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
                   <span style={{ fontSize: "0.8rem", color: "var(--text-secondary)", fontWeight: 600 }}>LÍMITE 40% / 1.340 UVT (Mensualizado)</span>
-                  <span style={{ fontSize: "0.8rem", fontFamily: "JetBrains Mono, monospace",
+                  <span style={{ fontSize: "0.8rem", fontFamily: "var(--font-jetbrains), monospace",
                     color: r.topeTecho40Activo ? "#f59e0b" : "var(--text-muted)" }}>{r.porcentajeUsado.toFixed(1)}% usado</span>
                 </div>
                 <div style={{ height: 8, borderRadius: 4, background: "rgba(148,163,184,0.15)", overflow: "hidden" }}>
@@ -303,7 +303,7 @@ export function SeccionResumenLey({ resultado: r, aplicaTabla383 }: Props) {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 0", marginTop: 8, borderTop: "2px solid var(--accent-rose)" }}>
               <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>(=) GRAN TOTAL DEDUCCIONES</span>
               <div style={{ textAlign: "right" }}>
-                <span style={{ fontSize: "1.1rem", fontWeight: 800, fontFamily: "JetBrains Mono, monospace", color: "var(--accent-rose)" }}>
+                <span style={{ fontSize: "1.1rem", fontWeight: 800, fontFamily: "var(--font-jetbrains), monospace", color: "var(--accent-rose)" }}>
                   - {formatCOP(granTotalDeduccionesMes)}
                 </span>
               </div>
@@ -316,22 +316,22 @@ export function SeccionResumenLey({ resultado: r, aplicaTabla383 }: Props) {
           
           {/* TARJETA 4: BASE GRAVABLE MENSUAL */}
           <div style={{ padding: 32, borderRadius: 20, background: "rgba(52, 211, 153, 0.06)", border: "1px solid rgba(52, 211, 153, 0.15)" }}>
-            <SectionHead title="BASE GRAVABLE MENSUAL" color="#34d399" />
+            <SectionHead title="BASE GRAVABLE MENSUAL" color="var(--accent-emerald)" />
             <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 16 }}>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
                 <span style={{ color: "var(--text-secondary)" }}>Ingreso Bruto</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace", color: "var(--accent-emerald)" }}>{formatCOP(r.ingresoBrutoMes)}</span>
+                <span style={{ fontFamily: "var(--font-jetbrains), monospace", color: "var(--accent-emerald)" }}>{formatCOP(r.ingresoBrutoMes)}</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
                 <span style={{ color: "var(--text-secondary)" }}>(-) Gran Total Deducciones</span>
-                <span style={{ fontFamily: "JetBrains Mono, monospace", color: "var(--accent-rose)" }}>
+                <span style={{ fontFamily: "var(--font-jetbrains), monospace", color: "var(--accent-rose)" }}>
                   - {formatCOP(granTotalDeduccionesMes)}
                 </span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "1rem", fontWeight: 700, borderTop: "1.5px solid rgba(52, 211, 153, 0.3)", paddingTop: 12, marginTop: 4 }}>
                 <span style={{ color: "var(--text-primary)" }}>(=) Base Gravable Final</span>
                 <div style={{ textAlign: "right" }}>
-                  <span data-testid="base-uvt-mes" style={{ fontFamily: "JetBrains Mono, monospace", color: "var(--accent-emerald)" }}>{formatCOP(r.baseGravableMes)}</span>
+                  <span data-testid="base-uvt-mes" style={{ fontFamily: "var(--font-jetbrains), monospace", color: "var(--accent-emerald)" }}>{formatCOP(r.baseGravableMes)}</span>
                   <span style={{ display: "block", fontSize: "0.68rem", color: "var(--text-muted)", fontWeight: 500 }}>
                     {formatUVT(r.baseGravableMesUVT)}
                   </span>
@@ -342,7 +342,7 @@ export function SeccionResumenLey({ resultado: r, aplicaTabla383 }: Props) {
 
           {/* TARJETA 5: RETENCIÓN EN LA FUENTE */}
           <div style={{ padding: 32, borderRadius: 20, background: "rgba(52, 211, 153, 0.06)", border: "1px solid rgba(52, 211, 153, 0.15)" }}>
-            <SectionHead title="RETENCIÓN EN LA FUENTE" color="#34d399" />
+            <SectionHead title="RETENCIÓN EN LA FUENTE" color="var(--accent-emerald)" />
             
             {/* Desglose de Tabla Progresiva (Caja Blanca) */}
             <div style={{ marginTop: 12, marginBottom: 12, padding: 12, borderRadius: 10, background: "rgba(255, 255, 255, 0.03)", border: "1px solid rgba(52, 211, 153, 0.1)" }}>
@@ -350,21 +350,21 @@ export function SeccionResumenLey({ resultado: r, aplicaTabla383 }: Props) {
                 Desglose de Tabla (Art. 383):
               </div>
               <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", display: "flex", flexDirection: "column", gap: 3 }}>
-                <div>• Base Mensual UVT: <span style={{ fontFamily: "JetBrains Mono, monospace", color: "var(--text-secondary)" }}>{r.baseGravableMesUVT.toFixed(2)}</span> UVT</div>
+                <div>• Base Mensual UVT: <span style={{ fontFamily: "var(--font-jetbrains), monospace", color: "var(--text-secondary)" }}>{r.baseGravableMesUVT.toFixed(2)}</span> UVT</div>
                 <div>• Tramo Aplicable: <span style={{ color: "var(--text-secondary)" }}>&gt; {tramo.desde} a {tramo.hasta === Infinity ? "más" : tramo.hasta}</span> UVT</div>
                 <div>• Cálculo: <span style={{ color: "var(--text-secondary)" }}>({r.baseGravableMesUVT.toFixed(2)} - {tramo.baseUVT}) × {(tramo.marginal * 100).toFixed(0)}% + {tramo.cuotaFija} = {((r.baseGravableMesUVT - tramo.baseUVT) * tramo.marginal + tramo.cuotaFija).toFixed(2)}</span> UVT</div>
-                <div>• Conversión a Pesos: <span style={{ fontFamily: "JetBrains Mono, monospace", color: "#34d399" }}>{((r.baseGravableMesUVT - tramo.baseUVT) * tramo.marginal + tramo.cuotaFija).toFixed(2)} UVT × ${C.UVT.toLocaleString("es-CO")} = {formatCOP(r.impuestoMes)}</span></div>
+                <div>• Conversión a Pesos: <span style={{ fontFamily: "var(--font-jetbrains), monospace", color: "var(--accent-emerald)" }}>{((r.baseGravableMesUVT - tramo.baseUVT) * tramo.marginal + tramo.cuotaFija).toFixed(2)} UVT × ${C.UVT.toLocaleString("es-CO")} = {formatCOP(r.impuestoMes)}</span></div>
               </div>
             </div>
             
             <div style={{ padding: 16, borderRadius: 14, marginTop: 4,
               background: "linear-gradient(135deg,rgba(52,211,153,0.1),rgba(52,211,153,0.04))",
               border: "1.5px solid rgba(52,211,153,0.25)", textAlign: "center" }}>
-              <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "#34d399", letterSpacing: "0.06em", marginBottom: 4 }}>
+              <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--accent-emerald)", letterSpacing: "0.06em", marginBottom: 4 }}>
                 RETENCIÓN MENSUAL ESTIMADA
               </div>
               <div data-testid="retencion-monthly-cop" style={{ fontSize: "1.9rem", fontWeight: 800,
-                fontFamily: "JetBrains Mono, monospace", color: "#34d399" }}>
+                fontFamily: "var(--font-jetbrains), monospace", color: "var(--accent-emerald)" }}>
                 {formatCOP(r.impuestoMes)}
               </div>
               <div style={{ fontSize: "0.71rem", color: "var(--text-muted)", marginTop: 4 }}>
@@ -391,7 +391,7 @@ export function SeccionResumenLey({ resultado: r, aplicaTabla383 }: Props) {
                   Reserva este monto de tu flujo de caja mensual.
                 </span>
               </div>
-              <span style={{ color: "#f59e0b", fontFamily: "JetBrains Mono, monospace", fontWeight: 600, fontSize: "0.9rem" }}>
+              <span style={{ color: "#f59e0b", fontFamily: "var(--font-jetbrains), monospace", fontWeight: 600, fontSize: "0.9rem" }}>
                 {formatCOP((r.ingresoBrutoAnual * 0.01) / 12)} / mes
               </span>
             </div>
@@ -399,12 +399,12 @@ export function SeccionResumenLey({ resultado: r, aplicaTabla383 }: Props) {
             {/* Cupo disponible (solo si obligado a declarar and no topado) */}
             {r.obligadoDeclarar && !r.topeTecho40Activo && (
               <div style={{ marginTop: 10, padding: "10px 12px", borderRadius: 10,
-                background: "rgba(6, 182, 212, 0.05)", border: "1px solid rgba(6, 182, 212, 0.15)" }}>
-                <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "#06b6d4", marginBottom: 3 }}>
+                background: "rgba(52,211,153, 0.05)", border: "1px solid rgba(52,211,153, 0.15)" }}>
+                <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--accent-cyan)", marginBottom: 3 }}>
                   Cupo disponible para AFC / Pensiones Voluntarias
                 </div>
                 <div style={{ fontSize: "0.77rem", fontWeight: 600,
-                  fontFamily: "JetBrains Mono, monospace", color: "var(--text-primary)" }}>
+                  fontFamily: "var(--font-jetbrains), monospace", color: "var(--text-primary)" }}>
                   {formatCOP(r.cupoDisponibleMes)}/mes · {formatCOP(r.cupoDisponibleAnual)}/año
                 </div>
                 <div style={{ fontSize: "0.67rem", color: "var(--text-muted)", marginTop: 2 }}>

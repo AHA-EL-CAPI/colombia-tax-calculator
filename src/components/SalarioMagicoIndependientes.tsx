@@ -88,7 +88,7 @@ function CascadaItem({
           </div>
         </div>
         <span style={{ 
-          fontFamily: "JetBrains Mono, monospace", 
+          fontFamily: "var(--font-jetbrains), monospace", 
           fontSize: isTotal || highlight ? '1rem' : '0.9rem', 
           fontWeight: 800, 
           color: safeValue < 0 ? 'var(--text-error)' : (highlight ? highlightColor : 'var(--text-primary)'),
@@ -103,7 +103,7 @@ function CascadaItem({
           {subItems.map((si, idx) => (
             <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: si.isSpecial ? 'var(--accent-amber)' : 'var(--text-muted)' }}>
               <span>{si.label}:</span>
-              <span style={{ fontFamily: "JetBrains Mono, monospace", fontWeight: 700 }}>
+              <span style={{ fontFamily: "var(--font-jetbrains), monospace", fontWeight: 700 }}>
                 {(si.value || 0) === 0 ? "$0" : ((si.value || 0) > 0 ? "" : "-") + formatCOP(Math.abs(si.value || 0))}
               </span>
             </div>
@@ -128,7 +128,7 @@ function BentoIndicator({ label, value, color, description }: { label: string; v
     }}>
       <div style={{ position: 'absolute', top: -10, right: -10, width: 60, height: 60, background: color, opacity: 0.05, borderRadius: '50%' }}></div>
       <div style={{ fontSize: "0.7rem", fontWeight: 800, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>{label}</div>
-      <div style={{ fontSize: "1.8rem", fontWeight: 900, color: color, fontFamily: "JetBrains Mono, monospace", marginBottom: 4 }}>{value}</div>
+      <div style={{ fontSize: "1.8rem", fontWeight: 900, color: color, fontFamily: "var(--font-jetbrains), monospace", marginBottom: 4 }}>{value}</div>
       {description && <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", lineHeight: 1.4 }}>{description}</div>}
     </div>
   );
@@ -292,7 +292,7 @@ export function SalarioMagicoIndependientes({
         <div style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: 32, overflow: "hidden", boxShadow: "0 20px 50px -20px rgba(0,0,0,0.2)" }}>
           <div style={{ background: "linear-gradient(135deg, #10b981 0%, #059669 100%)", padding: "40px", textAlign: 'center', color: 'white' }}>
             <div style={{ fontSize: "0.8rem", fontWeight: 800, opacity: 0.8, textTransform: 'uppercase', marginBottom: 8 }}>Salario Mágico Orgánico</div>
-            <div style={{ fontSize: "3rem", fontWeight: 950, fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(salarioOrg || 0)}</div>
+            <div style={{ fontSize: "3rem", fontWeight: 950, fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(salarioOrg || 0)}</div>
             <div style={{ fontSize: "0.9rem", fontWeight: 600, opacity: 0.9, marginTop: 4 }}>Ingreso bruto máximo sin generar Retención en la Fuente</div>
           </div>
           
@@ -308,7 +308,7 @@ export function SalarioMagicoIndependientes({
               <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div><div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 1: Ingreso Bruto</div></div>
-                  <div style={{ fontSize: "1rem", fontWeight: 800, fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(salarioOrg || 0)}</div>
+                  <div style={{ fontSize: "1rem", fontWeight: 800, fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(salarioOrg || 0)}</div>
                 </div>
               </div>
 
@@ -316,7 +316,7 @@ export function SalarioMagicoIndependientes({
               <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div><div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 2: (-) Aportes a Seguridad Social (PILA)</div></div>
-                  <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-error, #ef4444)" }}>(-) {formatCOP((resOrg.descuentoSaludMes || 0) + (resOrg.descuentoPensionMes || 0) + (resOrg.fspMes || 0))}</div>
+                  <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "var(--font-jetbrains), monospace", color: "var(--text-error, #ef4444)" }}>(-) {formatCOP((resOrg.descuentoSaludMes || 0) + (resOrg.descuentoPensionMes || 0) + (resOrg.fspMes || 0))}</div>
                 </div>
                 <div style={{ marginLeft: "12px", marginTop: "8px", padding: "12px", background: "rgba(255,255,255,0.02)", borderRadius: "12px", display: "flex", flexDirection: "column", gap: "6px", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between" }}><span>↳ Ingreso Bruto base:</span><span>{formatCOP(salarioOrg || 0)}</span></div>
@@ -339,7 +339,7 @@ export function SalarioMagicoIndependientes({
               <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)", background: "rgba(255,255,255,0.01)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div><div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 3: (=) Ingreso Neto DIAN</div><div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Base real impositiva (Ingreso Bruto - Salud y Pensión)</div></div>
-                  <div style={{ fontSize: "1rem", fontWeight: 800, fontFamily: "JetBrains Mono, monospace" }}>(=) {formatCOP(resOrg.ingresoNetoDIANMes || 0)}</div>
+                  <div style={{ fontSize: "1rem", fontWeight: 800, fontFamily: "var(--font-jetbrains), monospace" }}>(=) {formatCOP(resOrg.ingresoNetoDIANMes || 0)}</div>
                 </div>
               </div>
 
@@ -353,7 +353,7 @@ export function SalarioMagicoIndependientes({
                       <span style={{ fontSize: "0.7rem", color: "var(--text-secondary)", fontStyle: "italic", opacity: 0.8 }}>(Menor entre el 40% del Neto DIAN y el tope de 1.340 UVT anuales)</span>
                     </div>
                   </div>
-                  <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-error, #ef4444)" }}>(-) {formatCOP(resOrg.deduccionesCapadasMes || 0)}</div>
+                  <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "var(--font-jetbrains), monospace", color: "var(--text-error, #ef4444)" }}>(-) {formatCOP(resOrg.deduccionesCapadasMes || 0)}</div>
                 </div>
                 <div style={{ marginLeft: "12px", marginTop: "8px", padding: "12px", background: "rgba(255,255,255,0.02)", borderRadius: "12px", display: "flex", flexDirection: "column", gap: "8px", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between" }}><span>↳ Dependientes Art. 387 <span style={{fontSize: "0.65rem", color: "var(--text-muted)", fontStyle: "italic"}}>(10% del Bruto, máx 32 UVT/mes)</span>:</span><span>- {numDependientes > 0 ? formatCOP(resOrg.deduccionArt387Mes || 0) : "$0"}</span></div>
@@ -371,7 +371,7 @@ export function SalarioMagicoIndependientes({
                 <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div><div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 5: (-) Deducciones sin límite del 40%</div></div>
-                    <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-error, #ef4444)" }}>(-) {formatCOP(resOrg.deduccionArt336Mes || 0)}</div>
+                    <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "var(--font-jetbrains), monospace", color: "var(--text-error, #ef4444)" }}>(-) {formatCOP(resOrg.deduccionArt336Mes || 0)}</div>
                   </div>
                   <div style={{ marginLeft: "12px", marginTop: "8px", padding: "12px", background: "rgba(255,255,255,0.02)", borderRadius: "12px", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
                     <div>↳ Dependientes Adicionales (Art. 336, sin repetir el del Art. 387): {(resOrg.deduccionArt336AnualUVT || 0) / 12} UVT mensuales = - {formatCOP(resOrg.deduccionArt336Mes || 0)}</div>
@@ -382,7 +382,7 @@ export function SalarioMagicoIndependientes({
               {/* PASO 6 */}
               <div style={{ display: "flex", justifyContent: "space-between", padding: "16px", borderLeft: "4px solid #10b981", background: "rgba(16, 185, 129, 0.04)", borderRadius: "8px", alignItems: "center" }}>
                 <div><div style={{ fontSize: "0.9rem", fontWeight: 800, color: "#10b981" }}>Paso 6: (=) Base Gravable Final</div></div>
-                <div style={{ fontSize: "1.2rem", fontWeight: 900, fontFamily: "JetBrains Mono, monospace", color: "#10b981" }}>(=) {formatCOP((resOrg.baseGravableAnual || 0) / 12)}</div>
+                <div style={{ fontSize: "1.2rem", fontWeight: 900, fontFamily: "var(--font-jetbrains), monospace", color: "#10b981" }}>(=) {formatCOP((resOrg.baseGravableAnual || 0) / 12)}</div>
               </div>
             </div>
           </div>
@@ -392,7 +392,7 @@ export function SalarioMagicoIndependientes({
         <div style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: 32, overflow: "hidden", boxShadow: "0 20px 50px -20px rgba(0,0,0,0.2)" }}>
           <div style={{ background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)", padding: "40px", textAlign: 'center', color: 'white' }}>
             <div style={{ fontSize: "0.8rem", fontWeight: 800, opacity: 0.8, textTransform: 'uppercase', marginBottom: 8 }}>Salario Mágico Maximizado (con AFC)</div>
-            <div style={{ fontSize: "3rem", fontWeight: 950, fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(salarioMax || 0)}</div>
+            <div style={{ fontSize: "3rem", fontWeight: 950, fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(salarioMax || 0)}</div>
             <div style={{ fontSize: "0.9rem", fontWeight: 600, opacity: 0.9, marginTop: 4 }}>Optimizando hasta el tope del 40% de beneficios tributarios</div>
           </div>
           
@@ -408,7 +408,7 @@ export function SalarioMagicoIndependientes({
               <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div><div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 1: Ingreso Bruto</div><div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Honorarios calculados</div></div>
-                  <div style={{ fontSize: "1rem", fontWeight: 800, fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(salarioMax || 0)}</div>
+                  <div style={{ fontSize: "1rem", fontWeight: 800, fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(salarioMax || 0)}</div>
                 </div>
               </div>
 
@@ -416,7 +416,7 @@ export function SalarioMagicoIndependientes({
               <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div><div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 2: (-) Aportes a Seguridad Social (PILA)</div></div>
-                  <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-error, #ef4444)" }}>(-) {formatCOP((resMax.descuentoSaludMes || 0) + (resMax.descuentoPensionMes || 0) + (resMax.fspMes || 0))}</div>
+                  <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "var(--font-jetbrains), monospace", color: "var(--text-error, #ef4444)" }}>(-) {formatCOP((resMax.descuentoSaludMes || 0) + (resMax.descuentoPensionMes || 0) + (resMax.fspMes || 0))}</div>
                 </div>
                 <div style={{ marginLeft: "12px", marginTop: "8px", padding: "12px", background: "rgba(255,255,255,0.02)", borderRadius: "12px", display: "flex", flexDirection: "column", gap: "6px", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between" }}><span>↳ Ingreso Bruto base:</span><span>{formatCOP(salarioMax || 0)}</span></div>
@@ -439,7 +439,7 @@ export function SalarioMagicoIndependientes({
               <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)", background: "rgba(255,255,255,0.01)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div><div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 3: (=) Ingreso Neto DIAN</div></div>
-                  <div style={{ fontSize: "1rem", fontWeight: 800, fontFamily: "JetBrains Mono, monospace" }}>(=) {formatCOP(resMax.ingresoNetoDIANMes || 0)}</div>
+                  <div style={{ fontSize: "1rem", fontWeight: 800, fontFamily: "var(--font-jetbrains), monospace" }}>(=) {formatCOP(resMax.ingresoNetoDIANMes || 0)}</div>
                 </div>
               </div>
 
@@ -453,7 +453,7 @@ export function SalarioMagicoIndependientes({
                       <span style={{ fontSize: "0.7rem", color: "var(--text-secondary)", fontStyle: "italic", opacity: 0.8 }}>(Menor entre el 40% del Neto DIAN y el tope de 1.340 UVT anuales)</span>
                     </div>
                   </div>
-                  <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-error, #ef4444)" }}>(-) {formatCOP(resMax.deduccionesCapadasMes || 0)}</div>
+                  <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "var(--font-jetbrains), monospace", color: "var(--text-error, #ef4444)" }}>(-) {formatCOP(resMax.deduccionesCapadasMes || 0)}</div>
                 </div>
                 <div style={{ marginLeft: "12px", marginTop: "8px", padding: "12px", background: "rgba(255,255,255,0.02)", borderRadius: "12px", display: "flex", flexDirection: "column", gap: "8px", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between" }}><span>↳ Dependientes Art. 387 <span style={{fontSize: "0.65rem", color: "var(--text-muted)", fontStyle: "italic"}}>(10% del Bruto, máx 32 UVT/mes)</span>:</span><span>- {numDependientes > 0 ? formatCOP(resMax.deduccionArt387Mes || 0) : "$0"}</span></div>
@@ -474,7 +474,7 @@ export function SalarioMagicoIndependientes({
                 <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div><div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 5: (-) Deducciones sin límite del 40%</div></div>
-                    <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-error, #ef4444)" }}>(-) {formatCOP(resMax.deduccionArt336Mes || 0)}</div>
+                    <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "var(--font-jetbrains), monospace", color: "var(--text-error, #ef4444)" }}>(-) {formatCOP(resMax.deduccionArt336Mes || 0)}</div>
                   </div>
                   <div style={{ marginLeft: "12px", marginTop: "8px", padding: "12px", background: "rgba(255,255,255,0.02)", borderRadius: "12px", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
                     <div>↳ Dependientes Adicionales (Art. 336, sin repetir el del Art. 387): {(resMax.deduccionArt336AnualUVT || 0) / 12} UVT mensuales = - {formatCOP(resMax.deduccionArt336Mes || 0)}</div>
@@ -485,7 +485,7 @@ export function SalarioMagicoIndependientes({
               {/* PASO 6 */}
               <div style={{ display: "flex", justifyContent: "space-between", padding: "16px", borderLeft: "4px solid #3b82f6", background: "rgba(59, 130, 246, 0.04)", borderRadius: "8px", alignItems: "center" }}>
                 <div><div style={{ fontSize: "0.9rem", fontWeight: 800, color: "#3b82f6" }}>Paso 6: (=) Base Gravable Final</div></div>
-                <div style={{ fontSize: "1.2rem", fontWeight: 900, fontFamily: "JetBrains Mono, monospace", color: "#3b82f6" }}>(=) {formatCOP((resMax.baseGravableAnual || 0) / 12)}</div>
+                <div style={{ fontSize: "1.2rem", fontWeight: 900, fontFamily: "var(--font-jetbrains), monospace", color: "#3b82f6" }}>(=) {formatCOP((resMax.baseGravableAnual || 0) / 12)}</div>
               </div>
             </div>
           </div>
@@ -495,7 +495,7 @@ export function SalarioMagicoIndependientes({
         <div style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: 32, overflow: "hidden", boxShadow: "0 20px 50px -20px rgba(0,0,0,0.2)" }}>
           <div style={{ background: "linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)", padding: "40px", textAlign: 'center', color: 'white' }}>
             <div style={{ fontSize: "0.8rem", fontWeight: 800, opacity: 0.8, textTransform: 'uppercase', marginBottom: 8 }}>Comparación: Régimen Simple (RST) con el mismo ingreso</div>
-            <div style={{ fontSize: "3rem", fontWeight: 950, fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(optimalGRST || 0)}</div>
+            <div style={{ fontSize: "3rem", fontWeight: 950, fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(optimalGRST || 0)}</div>
             <div style={{ fontSize: "0.9rem", fontWeight: 600, opacity: 0.9, marginTop: 4 }}>En el SIMPLE no existe salario mágico: impuesto neto {formatCOP(breakdownRST.impuestoNeto)}/año</div>
           </div>
           
@@ -516,7 +516,7 @@ export function SalarioMagicoIndependientes({
               <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div><div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 2: Seguridad Social (se paga aparte, no reduce la base)</div></div>
-                  <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--text-secondary)" }}>{formatCOP((breakdownRST.salud || 0) + (breakdownRST.pensionTotal || 0))}</div>
+                  <div style={{ fontSize: "0.95rem", fontWeight: 700, fontFamily: "var(--font-jetbrains), monospace", color: "var(--text-secondary)" }}>{formatCOP((breakdownRST.salud || 0) + (breakdownRST.pensionTotal || 0))}</div>
                 </div>
                 <div style={{ marginLeft: "12px", marginTop: "8px", padding: "12px", background: "rgba(255,255,255,0.02)", borderRadius: "12px", display: "flex", flexDirection: "column", gap: "8px", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between" }}><span>↳ Ingreso Bruto base:</span><span>{formatCOP(optimalGRST || 0)}</span></div>

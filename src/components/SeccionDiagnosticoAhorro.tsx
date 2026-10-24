@@ -18,7 +18,7 @@ export function SeccionDiagnosticoAhorro({ resultado: r, ahorroPorAportesVolunta
           </div>
           <p style={{ fontSize:"0.8rem", color:"var(--text-secondary)", lineHeight:1.7, maxWidth:440, margin:"0 auto 14px" }}>
             Para tu ingreso actual de{" "}
-            <strong style={{ color:"var(--text-primary)", fontFamily:"JetBrains Mono,monospace" }}>
+            <strong style={{ color:"var(--text-primary)", fontFamily:"var(--font-jetbrains),monospace" }}>
               {formatCOP(r.salarioMensual)}/mes
             </strong>
             , tu retención es de <strong style={{ color:"var(--accent-emerald)" }}>$0</strong>.
@@ -40,8 +40,8 @@ export function SeccionDiagnosticoAhorro({ resultado: r, ahorroPorAportesVolunta
 
           {r.aportesVoluntariosMensual > 0 ? (
             <div style={{ padding:"12px 14px", borderRadius:10, marginBottom:14,
-              background:"rgba(6,182,212,0.06)", border:"1px solid rgba(6,182,212,0.18)", textAlign: "left" }}>
-              <div style={{ fontWeight:700, fontSize:"0.78rem", color:"#06b6d4", marginBottom:8 }}>
+              background:"rgba(52,211,153,0.06)", border:"1px solid rgba(52,211,153,0.18)", textAlign: "left" }}>
+              <div style={{ fontWeight:700, fontSize:"0.78rem", color:"var(--accent-cyan)", marginBottom:8 }}>
                 💰 Impacto de tus Aportes Voluntarios
               </div>
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
@@ -50,7 +50,7 @@ export function SeccionDiagnosticoAhorro({ resultado: r, ahorroPorAportesVolunta
                   <div style={{ fontSize:"0.64rem", color:"var(--text-muted)", fontWeight:700, marginBottom:3 }}>
                     APORTES MES
                   </div>
-                  <div style={{ fontFamily:"JetBrains Mono,monospace", fontSize:"0.8rem",
+                  <div style={{ fontFamily:"var(--font-jetbrains),monospace", fontSize:"0.8rem",
                     fontWeight:700, color:"var(--text-primary)" }}>
                     {formatCOP(r.aportesVoluntariosMensual)}/mes
                   </div>
@@ -63,7 +63,7 @@ export function SeccionDiagnosticoAhorro({ resultado: r, ahorroPorAportesVolunta
                   <div style={{ fontSize:"0.64rem", color:"#22c55e", fontWeight:700, marginBottom:3 }}>
                     AHORRO GENERADO
                   </div>
-                  <div style={{ fontFamily:"JetBrains Mono,monospace", fontSize:"0.8rem",
+                  <div style={{ fontFamily:"var(--font-jetbrains),monospace", fontSize:"0.8rem",
                     fontWeight:700, color:"#22c55e" }}>
                     {formatCOP(ahorroPorAportesVoluntarios)}/año
                   </div>
@@ -126,8 +126,8 @@ export function SeccionDiagnosticoAhorro({ resultado: r, ahorroPorAportesVolunta
           Tramo marginal: {marginalPct}
         </span>
         <span style={{ padding:"4px 12px", borderRadius:20,
-          background:"rgba(6,182,212,0.08)", border:"1px solid rgba(6,182,212,0.2)",
-          fontSize:"0.7rem", fontWeight:700, color:"#06b6d4" }}>
+          background:"rgba(52,211,153,0.08)", border:"1px solid rgba(52,211,153,0.2)",
+          fontSize:"0.7rem", fontWeight:700, color:"var(--accent-cyan)" }}>
           Base: {formatUVT(r.baseGravableAnualUVT)}
         </span>
         {tieneDep && (
@@ -152,7 +152,7 @@ export function SeccionDiagnosticoAhorro({ resultado: r, ahorroPorAportesVolunta
               <div style={{ fontSize:"0.64rem", color:"#f59e0b", fontWeight:700, marginBottom:3 }}>
                 ART. 387 (Dentro 40%)
               </div>
-              <div style={{ fontFamily:"JetBrains Mono,monospace", fontSize:"0.8rem",
+              <div style={{ fontFamily:"var(--font-jetbrains),monospace", fontSize:"0.8rem",
                 fontWeight:700, color:"var(--text-primary)" }}>
                 {formatCOP(r.deduccionArt387Mes)}/mes
               </div>
@@ -166,7 +166,7 @@ export function SeccionDiagnosticoAhorro({ resultado: r, ahorroPorAportesVolunta
               <div style={{ fontSize:"0.64rem", color:"#fb923c", fontWeight:700, marginBottom:3 }}>
                 ART. 336 (Fuera 40%)
               </div>
-              <div style={{ fontFamily:"JetBrains Mono,monospace", fontSize:"0.8rem",
+              <div style={{ fontFamily:"var(--font-jetbrains),monospace", fontSize:"0.8rem",
                 fontWeight:700, color:"var(--text-primary)" }}>
                 {formatCOP(r.deduccionArt336Mes)}/mes
               </div>
@@ -181,14 +181,14 @@ export function SeccionDiagnosticoAhorro({ resultado: r, ahorroPorAportesVolunta
       {/* Diagnóstico Legal de Optimización */}
       <div style={{ padding:"14px", borderRadius:12,
         background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.08)", marginTop: 14 }}>
-        <div style={{ fontWeight:700, fontSize:"0.85rem", color:"#06b6d4", marginBottom:10 }}>
+        <div style={{ fontWeight:700, fontSize:"0.85rem", color:"var(--accent-cyan)", marginBottom:10 }}>
           💡 Diagnóstico Legal de Optimización (AFC / Pensiones Voluntarias)
         </div>
 
         {r.aportesVoluntariosMensual > 0 && (
           <div style={{ padding:"12px 14px", borderRadius:10, marginBottom:14,
-            background:"rgba(6,182,212,0.06)", border:"1px solid rgba(6,182,212,0.18)" }}>
-            <div style={{ fontWeight:700, fontSize:"0.78rem", color:"#06b6d4", marginBottom:8 }}>
+            background:"rgba(52,211,153,0.06)", border:"1px solid rgba(52,211,153,0.18)" }}>
+            <div style={{ fontWeight:700, fontSize:"0.78rem", color:"var(--accent-cyan)", marginBottom:8 }}>
               💰 Impacto de tus Aportes Voluntarios
             </div>
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
@@ -197,7 +197,7 @@ export function SeccionDiagnosticoAhorro({ resultado: r, ahorroPorAportesVolunta
                 <div style={{ fontSize:"0.64rem", color:"var(--text-muted)", fontWeight:700, marginBottom:3 }}>
                   APORTES MES
                 </div>
-                <div style={{ fontFamily:"JetBrains Mono,monospace", fontSize:"0.8rem",
+                <div style={{ fontFamily:"var(--font-jetbrains),monospace", fontSize:"0.8rem",
                   fontWeight:700, color:"var(--text-primary)" }}>
                   {formatCOP(r.aportesVoluntariosMensual)}/mes
                 </div>
@@ -210,7 +210,7 @@ export function SeccionDiagnosticoAhorro({ resultado: r, ahorroPorAportesVolunta
                 <div style={{ fontSize:"0.64rem", color:"#22c55e", fontWeight:700, marginBottom:3 }}>
                   AHORRO GENERADO
                 </div>
-                <div style={{ fontFamily:"JetBrains Mono,monospace", fontSize:"0.8rem",
+                <div style={{ fontFamily:"var(--font-jetbrains),monospace", fontSize:"0.8rem",
                   fontWeight:700, color:"#22c55e" }}>
                   {formatCOP(ahorroPorAportesVoluntarios)}/año
                 </div>
@@ -226,7 +226,7 @@ export function SeccionDiagnosticoAhorro({ resultado: r, ahorroPorAportesVolunta
           <>
             <p style={{ fontSize:"0.78rem", color:"var(--text-secondary)", lineHeight:1.7, margin:"0 0 12px" }}>
               De acuerdo al Art. 336 del E.T., tus deducciones tienen un doble candado: máximo el 40% de tu ingreso neto o 1.340 UVT al año.
-              Tu límite legal estricto permite aportar hasta <strong style={{ color:"var(--text-primary)", fontFamily:"JetBrains Mono,monospace" }}>{formatCOP(cupoMes)} / mes</strong> ({formatCOP(cupoAnual)} / año) a cuentas AFC o Pensiones Voluntarias sin pasarte de la ley.
+              Tu límite legal estricto permite aportar hasta <strong style={{ color:"var(--text-primary)", fontFamily:"var(--font-jetbrains),monospace" }}>{formatCOP(cupoMes)} / mes</strong> ({formatCOP(cupoAnual)} / año) a cuentas AFC o Pensiones Voluntarias sin pasarte de la ley.
               <br /><br />
               <em>Nota: Multiplicar el cupo por la tarifa marginal ({marginalPct}) genera una sobreestimación del ahorro al ignorar la progresividad de la tabla (Art. 241). Este simulador calcula el DELTA exacto liquidando el impuesto con y sin el aporte.</em>
               <br /><br />
@@ -238,7 +238,7 @@ export function SeccionDiagnosticoAhorro({ resultado: r, ahorroPorAportesVolunta
                 background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.08)",
                 textAlign:"center" }}>
                 <div style={{ fontSize:"0.65rem", color:"var(--text-muted)", fontWeight:700, marginBottom:4 }}>Sin Optimizar (Impuesto Original)</div>
-                <div style={{ fontFamily:"JetBrains Mono,monospace", fontSize:"0.95rem",
+                <div style={{ fontFamily:"var(--font-jetbrains),monospace", fontSize:"0.95rem",
                   fontWeight:700, color:"var(--text-primary)" }}>{formatCOP(impuestoOriginalAnual)}</div>
                 <div style={{ fontSize:"0.6rem", color:"var(--text-muted)", marginTop:4 }}>Impuesto de renta proyectado al año</div>
               </div>
@@ -248,7 +248,7 @@ export function SeccionDiagnosticoAhorro({ resultado: r, ahorroPorAportesVolunta
                 background:"rgba(34,197,94,0.06)", border:"1px solid rgba(34,197,94,0.15)",
                 textAlign:"center", position: "relative" }}>
                 <div style={{ fontSize:"0.65rem", color:"#22c55e", fontWeight:700, marginBottom:4 }}>Aportando el Tope Legal</div>
-                <div style={{ fontFamily:"JetBrains Mono,monospace", fontSize:"0.95rem",
+                <div style={{ fontFamily:"var(--font-jetbrains),monospace", fontSize:"0.95rem",
                   fontWeight:700, color:"var(--text-primary)" }}>{formatCOP(impuestoOptimizadoAnual)}</div>
                 <div style={{ fontSize:"0.6rem", color:"var(--text-muted)", marginTop:4 }}>Nuevo impuesto proyectado</div>
                 {impuestoOptimizadoAnual === 0 && (
@@ -261,11 +261,11 @@ export function SeccionDiagnosticoAhorro({ resultado: r, ahorroPorAportesVolunta
 
             {/* Bloque 3: El Gran Total */}
             <div style={{ padding:"16px", borderRadius:10,
-              background:"linear-gradient(135deg, rgba(6,182,212,0.15), rgba(6,182,212,0.05))", border:"1px solid rgba(6,182,212,0.3)",
+              background:"linear-gradient(135deg, rgba(52,211,153,0.15), rgba(52,211,153,0.05))", border:"1px solid rgba(52,211,153,0.3)",
               textAlign:"center" }}>
-              <div style={{ fontSize:"0.75rem", color:"#06b6d4", fontWeight:700, marginBottom:4 }}>🔥 TU AHORRO TRIBUTARIO NETO</div>
-              <div style={{ fontFamily:"JetBrains Mono,monospace", fontSize:"1.3rem",
-                fontWeight:800, color:"#06b6d4" }}>{formatCOP(ahorroAnual)} / año</div>
+              <div style={{ fontSize:"0.75rem", color:"var(--accent-cyan)", fontWeight:700, marginBottom:4 }}>🔥 TU AHORRO TRIBUTARIO NETO</div>
+              <div style={{ fontFamily:"var(--font-jetbrains),monospace", fontSize:"1.3rem",
+                fontWeight:800, color:"var(--accent-cyan)" }}>{formatCOP(ahorroAnual)} / año</div>
               <div style={{ fontSize:"0.7rem", color:"var(--text-secondary)", marginTop:4 }}>
                 Equivale a dejar de pagar <strong>{formatCOP(ahorroMes)}</strong> cada mes a la DIAN.
               </div>

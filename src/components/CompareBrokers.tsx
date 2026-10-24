@@ -69,16 +69,19 @@ export default function CompareBrokers() {
 
   return (
     <div className="w-full flex flex-col items-center font-sans">
-      <div className="w-full max-w-6xl space-y-8">
-        <section className="bg-gray-800 rounded-2xl p-6 md:p-8 border border-gray-700 shadow-2xl flex flex-col items-center text-center">
-          <h2 className="text-2xl font-bold text-white mb-6">Comparador Brokers</h2>
+      <div className="w-full max-w-6xl space-y-6">
+        <section className="card !p-5 md:!p-8 flex flex-col items-center text-center">
+          <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-1 tracking-tight">Comparador de brokers</h2>
+          <p className="text-sm text-[var(--text-secondary)] mb-6">Encuentra la plataforma más barata para el monto que quieres invertir.</p>
           <div className="mb-8 w-full flex flex-col items-center">
-            <label className="block text-sm font-medium text-gray-400 mb-2">Monto a Invertir (COP)</label>
+            <label htmlFor="monto-invertir" className="block text-sm font-medium text-[var(--text-secondary)] mb-2">Monto a invertir (COP)</label>
             <div className="relative flex items-center justify-center w-full max-w-md">
-              <span className="absolute left-4 text-emerald-400 font-bold text-xl">$</span>
+              <span className="absolute left-4 text-[var(--accent-emerald)] font-bold text-xl">$</span>
               <input
+                id="monto-invertir"
                 type="text"
-                className="w-full bg-gray-900 border border-gray-600 rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors text-center font-mono text-2xl tracking-wider"
+                inputMode="numeric"
+                className="tax-input text-center !text-2xl !pl-10"
                 value={montoStr ? new Intl.NumberFormat('es-CO').format(Number(montoStr)) : ''}
                 onChange={(e) => setMontoStr(e.target.value.replace(/\D/g, ''))}
               />
@@ -86,73 +89,67 @@ export default function CompareBrokers() {
           </div>
 
           {ganador ? (
-            <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 md:p-8 border border-gray-700 relative overflow-hidden shadow-lg w-full max-w-3xl">
-              <div className="absolute -top-4 -right-4 p-8 text-8xl opacity-5 transform rotate-12">📊</div>
-              <h3 className="text-sm tracking-wider uppercase text-blue-400 font-bold mb-2">Ganador Recomendado</h3>
-              <div className="text-3xl md:text-4xl font-bold text-white mb-6">{ganador.broker.nombre}</div>
+            <div className="rounded-xl p-6 md:p-8 border border-[var(--border-accent)] bg-[var(--glow-emerald)] relative overflow-hidden w-full max-w-3xl">
+              <h3 className="text-sm font-semibold text-[var(--accent-emerald)] mb-2">Opción más barata</h3>
+              <div className="text-2xl md:text-4xl font-bold text-[var(--text-primary)] mb-6 tracking-tight">{ganador.broker.nombre}</div>
 
               <div className="flex flex-wrap gap-8 mb-6 justify-center">
                 <div>
-                  <div className="text-xs uppercase tracking-wider text-gray-500 mb-1">Costo Total Neto</div>
-                  <div className="text-3xl font-mono text-green-400 font-semibold">
+                  <div className="text-xs text-[var(--text-muted)] mb-1">Costo total neto</div>
+                  <div className="text-2xl md:text-3xl font-mono text-[var(--accent-emerald)] font-semibold">
                     {formatCOP(ganador.resultado.costoFinal + ganador.resultado.costo_suscripcion)}
                   </div>
                 </div>
                 <div>
-                  <div className="text-xs uppercase tracking-wider text-gray-500 mb-1">Impacto</div>
-                  <div className="text-3xl font-mono text-blue-400 font-semibold">
+                  <div className="text-xs text-[var(--text-muted)] mb-1">Impacto sobre el monto</div>
+                  <div className="text-2xl md:text-3xl font-mono text-[var(--text-primary)] font-semibold">
                     {monto > 0 ? (((ganador.resultado.costoFinal + ganador.resultado.costo_suscripcion) / monto) * 100).toFixed(2) : '0.00'}%
                   </div>
                 </div>
               </div>
 
               {ganador.resultado.costo_suscripcion > 0 && (
-                <div className="mt-6 bg-red-900/20 border border-red-900/50 rounded-lg p-4 flex flex-col gap-2">
-                  <span className="flex items-center gap-2 text-red-400 font-bold">
-                    ⚠️ Más mensualidad de {formatCOP(ganador.resultado.costo_suscripcion)}
+                <div className="mt-6 bg-[var(--glow-amber)] border border-[var(--accent-amber)]/30 rounded-lg p-4 flex flex-col gap-2">
+                  <span className="flex items-center gap-2 text-[var(--accent-amber)] font-bold">
+                    Más mensualidad de {formatCOP(ganador.resultado.costo_suscripcion)}
                   </span>
                   {ganador.resultado.notas_adicionales && (
-                    <span className="text-red-300/80 text-sm leading-relaxed">{ganador.resultado.notas_adicionales}</span>
+                    <span className="text-[var(--text-secondary)] text-sm leading-relaxed">{ganador.resultado.notas_adicionales}</span>
                   )}
                 </div>
               )}
 
-              <div className="mt-6 pt-6 border-t border-gray-700/50 text-sm text-gray-400 flex items-start gap-2">
-                <span className="text-xl">ℹ️</span>
+              <div className="mt-6 pt-6 border-t border-[var(--border-color)] text-sm text-[var(--text-secondary)] flex items-start gap-2 justify-center text-left">
                 <p>
                   Nota: El monto mínimo requerido para futuras ventas en esta plataforma es de{' '}
-                  <strong className="text-gray-300">{formatCOP(ganador.broker.monto_minimo_venta)}</strong> COP.
+                  <strong className="text-[var(--text-primary)]">{formatCOP(ganador.broker.monto_minimo_venta)}</strong> COP.
                 </p>
               </div>
             </div>
           ) : (
-            <div className="bg-red-900/20 border border-red-800/50 rounded-xl p-6 text-red-400 text-center font-medium">
+            <div className="bg-[var(--glow-amber)] border border-[var(--accent-amber)]/30 rounded-xl p-6 text-[var(--accent-amber)] text-center font-medium">
               El monto ingresado es menor al mínimo de compra requerido por todos los brokers disponibles.
             </div>
           )}
         </section>
 
-        <section className="bg-gray-800 rounded-2xl p-6 md:p-8 border border-gray-700 shadow-2xl overflow-x-auto">
-          <h2 className="text-xl font-bold text-white mb-6">Matriz Comparativa de Comisiones</h2>
+        <section className="card !p-5 md:!p-8">
+          <h2 className="text-xl font-bold text-[var(--text-primary)] mb-1">Matriz comparativa de comisiones</h2>
+          <p className="text-sm text-[var(--text-muted)] mb-5">Costo total por compra (comisión + suscripción) y su peso sobre el monto. Toca una fila para resaltarla.</p>
           <div ref={tableRef} className="w-full overflow-x-auto">
-            <table className="w-full text-left border-collapse text-sm whitespace-nowrap min-w-max">
+            <table className="w-full text-left border-collapse text-sm whitespace-nowrap">
               <thead>
-                <tr className="border-b border-gray-700 divide-x divide-gray-600">
-                  <th className="py-4 !px-8 whitespace-nowrap font-semibold text-gray-400 uppercase tracking-wider text-xs">Monto</th>
+                <tr className="border-b border-[var(--border-color)]">
+                  <th className="py-3 px-4 whitespace-nowrap font-semibold text-[var(--text-secondary)] text-xs sticky left-0 z-10 bg-[var(--bg-card)]">Monto</th>
                   {brokers.map((b) => (
-                    <th key={`${b.id}-nom`} className="py-4 !px-8 whitespace-nowrap font-semibold text-gray-400 uppercase tracking-wider text-xs text-right">
-                      {b.nombre} ($) {b.costo_suscripcion_mensual ? '*' : ''}
+                    <th key={`${b.id}-nom`} className="py-3 px-4 whitespace-nowrap font-semibold text-[var(--text-secondary)] text-xs text-right">
+                      {b.nombre}{b.costo_suscripcion_mensual ? ' *' : ''}
                     </th>
                   ))}
-                  {brokers.map((b) => (
-                    <th key={`${b.id}-pct`} className="py-4 !px-8 whitespace-nowrap font-semibold text-gray-400 uppercase tracking-wider text-xs text-right">
-                      {b.nombre} (%) {b.costo_suscripcion_mensual ? '*' : ''}
-                    </th>
-                  ))}
-                  <th className="py-4 !px-8 whitespace-nowrap font-semibold text-gray-400 uppercase tracking-wider text-xs pl-8">🏁 Ganador</th>
+                  <th className="py-3 px-4 whitespace-nowrap font-semibold text-[var(--text-secondary)] text-xs">Más barato</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-700/50">
+              <tbody className="divide-y divide-[var(--border-color)]">
                 {saltos.map((m) => {
                   const filaResultados = brokers.map((b) => ({
                     broker: b,
@@ -173,48 +170,31 @@ export default function CompareBrokers() {
                   return (
                     <tr
                       key={m}
-                      className={`divide-x divide-gray-600 transition-all cursor-pointer ${selectedRow === m ? 'bg-gray-700 ring-2 ring-inset ring-blue-500 shadow-lg relative z-10' : 'bg-transparent hover:bg-gray-700/60'}`}
+                      className={`transition-colors cursor-pointer ${selectedRow === m ? 'bg-[var(--bg-card-hover)] ring-2 ring-inset ring-[var(--accent-emerald)]' : 'bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)]'}`}
                       onClick={() => setSelectedRow((current) => (current === m ? null : m))}
                     >
-                      <td className="py-3 !px-8 whitespace-nowrap font-mono text-gray-300 font-medium">{formatCOP(m)}</td>
+                      <td className="py-2.5 px-4 whitespace-nowrap font-mono text-[var(--text-primary)] font-medium sticky left-0 z-10 bg-inherit">{formatCOP(m)}</td>
                       {filaResultados.map(({ broker, res }) => {
                         if (res.error) {
-                          return <td key={`${broker.id}-nom`} className="py-3 !px-8 whitespace-nowrap text-right text-gray-600 font-mono text-xs">N/A</td>;
+                          return <td key={`${broker.id}-nom`} className="py-2.5 px-4 whitespace-nowrap text-right text-[var(--text-muted)] font-mono text-xs">N/A</td>;
                         }
                         const r = res as ResultadoExitoso;
+                        const total = r.costoFinal + r.costo_suscripcion;
                         const isWinner = ganadorFila?.broker.id === broker.id;
                         return (
-                          <td key={`${broker.id}-nom`} className={`py-3 !px-8 whitespace-nowrap text-right font-mono ${isWinner ? 'text-green-400 font-bold' : 'text-gray-400'}`}>
-                            {formatCOP(r.costoFinal + r.costo_suscripcion)}
+                          <td key={`${broker.id}-nom`} className={`py-2.5 px-4 whitespace-nowrap text-right font-mono ${isWinner ? 'text-[var(--accent-emerald)] font-bold' : 'text-[var(--text-secondary)]'}`}>
+                            <div>{formatCOP(total)}</div>
+                            <div className="text-[0.7rem] opacity-70">{((total / m) * 100).toFixed(2)}%</div>
                           </td>
                         );
                       })}
-                      {filaResultados.map(({ broker, res }) => {
-                        if (res.error) {
-                          return <td key={`${broker.id}-pct`} className="py-3 !px-8 whitespace-nowrap text-right text-gray-600 font-mono text-xs">N/A</td>;
-                        }
-                        const r = res as ResultadoExitoso;
-                        const p = (((r.costoFinal + r.costo_suscripcion) / m) * 100).toFixed(2);
-                        const isWinner = ganadorFila?.broker.id === broker.id;
-                        return (
-                          <td key={`${broker.id}-pct`} className={`py-3 !px-8 whitespace-nowrap text-right font-mono ${isWinner ? 'text-green-400 font-bold' : 'text-gray-400'}`}>
-                            {p}%
-                          </td>
-                        );
-                      })}
-                      <td className="py-3 !px-8 whitespace-nowrap pl-8">
+                      <td className="py-2.5 px-4 whitespace-nowrap">
                         {ganadorFila ? (
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold shadow-sm border ${
-                            ganadorFila.broker.nombre.toLowerCase().includes('trii')
-                              ? 'bg-green-900/20 text-green-400 border-green-800/50'
-                              : ganadorFila.broker.nombre.toLowerCase().includes('bancolombia')
-                                ? 'bg-yellow-900/20 text-yellow-400 border-yellow-800/50'
-                                : 'bg-blue-900/20 text-blue-400 border-blue-800/50'
-                          }`}>
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold border bg-[var(--glow-emerald)] text-[var(--accent-emerald)] border-[var(--border-accent)]">
                             {ganadorFila.broker.nombre}
                           </span>
                         ) : (
-                          <span className="text-gray-600 text-xs font-medium">N/A</span>
+                          <span className="text-[var(--text-muted)] text-xs font-medium">N/A</span>
                         )}
                       </td>
                     </tr>
@@ -225,21 +205,21 @@ export default function CompareBrokers() {
           </div>
         </section>
 
-        <div className="text-xs text-gray-400 bg-gray-800/50 p-4 rounded-xl border border-gray-700 mt-6 mb-8 space-y-2 leading-relaxed">
+        <div className="card !p-5 md:!p-6 text-[0.8rem] text-[var(--text-secondary)] space-y-3 leading-relaxed">
           <p>
-            <span className="text-yellow-500 font-bold">Nota sobre tarifas:</span> Los valores calculados corresponden a comisiones de corretaje con IVA incluido. (*) Indica plataformas con costo de suscripción mensual independiente.
+            <span className="text-[var(--text-primary)] font-semibold">Nota sobre tarifas:</span> Los valores calculados corresponden a comisiones de corretaje con IVA incluido. (*) Indica plataformas con costo de suscripción mensual independiente.
           </p>
           <p>
-            <span className="text-blue-400 font-bold">Realidad de ejecución en la BVC:</span> En el mercado colombiano no es posible comprar fracciones de acciones. El monto exacto invertido será una aproximación basada en el precio de mercado del activo multiplicada por unidades enteras. Además, la falta de liquidez en ciertos activos genera un spread que representa un costo implícito no reflejado aquí.
+            <span className="text-[var(--text-primary)] font-semibold">Realidad de ejecución en la BVC:</span> En el mercado colombiano no es posible comprar fracciones de acciones. El monto exacto invertido será una aproximación basada en el precio de mercado del activo multiplicada por unidades enteras. Además, la falta de liquidez en ciertos activos genera un spread que representa un costo implícito no reflejado aquí.
           </p>
           <p>
-            <span className="text-red-400 font-bold">Impacto Tributario (Brokers Internacionales):</span> Las inversiones en plataformas extranjeras no gozan del beneficio tributario de la BVC. Si vendes acciones con menos de 2 años de tenencia, la utilidad entra a tu Cédula General tributando a la tarifa marginal progresiva. Si mantienes la inversión por más de 2 años ininterrumpidos, tributarás como Ganancia Ocasional al 15%.
+            <span className="text-[var(--accent-amber)] font-semibold">Impacto tributario (brokers internacionales):</span> Las inversiones en plataformas extranjeras no gozan del beneficio tributario de la BVC. Si vendes acciones con menos de 2 años de tenencia, la utilidad entra a tu Cédula General tributando a la tarifa marginal progresiva. Si mantienes la inversión por más de 2 años ininterrumpidos, tributarás como Ganancia Ocasional al 15%.
           </p>
         </div>
 
-        <section className="bg-gray-800 rounded-2xl p-6 md:p-8 border border-gray-700 shadow-2xl">
-          <h2 className="text-xl font-bold text-white mb-6">Fuentes de Información y Tarifas Oficiales</h2>
-          <div className="space-y-4">
+        <section className="card !p-5 md:!p-8">
+          <h2 className="text-xl font-bold text-[var(--text-primary)] mb-5">Fuentes de información y tarifas oficiales</h2>
+          <div className="space-y-2">
             {[
               {
                 id: 'trii',
@@ -248,7 +228,7 @@ export default function CompareBrokers() {
                   <div className="space-y-2">
                     <p>Trii aplica comisiones fijas para montos menores a $5.000.000 y tarifas porcentuales por encima de ese umbral.</p>
                     <p>Trii Pro agrega una suscripción mensual y usa una escala más baja para el mismo monto.</p>
-                    <p className="text-blue-400">Fuente: <a href="https://trii.co/" target="_blank" rel="noreferrer" className="underline">Trii</a></p>
+                    <p className="text-[var(--accent-emerald)]">Fuente: <a href="https://trii.co/" target="_blank" rel="noreferrer" className="underline">Trii</a></p>
                   </div>
                 )
               },
@@ -259,7 +239,7 @@ export default function CompareBrokers() {
                   <div className="space-y-2">
                     <p>Bancolombia cobra tarifas fijas o porcentuales según el monto y el plan elegido, con IVA incluido.</p>
                     <p>Se usaron los rangos promocionales y estándar reportados para el comparador.</p>
-                    <p className="text-blue-400">Fuente: tarifa publicada en la plataforma eTrading de Bancolombia.</p>
+                    <p className="text-[var(--accent-emerald)]">Fuente: tarifa publicada en la plataforma eTrading de Bancolombia.</p>
                   </div>
                 )
               },
@@ -270,7 +250,7 @@ export default function CompareBrokers() {
                   <div className="space-y-2">
                     <p>Davivienda Homebroker usa una tarifa escalonada por monto y aplica una comisión fija o porcentual según el rango.</p>
                     <p>El comparador refleja la estructura general del tarifario disponible para operaciones en la plataforma.</p>
-                    <p className="text-blue-400">Fuente: tarifario público de Davivienda Homebroker.</p>
+                    <p className="text-[var(--accent-emerald)]">Fuente: tarifario público de Davivienda Homebroker.</p>
                   </div>
                 )
               },
@@ -281,7 +261,7 @@ export default function CompareBrokers() {
                   <div className="space-y-2">
                     <p>XTB se modela con un spread estimado de 0,5% sobre el monto y un costo de retiro vía SWIFT conservador.</p>
                     <p>El cálculo incluye el costo adicional de salida, que puede ser relevante en transferencias internacionales.</p>
-                    <p className="text-blue-400">Fuente: <a href="https://www.xtb.com/lat/centro-de-ayuda/tarifas-y-comisiones" target="_blank" rel="noreferrer" className="underline">XTB tarifas y comisiones</a></p>
+                    <p className="text-[var(--accent-emerald)]">Fuente: <a href="https://www.xtb.com/lat/centro-de-ayuda/tarifas-y-comisiones" target="_blank" rel="noreferrer" className="underline">XTB tarifas y comisiones</a></p>
                   </div>
                 )
               },
@@ -292,7 +272,7 @@ export default function CompareBrokers() {
                   <div className="space-y-2">
                     <p>eToro se modela con un costo de conversión de divisa de 3% y un retiro fijo local aproximado.</p>
                     <p>Este costo suele impactar más que la comisión directa en operaciones de montos pequeños y medianos.</p>
-                    <p className="text-blue-400">Fuente: <a href="https://www.etoro.com/es/trading/fees/conversion/" target="_blank" rel="noreferrer" className="underline">eToro fees and conversion</a></p>
+                    <p className="text-[var(--accent-emerald)]">Fuente: <a href="https://www.etoro.com/es/trading/fees/conversion/" target="_blank" rel="noreferrer" className="underline">eToro fees and conversion</a></p>
                   </div>
                 )
               },
@@ -303,21 +283,22 @@ export default function CompareBrokers() {
                   <div className="space-y-2">
                     <p>Hapi se modela con un costo mínimo de fondeo PSE y un porcentaje adicional sobre la operación.</p>
                     <p>También se incluye el costo fijo asociado a retiro local y la comisión de clearing.</p>
-                    <p className="text-blue-400">Fuente: <a href="https://help.hapi.trade/en/articles/8976002" target="_blank" rel="noreferrer" className="underline">Hapi help center</a></p>
+                    <p className="text-[var(--accent-emerald)]">Fuente: <a href="https://help.hapi.trade/en/articles/8976002" target="_blank" rel="noreferrer" className="underline">Hapi help center</a></p>
                   </div>
                 )
               }
             ].map((item) => (
-              <div key={item.id} className="border border-gray-700 rounded-lg overflow-hidden transition-all">
+              <div key={item.id} className="border border-[var(--border-color)] rounded-lg overflow-hidden">
                 <button
                   onClick={() => toggleSource(item.id)}
-                  className="w-full bg-gray-800/60 hover:bg-gray-800 px-6 py-4 flex justify-between items-center text-left transition-colors"
+                  aria-expanded={openSource === item.id}
+                  className="w-full hover:bg-[var(--bg-card-hover)] px-5 py-3.5 flex justify-between items-center text-left transition-colors cursor-pointer"
                 >
-                  <span className="font-semibold text-gray-200">{item.title}</span>
-                  <span className="text-gray-400">{openSource === item.id ? '▾' : '▸'}</span>
+                  <span className="font-semibold text-[var(--text-primary)]">{item.title}</span>
+                  <span className="text-[var(--text-muted)]">{openSource === item.id ? '−' : '+'}</span>
                 </button>
                 {openSource === item.id && (
-                  <div className="p-6 bg-gray-900 border-t border-gray-700 text-sm text-gray-300 leading-relaxed">
+                  <div className="px-5 py-4 bg-[var(--bg-primary)] border-t border-[var(--border-color)] text-sm text-[var(--text-secondary)] leading-relaxed">
                     {item.body}
                   </div>
                 )}

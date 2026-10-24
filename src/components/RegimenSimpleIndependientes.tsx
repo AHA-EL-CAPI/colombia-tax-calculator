@@ -202,7 +202,7 @@ export function RegimenSimpleIndependientes({ anio, uvt, smmlv }: RegimenSimpleI
           <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
             Impuesto Total a Pagar (RST)
           </div>
-          <div style={{ fontSize: "2.5rem", fontWeight: 800, color: "var(--accent-purple)", fontFamily: "JetBrains Mono, monospace", marginBottom: 8 }}>
+          <div style={{ fontSize: "2.5rem", fontWeight: 800, color: "var(--accent-purple)", fontFamily: "var(--font-jetbrains), monospace", marginBottom: 8 }}>
             {formatCOP(impuestoNeto)} <span style={{ fontSize: "1rem" }}>/año</span>
           </div>
           <div style={{ fontSize: "0.9rem", color: "var(--text-secondary)" }}>
@@ -219,7 +219,7 @@ export function RegimenSimpleIndependientes({ anio, uvt, smmlv }: RegimenSimpleI
           <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
             <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 1: Ingreso Bruto Anual</div>
             <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: "4px 0" }}>Honorarios totales facturados en el año.</p>
-            <strong style={{ fontSize: "1rem", fontFamily: "JetBrains Mono, monospace", color: "var(--text-primary)" }}>{formatCOP(ingresoAnual)}</strong>
+            <strong style={{ fontSize: "1rem", fontFamily: "var(--font-jetbrains), monospace", color: "var(--text-primary)" }}>{formatCOP(ingresoAnual)}</strong>
           </div>
 
           {/* Paso 2 */}
@@ -254,14 +254,14 @@ export function RegimenSimpleIndependientes({ anio, uvt, smmlv }: RegimenSimpleI
             <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginLeft: 12 }}>
               ↳ Aporte a Salud (12.5%): {formatCOP(salud)}
             </div>
-            <strong style={{ fontSize: "1rem", fontFamily: "JetBrains Mono, monospace", color: "var(--text-secondary)" }}>{formatCOP(salud)}</strong>
+            <strong style={{ fontSize: "1rem", fontFamily: "var(--font-jetbrains), monospace", color: "var(--text-secondary)" }}>{formatCOP(salud)}</strong>
           </div>
 
           {/* Paso 3 */}
           <div style={{ padding: "12px 0", borderBottom: "1px solid var(--border-color)" }}>
             <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Paso 3: (=) Base Gravable RST</div>
             <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: "4px 0" }}>Dinero sobre el cual se calculará la tarifa de tu grupo.</p>
-            <strong style={{ fontSize: "1rem", fontFamily: "JetBrains Mono, monospace", color: "var(--text-primary)" }}>(=) {formatCOP(baseGravableRST)}</strong>
+            <strong style={{ fontSize: "1rem", fontFamily: "var(--font-jetbrains), monospace", color: "var(--text-primary)" }}>(=) {formatCOP(baseGravableRST)}</strong>
           </div>
 
           {/* Paso 4 */}
@@ -271,7 +271,7 @@ export function RegimenSimpleIndependientes({ anio, uvt, smmlv }: RegimenSimpleI
             <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginLeft: 12 }}>
               ↳ Cálculo: {formatCOP(baseGravableRST)} × {(tarifaRST * 100).toFixed(1)}%
             </div>
-            <strong style={{ fontSize: "1rem", fontFamily: "JetBrains Mono, monospace", color: "var(--text-primary)" }}>{formatCOP(impuestoBrutoRST)}</strong>
+            <strong style={{ fontSize: "1rem", fontFamily: "var(--font-jetbrains), monospace", color: "var(--text-primary)" }}>{formatCOP(impuestoBrutoRST)}</strong>
           </div>
 
           {/* Paso 5 */}
@@ -281,7 +281,7 @@ export function RegimenSimpleIndependientes({ anio, uvt, smmlv }: RegimenSimpleI
             <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginLeft: 12 }}>
               ↳ Aportes patronales del año: {formatCOP(pensionPatronalMensual * 12)}
             </div>
-            <strong style={{ fontSize: "1rem", fontFamily: "JetBrains Mono, monospace", color: "var(--accent-red)" }}>(-) {formatCOP(descuentoPension)}</strong>
+            <strong style={{ fontSize: "1rem", fontFamily: "var(--font-jetbrains), monospace", color: "var(--accent-red)" }}>(-) {formatCOP(descuentoPension)}</strong>
           </div>
 
           {/* Paso 6 */}
@@ -291,7 +291,7 @@ export function RegimenSimpleIndependientes({ anio, uvt, smmlv }: RegimenSimpleI
             <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginLeft: 12 }}>
               ↳ Cálculo: {formatCOP(ingresoAnual * Math.min(100, Math.max(0, porcentajeElectronico)) / 100)} × 0.5%
             </div>
-            <strong style={{ fontSize: "1rem", fontFamily: "JetBrains Mono, monospace", color: "var(--accent-red)" }}>(-) {formatCOP(descuentoElectronico)}</strong>
+            <strong style={{ fontSize: "1rem", fontFamily: "var(--font-jetbrains), monospace", color: "var(--accent-red)" }}>(-) {formatCOP(descuentoElectronico)}</strong>
           </div>
 
           {/* Paso 6.5 */}
@@ -302,7 +302,7 @@ export function RegimenSimpleIndependientes({ anio, uvt, smmlv }: RegimenSimpleI
               <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginLeft: 12 }}>
                 ↳ Cálculo: {formatCOP(ingresoAnual)} × 8%
               </div>
-              <strong style={{ fontSize: "1rem", fontFamily: "JetBrains Mono, monospace", color: "var(--accent-red)" }}>(+) {formatCOP(impuestoConsumo)}</strong>
+              <strong style={{ fontSize: "1rem", fontFamily: "var(--font-jetbrains), monospace", color: "var(--accent-red)" }}>(+) {formatCOP(impuestoConsumo)}</strong>
             </div>
           )}
 
@@ -313,7 +313,7 @@ export function RegimenSimpleIndependientes({ anio, uvt, smmlv }: RegimenSimpleI
             <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginLeft: 12 }}>
               ↳ Ecuación: {formatCOP(impuestoBrutoRST)} - {formatCOP(descuentoPension)} - {formatCOP(descuentoElectronico)} {esExpendioComidas ? `+ ${formatCOP(impuestoConsumo)}` : ""}
             </div>
-            <strong style={{ fontSize: "1.1rem", fontFamily: "JetBrains Mono, monospace", color: "var(--accent-purple)" }}>(=) {formatCOP(impuestoNeto)}</strong>
+            <strong style={{ fontSize: "1.1rem", fontFamily: "var(--font-jetbrains), monospace", color: "var(--accent-purple)" }}>(=) {formatCOP(impuestoNeto)}</strong>
           </div>
 
         </div>
@@ -327,7 +327,7 @@ export function RegimenSimpleIndependientes({ anio, uvt, smmlv }: RegimenSimpleI
           ⚔️ EL DUELO: ORDINARIO VS. SIMPLE
         </div>
         
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 20 }}>
           {/* Columna Ordinario */}
           <div style={{ 
             background: "rgba(255,255,255,0.02)", border: "1px solid var(--border-color)", borderRadius: 12, padding: 16
@@ -335,7 +335,7 @@ export function RegimenSimpleIndependientes({ anio, uvt, smmlv }: RegimenSimpleI
             <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-secondary)", marginBottom: 8, textAlign: "center" }}>
               Régimen Ordinario
             </div>
-            <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--text-primary)", fontFamily: "JetBrains Mono, monospace", textAlign: "center", marginBottom: 8 }}>
+            <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--text-primary)", fontFamily: "var(--font-jetbrains), monospace", textAlign: "center", marginBottom: 8 }}>
               {formatCOP(impuestoOrdinarioTotal)}
             </div>
             <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>
@@ -357,7 +357,7 @@ export function RegimenSimpleIndependientes({ anio, uvt, smmlv }: RegimenSimpleI
             <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--accent-purple)", marginBottom: 8, textAlign: "center" }}>
               Régimen Simple
             </div>
-            <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--accent-purple)", fontFamily: "JetBrains Mono, monospace", textAlign: "center", marginBottom: 8 }}>
+            <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--accent-purple)", fontFamily: "var(--font-jetbrains), monospace", textAlign: "center", marginBottom: 8 }}>
               {formatCOP(impuestoNeto)}
             </div>
             <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>
@@ -394,7 +394,7 @@ export function RegimenSimpleIndependientes({ anio, uvt, smmlv }: RegimenSimpleI
       </div>
 
       {/* ── BLOQUE D: Referencias Legales ─────────────────────────── */}
-      <div style={{ marginTop: 24, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
+      <div style={{ marginTop: 24, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(200px, 100%), 1fr))", gap: 16 }}>
         <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid var(--border-color)", borderRadius: 12, padding: 16 }}>
           <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>Art. 903 al 916 E.T.</div>
           <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>Creación y tarifas del Régimen Simple.</div>
