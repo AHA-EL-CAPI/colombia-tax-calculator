@@ -67,7 +67,7 @@ export function SeccionReferenciasLegales({ anio }: { anio: number }) {
           display: "flex", alignItems: "center", justifyContent: "center",
         }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-            stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
             <polyline points="14 2 14 8 20 8" />
             <line x1="16" y1="13" x2="8" y2="13" />
@@ -95,17 +95,18 @@ export function SeccionReferenciasLegales({ anio }: { anio: number }) {
           <div key={r.articulo} style={{
             padding: "14px 16px",
             borderRadius: 12,
-            background: r.bg,
-            border: `1.5px solid ${r.border}`,
+            background: "var(--bg-primary)",
+            border: "1px solid var(--border-color)",
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
               <span style={{
                 padding: "2px 10px", borderRadius: 6,
-                background: `${r.color}18`,
-                border: `1px solid ${r.color}33`,
+                background: "var(--glow-emerald)",
+                border: "1px solid var(--border-accent)",
                 fontSize: "0.7rem", fontWeight: 800,
-                letterSpacing: "0.06em", color: r.color,
-                fontFamily: "JetBrains Mono, monospace",
+                letterSpacing: "0.06em", color: "var(--accent-emerald)",
+                fontFamily: "var(--font-jetbrains), monospace",
+                whiteSpace: "nowrap", flexShrink: 0,
               }}>{r.articulo} E.T.</span>
               <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-primary)" }}>
                 {r.titulo}
@@ -131,24 +132,6 @@ export function SeccionReferenciasLegales({ anio }: { anio: number }) {
         Las deducciones del Art. 336 (72 UVT/dependiente) se aplican <em>después</em> de este techo y son adicionales, pero no por el mismo dependiente usado en el Art. 387.
       </div>
 
-      {/* Disclaimer */}
-      <div style={{
-        padding: "12px 16px", borderRadius: 10,
-        background: "rgba(30,41,59,0.4)",
-        border: "1px solid rgba(71,85,105,0.3)",
-        textAlign: "center",
-      }}>
-        <p style={{
-          fontSize: "0.72rem",
-          color: "#64748b", // Slate-500
-          margin: 0, lineHeight: 1.65,
-        }}>
-          ⚖️ <strong style={{ color: "#94a3b8" }}>Simulador con fines pedagógicos.</strong>{" "}
-          Los cálculos para {anio - 1}/{anio} no sustituyen la asesoría de un contador profesional.
-          Consulta siempre al DIAN o a un profesional certificado antes de tomar decisiones tributarias.
-          Referencias normativas: Estatuto Tributario (D. 624/1989) y Ley 2277 de 2022.
-        </p>
-      </div>
     </section>
   );
 }

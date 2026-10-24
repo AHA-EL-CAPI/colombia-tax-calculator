@@ -26,7 +26,7 @@ function Row({ label, value, sub, bold, accent, negative, dim, valueColor, subTe
       </span>
       <div style={{ textAlign:"right" }}>
         <span data-testid={subTestId} style={{ fontSize:"0.82rem", fontWeight: bold?700:500,
-          fontFamily:"JetBrains Mono, monospace", color }}>{value}</span>
+          fontFamily:"var(--font-jetbrains), monospace", color }}>{value}</span>
         {sub && <span style={{ display: "block", fontSize:"0.68rem", color:"var(--text-muted)" }}>{sub}</span>}
       </div>
     </div>
@@ -52,11 +52,11 @@ export function SeccionProyeccionAnual({ resultado: r, aplicaTabla383 }: Props) 
       {/* Header */}
       <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:18 }}>
         <div style={{ width:36, height:36, borderRadius:10,
-          background:"linear-gradient(135deg,rgba(6,182,212,0.15),rgba(6,182,212,0.05))",
-          border:"1px solid rgba(6,182,212,0.2)",
+          background:"linear-gradient(135deg,rgba(52,211,153,0.15),rgba(52,211,153,0.05))",
+          border:"1px solid rgba(52,211,153,0.2)",
           display:"flex", alignItems:"center", justifyContent:"center" }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-            stroke="#06b6d4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            stroke="var(--accent-cyan)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
           </svg>
         </div>
@@ -71,7 +71,7 @@ export function SeccionProyeccionAnual({ resultado: r, aplicaTabla383 }: Props) 
         {!r.obligadoDeclarar && (
           <div style={{ marginLeft:"auto", padding:"4px 12px", borderRadius:20,
             background:"rgba(52,211,153,0.1)", border:"1px solid rgba(52,211,153,0.25)",
-            fontSize:"0.68rem", fontWeight:700, color:"#34d399" }}>
+            fontSize:"0.68rem", fontWeight:700, color:"var(--accent-emerald)" }}>
             ✓ No obligado a declarar
           </div>
         )}
@@ -92,8 +92,8 @@ export function SeccionProyeccionAnual({ resultado: r, aplicaTabla383 }: Props) 
         <div className="main-grid">
 
           {/* ── INGRESOS — values in cyan ── */}
-          <div style={{ padding: 32, borderRadius: 20, background: "rgba(6, 182, 212, 0.06)", border: "1px solid rgba(6, 182, 212, 0.15)" }}>
-            <SectionHead title={r.isIndependiente ? "DEPURACIÓN UGPP / CÁLCULO IBC ANUAL" : "INGRESOS LABORALES"} color="#06b6d4" />
+          <div style={{ padding: 32, borderRadius: 20, background: "rgba(52,211,153, 0.06)", border: "1px solid rgba(52,211,153, 0.15)" }}>
+            <SectionHead title={r.isIndependiente ? "DEPURACIÓN UGPP / CÁLCULO IBC ANUAL" : "INGRESOS LABORALES"} color="var(--accent-cyan)" />
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
 
               
@@ -120,7 +120,7 @@ export function SeccionProyeccionAnual({ resultado: r, aplicaTabla383 }: Props) 
                       ⚠️ <strong>Sin Capacidad de Pago:</strong> Tus ingresos netos son inferiores a 1 SMMLV ({formatCOP(C.SMMLV * 12)} anuales). No estás obligado a cotizar a seguridad social.
                     </div>
                   ) : (
-                    <div style={{ margin: "12px 0", padding: "10px 14px", borderRadius: 8, background: "rgba(52, 211, 153, 0.1)", border: "1px solid rgba(52, 211, 153, 0.3)", color: "#34d399", fontSize: "0.75rem" }}>
+                    <div style={{ margin: "12px 0", padding: "10px 14px", borderRadius: 8, background: "rgba(52, 211, 153, 0.1)", border: "1px solid rgba(52, 211, 153, 0.3)", color: "var(--accent-emerald)", fontSize: "0.75rem" }}>
                       ✅ <strong>Con Capacidad de Pago:</strong> Tus ingresos netos superan 1 SMMLV ({formatCOP(C.SMMLV * 12)} anuales). Es obligatorio cotizar sobre el IBC calculado.
                     </div>
                   )}
@@ -150,7 +150,7 @@ export function SeccionProyeccionAnual({ resultado: r, aplicaTabla383 }: Props) 
                       )}
                       <div style={{ fontSize: "0.7rem", color: "var(--text-secondary)" }}>Valor definitivo para Salud y Pensión</div>
                     </div>
-                    <div data-testid="ibc-valor-visual" style={{ fontWeight: 800, fontSize: "1.05rem", fontFamily: "JetBrains Mono, monospace", color: "var(--text-primary)" }}>
+                    <div data-testid="ibc-valor-visual" style={{ fontWeight: 800, fontSize: "1.05rem", fontFamily: "var(--font-jetbrains), monospace", color: "var(--text-primary)" }}>
                       {formatCOP(r.ibcAnual!)}
                     </div>
                   </div>
@@ -161,7 +161,7 @@ export function SeccionProyeccionAnual({ resultado: r, aplicaTabla383 }: Props) 
                   <Row label="Salario Base"
                     value={formatCOP(r.salarioMensual * 12)}
                     sub={`Mensual: ${formatCOP(r.salarioMensual)}`}
-                    valueColor="#06b6d4" />
+                    valueColor="var(--accent-cyan)" />
                   {r.totalDevengadoMes !== undefined && (r.totalDevengadoMes - r.salarioMensual) > 0 && (
                     <Row label="(+) Ingresos No Salariales / Bonos"
                       value={formatCOP((r.totalDevengadoMes - r.salarioMensual) * 12)}
@@ -268,18 +268,18 @@ export function SeccionProyeccionAnual({ resultado: r, aplicaTabla383 }: Props) 
                   <div style={{ padding: "12px", borderRadius: "8px", background: "rgba(245, 158, 11, 0.03)", border: "1px solid rgba(245, 158, 11, 0.1)", marginTop: "4px", marginBottom: "4px", fontSize: "0.72rem", color: "var(--text-secondary)" }}>
                     <div style={{ fontWeight: 700, marginBottom: "6px", color: "#f59e0b" }}>⚙️ Auditoría de Base Renta Exenta (Anual):</div>
                     <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
-                      <div style={{ opacity: 0.85 }}>• Ingreso Bruto Anual: <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(r.ingresoBrutoAnual)}</span></div>
-                      <div style={{ opacity: 0.85 }}>(–) Aportes PILA Obligatorios (Salud + Pensión): <span style={{ fontFamily: "JetBrains Mono, monospace", color: "var(--accent-rose)" }}>- {formatCOP(r.descuentoSaludAnual + r.descuentoPensionAnual)}</span></div>
+                      <div style={{ opacity: 0.85 }}>• Ingreso Bruto Anual: <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(r.ingresoBrutoAnual)}</span></div>
+                      <div style={{ opacity: 0.85 }}>(–) Aportes PILA Obligatorios (Salud + Pensión): <span style={{ fontFamily: "var(--font-jetbrains), monospace", color: "var(--accent-rose)" }}>- {formatCOP(r.descuentoSaludAnual + r.descuentoPensionAnual)}</span></div>
                       <div style={{ borderTop: "1px dashed rgba(245, 158, 11, 0.2)", margin: "4px 0" }} />
-                      <div style={{ fontWeight: 600, color: "var(--text-primary)", marginBottom: "6px" }}>(=) Renta Líquida Base: <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(r.ingresoNetoAnual)}</span></div>
-                      <div>(–) Dependientes Art. 387: <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(r.deduccionArt387Anual || 0)}</span></div>
-                      <div>(–) Medicina Prepagada: <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(r.medicinaPrepagadaAnual || 0)}</span></div>
-                      <div>(–) Intereses Vivienda: <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(r.interesesViviendaAnual || 0)}</span></div>
-                      <div>(–) Aportes AFC / FPV: <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(r.aportesVoluntariosAnual || 0)}</span></div>
+                      <div style={{ fontWeight: 600, color: "var(--text-primary)", marginBottom: "6px" }}>(=) Renta Líquida Base: <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(r.ingresoNetoAnual)}</span></div>
+                      <div>(–) Dependientes Art. 387: <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(r.deduccionArt387Anual || 0)}</span></div>
+                      <div>(–) Medicina Prepagada: <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(r.medicinaPrepagadaAnual || 0)}</span></div>
+                      <div>(–) Intereses Vivienda: <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(r.interesesViviendaAnual || 0)}</span></div>
+                      <div>(–) Aportes AFC / FPV: <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(r.aportesVoluntariosAnual || 0)}</span></div>
                       <div style={{ borderTop: "1px solid rgba(245,158,11,0.2)", marginTop: "4px", paddingTop: "4px", fontWeight: 600 }}>
-                        (=) Base Depurada: <span style={{ fontFamily: "JetBrains Mono, monospace" }}>{formatCOP(Math.max(0, r.ingresoNetoAnual - (r.deduccionArt387Anual || 0) - (r.medicinaPrepagadaAnual || 0) - (r.interesesViviendaAnual || 0) - (r.aportesVoluntariosAnual || 0)))}</span>
+                        (=) Base Depurada: <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(Math.max(0, r.ingresoNetoAnual - (r.deduccionArt387Anual || 0) - (r.medicinaPrepagadaAnual || 0) - (r.interesesViviendaAnual || 0) - (r.aportesVoluntariosAnual || 0)))}</span>
                       </div>
-                      <div>(×) 25% de Ley = <span style={{ fontFamily: "JetBrains Mono, monospace", color: "#f59e0b" }}>{formatCOP(r.rentaExentaAnual)}</span> {r.topeRentaExentaActivo ? <span style={{ color: "#fb923c" }}>(Topado a 790 UVT)</span> : ""}</div>
+                      <div>(×) 25% de Ley = <span style={{ fontFamily: "var(--font-jetbrains), monospace", color: "#f59e0b" }}>{formatCOP(r.rentaExentaAnual)}</span> {r.topeRentaExentaActivo ? <span style={{ color: "#fb923c" }}>(Topado a 790 UVT)</span> : ""}</div>
                     </div>
                   </div>
                 </>
@@ -311,7 +311,7 @@ export function SeccionProyeccionAnual({ resultado: r, aplicaTabla383 }: Props) 
                   background: "rgba(148,163,184,0.05)", border: "1px solid rgba(148,163,184,0.15)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
                     <span style={{ fontSize: "0.8rem", color: "var(--text-secondary)", fontWeight: 600 }}>LÍMITE 40% / 1.340 UVT</span>
-                    <span style={{ fontSize: "0.8rem", fontFamily: "JetBrains Mono, monospace",
+                    <span style={{ fontSize: "0.8rem", fontFamily: "var(--font-jetbrains), monospace",
                       color: r.topeTecho40Activo ? "#f59e0b" : "var(--text-muted)" }}>{r.porcentajeUsado.toFixed(1)}% usado</span>
                   </div>
                   <div style={{ height: 8, borderRadius: 4, background: "rgba(148,163,184,0.15)", overflow: "hidden" }}>
@@ -354,7 +354,7 @@ export function SeccionProyeccionAnual({ resultado: r, aplicaTabla383 }: Props) 
                     )}
                   </div>
                   <div style={{ textAlign: "right" }}>
-                    <span style={{ fontSize: "0.9rem", fontWeight: 700, fontFamily: "JetBrains Mono, monospace", color: "var(--accent-rose)" }}>
+                    <span style={{ fontSize: "0.9rem", fontWeight: 700, fontFamily: "var(--font-jetbrains), monospace", color: "var(--accent-rose)" }}>
                       - {formatCOP((r.costosDeduciblesMes || 0) * 12)}
                     </span>
                   </div>
@@ -371,7 +371,7 @@ export function SeccionProyeccionAnual({ resultado: r, aplicaTabla383 }: Props) 
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>(=) GRAN TOTAL DEDUCCIONES</span>
                       <div style={{ textAlign: "right" }}>
-                        <span style={{ fontSize: "1.1rem", fontWeight: 800, fontFamily: "JetBrains Mono, monospace", color: "var(--accent-rose)" }}>
+                        <span style={{ fontSize: "1.1rem", fontWeight: 800, fontFamily: "var(--font-jetbrains), monospace", color: "var(--accent-rose)" }}>
                           - {formatCOP(granTotalDeducciones)}
                         </span>
                       </div>
@@ -390,20 +390,20 @@ export function SeccionProyeccionAnual({ resultado: r, aplicaTabla383 }: Props) 
 
             {/* Base Gravable → green */}
             <div style={{ padding: 32, borderRadius: 20, background: "rgba(52, 211, 153, 0.06)", border: "1px solid rgba(52, 211, 153, 0.15)" }}>
-              <SectionHead title="BASE GRAVABLE ANUAL" color="#34d399" />
+              <SectionHead title="BASE GRAVABLE ANUAL" color="var(--accent-emerald)" />
               <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 16 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
                   <span style={{ color: "var(--text-secondary)" }}>Ingreso Bruto</span>
-                  <span style={{ fontFamily: "JetBrains Mono, monospace", color: "var(--accent-emerald)" }}>{formatCOP(r.ingresoBrutoAnual)}</span>
+                  <span style={{ fontFamily: "var(--font-jetbrains), monospace", color: "var(--accent-emerald)" }}>{formatCOP(r.ingresoBrutoAnual)}</span>
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
                   <span style={{ color: "var(--text-secondary)" }}>(-) Gran Total Deducciones</span>
-                  <span style={{ fontFamily: "JetBrains Mono, monospace", color: "var(--accent-rose)" }}>- {formatCOP(r.descuentoSaludAnual + r.descuentoPensionAnual + (r.fspAnual || 0) + (r.isIndependiente ? (r.costosDeduciblesMes || 0) * 12 : 0) + r.rentaExentaAnual + (r.tieneArt387 ? r.deduccionArt387Anual : 0) + (r.tieneArt336 ? r.deduccionArt336Anual : 0))}</span>
+                  <span style={{ fontFamily: "var(--font-jetbrains), monospace", color: "var(--accent-rose)" }}>- {formatCOP(r.descuentoSaludAnual + r.descuentoPensionAnual + (r.fspAnual || 0) + (r.isIndependiente ? (r.costosDeduciblesMes || 0) * 12 : 0) + r.rentaExentaAnual + (r.tieneArt387 ? r.deduccionArt387Anual : 0) + (r.tieneArt336 ? r.deduccionArt336Anual : 0))}</span>
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "1rem", fontWeight: 700, borderTop: "1.5px solid rgba(52, 211, 153, 0.3)", paddingTop: 12, marginTop: 4 }}>
                   <span style={{ color: "var(--text-primary)" }}>(=) Base Gravable Final</span>
                   <div style={{ textAlign: "right" }}>
-                    <span data-testid="base-uvt-anual" style={{ fontFamily: "JetBrains Mono, monospace", color: "var(--accent-emerald)" }}>{formatCOP(r.baseGravableAnual)}</span>
+                    <span data-testid="base-uvt-anual" style={{ fontFamily: "var(--font-jetbrains), monospace", color: "var(--accent-emerald)" }}>{formatCOP(r.baseGravableAnual)}</span>
                     <span style={{ display: "block", fontSize: "0.68rem", color: "var(--text-muted)", fontWeight: 500 }}>
                       {formatUVT(r.baseGravableAnualUVT)}
                     </span>
@@ -414,7 +414,7 @@ export function SeccionProyeccionAnual({ resultado: r, aplicaTabla383 }: Props) 
 
             {/* Impuesto → green */}
             <div style={{ padding: 32, borderRadius: 20, background: "rgba(52, 211, 153, 0.06)", border: "1px solid rgba(52, 211, 153, 0.15)" }}>
-              <SectionHead title="IMPUESTO ESTIMADO ANUAL" color="#34d399" />
+              <SectionHead title="IMPUESTO ESTIMADO ANUAL" color="var(--accent-emerald)" />
               <Row dim label="Tramo marginal"
                 value={`${(tramo.marginal * 100).toFixed(0)}%`}
                 sub={`Base: ${r.baseGravableAnualUVT.toFixed(1)} UVT`} />
@@ -425,21 +425,21 @@ export function SeccionProyeccionAnual({ resultado: r, aplicaTabla383 }: Props) 
                   Desglose de Tabla (Art. 241):
                 </div>
                 <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", display: "flex", flexDirection: "column", gap: 4 }}>
-                  <div>• Base Gravable en UVT: <span style={{ fontFamily: "JetBrains Mono, monospace", color: "var(--text-secondary)" }}>{r.baseGravableAnualUVT.toFixed(2)}</span> UVT</div>
+                  <div>• Base Gravable en UVT: <span style={{ fontFamily: "var(--font-jetbrains), monospace", color: "var(--text-secondary)" }}>{r.baseGravableAnualUVT.toFixed(2)}</span> UVT</div>
                   <div>• Tramo Aplicable: <span style={{ color: "var(--text-secondary)" }}>&gt; {tramo.desde} a {tramo.hasta === Infinity ? "más" : tramo.hasta}</span> UVT (Tarifa Marginal: <span style={{ color: "var(--text-secondary)" }}>{(tramo.marginal * 100).toFixed(0)}%</span>)</div>
                   <div>• Fórmula Legal: <span style={{ color: "var(--text-secondary)" }}>(Base UVT - {tramo.baseUVT}) × {(tramo.marginal * 100).toFixed(0)}% + {tramo.cuotaFija}</span></div>
                   <div>• Cálculo: <span style={{ color: "var(--text-secondary)" }}>({r.baseGravableAnualUVT.toFixed(2)} - {tramo.baseUVT}) × {(tramo.marginal * 100).toFixed(0)}% + {tramo.cuotaFija} = {((r.baseGravableAnualUVT - tramo.baseUVT) * tramo.marginal + tramo.cuotaFija).toFixed(2)}</span> UVT</div>
-                  <div>• Conversión a Pesos: <span style={{ fontFamily: "JetBrains Mono, monospace", color: "#34d399" }}>{((r.baseGravableAnualUVT - tramo.baseUVT) * tramo.marginal + tramo.cuotaFija).toFixed(2)} UVT × ${C.UVT.toLocaleString("es-CO")} = {formatCOP(r.impuestoAnual)}</span></div>
+                  <div>• Conversión a Pesos: <span style={{ fontFamily: "var(--font-jetbrains), monospace", color: "var(--accent-emerald)" }}>{((r.baseGravableAnualUVT - tramo.baseUVT) * tramo.marginal + tramo.cuotaFija).toFixed(2)} UVT × ${C.UVT.toLocaleString("es-CO")} = {formatCOP(r.impuestoAnual)}</span></div>
                 </div>
               </div>
 
               <div style={{ marginTop: 16, padding: 24, borderRadius: 16,
                 background: "linear-gradient(135deg,rgba(52,211,153,0.1),rgba(52,211,153,0.04))",
                 border: "1.5px solid rgba(52,211,153,0.25)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#34d399", letterSpacing: "0.05em" }}>
+                <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--accent-emerald)", letterSpacing: "0.05em" }}>
                   IMPUESTO ANUAL ESTIMADO
                 </div>
-                <div style={{ fontSize: "2.4rem", fontWeight: 800, fontFamily: "JetBrains Mono, monospace", color: "#34d399" }}>
+                <div style={{ fontSize: "2.4rem", fontWeight: 800, fontFamily: "var(--font-jetbrains), monospace", color: "var(--accent-emerald)" }}>
                   {formatCOP(r.impuestoAnual)}
                 </div>
               </div>
@@ -459,7 +459,7 @@ export function SeccionProyeccionAnual({ resultado: r, aplicaTabla383 }: Props) 
                   <span style={{ color: "#f59e0b", fontWeight: 600, fontSize: "0.9rem", display: "flex", alignItems: "center", gap: "6px" }}>
                     🏛️ Impuesto Municipal (ICA) No Incluido
                   </span>
-                  <span style={{ color: "#f59e0b", fontFamily: "JetBrains Mono, monospace", fontWeight: 700 }}>
+                  <span style={{ color: "#f59e0b", fontFamily: "var(--font-jetbrains), monospace", fontWeight: 700 }}>
                     ~ {formatCOP(r.ingresoBrutoAnual * 0.01)} / año
                   </span>
                 </div>

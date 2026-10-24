@@ -1,83 +1,6 @@
 "use client";
-import { useState, useCallback } from "react";
+import { useState, useCallback, type ReactNode } from "react";
 import { DependientesInput } from "@/components/DependientesInput";
-
-// ── Tipo de Vinculación ──────────────────────────────────────────
-type TipoVinculacion = "asalariados" | "independientes" | "cedular" | "magico-asalariados" | "magico-independientes" | "simple-independientes";
-
-const TABS_VINCULACION: { id: TipoVinculacion; label: string; icon: string }[] = [
-  { id: "asalariados",    label: "Asalariados",    icon: "🏢" },
-  { id: "independientes", label: "Independientes",  icon: "💼" },
-  { id: "cedular",        label: "Declaración Anual", icon: "📑" },
-  { id: "simple-independientes", label: "Régimen Simple", icon: "🏪" },
-  { id: "magico-asalariados", label: "Mágico Asalariados", icon: "✨" },
-  { id: "magico-independientes", label: "Mágico Independientes", icon: "🪄" },
-];
-
-// ── Componente: Segmented Control de Vinculación ─────────────────
-function VinculacionSelector({
-  tipo,
-  onChange,
-}: {
-  tipo: TipoVinculacion;
-  onChange: (t: TipoVinculacion) => void;
-}) {
-  return (
-    <div
-      role="tablist"
-      aria-label="Tipo de vinculación laboral"
-      style={{
-        display: "flex",
-        flexWrap: "wrap",
-        justifyContent: "center",
-        padding: "4px",
-        borderRadius: 14,
-        background: "#0f172a",          // Slate-900 – alto contraste
-        border: "1.5px solid #1e293b",  // Slate-800
-        gap: 2,
-      }}
-    >
-      {TABS_VINCULACION.map(({ id, label, icon }) => {
-        const active = id === tipo;
-        return (
-          <button
-            key={id}
-            role="tab"
-            aria-selected={active}
-            onClick={() => onChange(id)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 7,
-              padding: "9px 22px",
-              borderRadius: 10,
-              border: "none",
-              cursor: "pointer",
-              fontSize: "0.85rem",
-              fontWeight: 700,
-              letterSpacing: "0.01em",
-              transition: "background 0.22s ease, color 0.22s ease, box-shadow 0.22s ease",
-              background: active
-                ? "linear-gradient(135deg, rgba(52,211,153,0.22), rgba(52,211,153,0.1))"
-                : "transparent",
-              color: active ? "#34d399" : "#64748b",  // Emerald-400 activo, Slate-400 inactivo
-              boxShadow: active
-                ? "inset 0 0 0 1.5px rgba(52,211,153,0.45), 0 0 14px rgba(52,211,153,0.12)"
-                : "none",
-              whiteSpace: "nowrap",
-              flexShrink: 0,
-            }}
-          >
-            <span style={{ fontSize: "1rem" }}>{icon}</span>
-            {label}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-
 import {
   calcularRetencion,
   calcularRetencionIndependiente,
@@ -98,6 +21,122 @@ import { RegimenSimpleIndependientes } from "@/components/RegimenSimpleIndependi
 import { DeclaracionCedular } from "@/components/DeclaracionCedular";
 import CompareBrokers from "@/components/CompareBrokers";
 
+// ── Tipo de Vinculación ──────────────────────────────────────────
+type TipoVinculacion = "asalariados" | "independientes" | "cedular" | "magico-asalariados" | "magico-independientes" | "simple-independientes";
+
+// Íconos de línea (estilo Feather) para las categorías
+const ICONOS: Record<string, ReactNode> = {
+  asalariados: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="2" y="7" width="20" height="14" rx="2" />
+      <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16" />
+    </svg>
+  ),
+  independientes: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  ),
+  cedular: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+      <polyline points="14 2 14 8 20 8" />
+      <line x1="16" y1="13" x2="8" y2="13" />
+      <line x1="16" y1="17" x2="8" y2="17" />
+    </svg>
+  ),
+};
+
+// Tres categorías principales; cada una agrupa sus modos de cálculo
+type Categoria = "asalariados" | "independientes" | "cedular";
+
+const CATEGORIAS: { id: Categoria; label: string; modos: { id: TipoVinculacion; label: string }[] }[] = [
+  {
+    id: "asalariados",
+    label: "Asalariados",
+    modos: [
+      { id: "asalariados", label: "Retención mensual" },
+      { id: "magico-asalariados", label: "Salario mágico" },
+    ],
+  },
+  {
+    id: "independientes",
+    label: "Independientes",
+    modos: [
+      { id: "independientes", label: "Retención mensual" },
+      { id: "simple-independientes", label: "Régimen Simple" },
+      { id: "magico-independientes", label: "Salario mágico" },
+    ],
+  },
+  {
+    id: "cedular",
+    label: "Declaración anual",
+    modos: [{ id: "cedular", label: "Declaración anual" }],
+  },
+];
+
+const NOTA_POR_TIPO: Record<TipoVinculacion, string> = {
+  "asalariados": "Para personas con contrato laboral vigente en Colombia (rentas de trabajo, Art. 383 E.T.).",
+  "magico-asalariados": "Encuentra el salario bruto que necesitas para recibir un neto mensual objetivo.",
+  "independientes": "Para contratistas y prestadores de servicios con honorarios o cuentas de cobro.",
+  "simple-independientes": "Compara el Régimen Simple de Tributación (Art. 903 E.T.) con el régimen ordinario.",
+  "magico-independientes": "Encuentra cuánto facturar para recibir un neto mensual objetivo como independiente.",
+  "cedular": "Simula tu declaración de renta anual por cédulas (Art. 330 y ss. E.T.).",
+};
+
+function categoriaDe(tipo: TipoVinculacion): Categoria {
+  return CATEGORIAS.find((c) => c.modos.some((m) => m.id === tipo))!.id;
+}
+
+// ── Componente: Selector de categoría y modo ─────────────────────
+function VinculacionSelector({
+  tipo,
+  onChange,
+}: {
+  tipo: TipoVinculacion;
+  onChange: (t: TipoVinculacion) => void;
+}) {
+  const categoria = categoriaDe(tipo);
+  const modos = CATEGORIAS.find((c) => c.id === categoria)!.modos;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+      <div role="tablist" aria-label="Tipo de cálculo" className="segmented">
+        {CATEGORIAS.map(({ id, label, modos }) => (
+          <button
+            key={id}
+            role="tab"
+            aria-selected={id === categoria}
+            className="segmented-btn"
+            onClick={() => id !== categoria && onChange(modos[0].id)}
+          >
+            {ICONOS[id]}
+            {label}
+          </button>
+        ))}
+      </div>
+      {modos.length > 1 && (
+        <div role="tablist" aria-label="Modo de cálculo" className="segmented segmented-sm">
+          {modos.map(({ id, label }) => (
+            <button
+              key={id}
+              role="tab"
+              aria-selected={id === tipo}
+              className="segmented-btn"
+              onClick={() => onChange(id)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+
 // ── Year selector tabs ───────────────────────────────────────────
 const ANIOS: AnioGravable[] = [2025, 2026];
 
@@ -109,43 +148,17 @@ function YearSelector({
   onChange: (a: AnioGravable) => void;
 }) {
   return (
-    <div style={{
-      display: "inline-flex",
-      alignItems: "center",
-      gap: 4,
-      padding: "4px",
-      borderRadius: 12,
-      background: "var(--bg-card)",
-      border: "1.5px solid var(--border-color)",
-    }}>
-      {ANIOS.map((a) => {
-        const active = a === anio;
-        return (
-          <button
-            key={a}
-            onClick={() => onChange(a)}
-            aria-pressed={active}
-            style={{
-              padding: "7px 20px",
-              borderRadius: 9,
-              border: "none",
-              cursor: "pointer",
-              fontSize: "0.82rem",
-              fontWeight: 700,
-              fontFamily: "JetBrains Mono, monospace",
-              letterSpacing: "0.04em",
-              transition: "all 0.18s ease",
-              background: active
-                ? "linear-gradient(135deg, #06b6d4, #34d399)"
-                : "transparent",
-              color: active ? "#0f172a" : "var(--text-muted)",
-              boxShadow: active ? "0 0 12px rgba(6,182,212,0.35)" : "none",
-            }}
-          >
-            {a}
-          </button>
-        );
-      })}
+    <div className="segmented" role="group" aria-label="Año gravable">
+      {ANIOS.map((a) => (
+        <button
+          key={a}
+          onClick={() => onChange(a)}
+          aria-pressed={a === anio}
+          className="segmented-btn year-btn"
+        >
+          {a}
+        </button>
+      ))}
     </div>
   );
 }
@@ -163,63 +176,62 @@ function getSalariosRapidos(anio: AnioGravable) {
   ];
 }
 
-// ── Section divider ──────────────────────────────────────────────
-function SectionDivider({
-  topLabel,
-  bottomLabel,
-  topColor,
-  bottomColor,
-}: {
-  topLabel: string;
-  bottomLabel: string;
-  topColor: string;
-  bottomColor: string;
-}) {
+// ── Bloque plegable para el cálculo detallado ────────────────────
+function DetalleCalculo({ titulo, subtitulo, children }: { titulo: string; subtitulo: string; children: ReactNode }) {
   return (
-    <div style={{ position: "relative", margin: "36px 0", display: "flex", alignItems: "center", gap: 16 }}>
-      <div style={{
-        display: "flex", alignItems: "center", gap: 8, flexShrink: 0,
-        padding: "6px 14px", borderRadius: 20,
-        background: "var(--bg-card)",
-        border: `1.5px solid ${topColor}33`,
-        fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.1em",
-        textTransform: "uppercase", color: topColor,
-      }}>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-          <polyline points="18 15 12 9 6 15" />
-        </svg>
-        {topLabel}
-      </div>
-
-      <div style={{ flex: 1, position: "relative", height: 1, background: `linear-gradient(90deg, ${topColor}33, ${bottomColor}33)` }}>
-        <div style={{
-          position: "absolute", left: "50%", top: "50%",
-          transform: "translate(-50%, -50%)",
-          padding: "5px 14px", borderRadius: 20,
-          background: "var(--bg-primary)",
-          border: "1px solid var(--border-color)",
-          fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.12em",
-          textTransform: "uppercase", color: "var(--text-muted)",
-          whiteSpace: "nowrap",
-        }}>
-          ÷ 12 meses
+    <details className="detail-block">
+      <summary>
+        <div>
+          {titulo}
+          <small>{subtitulo}</small>
         </div>
-      </div>
-
-      <div style={{
-        display: "flex", alignItems: "center", gap: 8, flexShrink: 0,
-        padding: "6px 14px", borderRadius: 20,
-        background: "var(--bg-card)",
-        border: `1.5px solid ${bottomColor}33`,
-        fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.1em",
-        textTransform: "uppercase", color: bottomColor,
-      }}>
-        {bottomLabel}
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+        <svg className="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
           <polyline points="6 9 12 15 18 9" />
         </svg>
+      </summary>
+      <div className="detail-body">{children}</div>
+    </details>
+  );
+}
+
+// ── Pie de página ────────────────────────────────────────────────
+function SiteFooter({ anio }: { anio: AnioGravable }) {
+  const C = CONSTANTES_POR_ANIO[anio];
+  return (
+    <footer className="site-footer">
+      <div className="site-footer-inner">
+        <div>
+          <h4>Aviso legal</h4>
+          <p>
+            Simulador con fines educativos. Los resultados son estimaciones y no reemplazan la asesoría de un
+            contador público ni la normativa oficial de la DIAN. Verifica tu caso antes de tomar decisiones tributarias.
+          </p>
+        </div>
+        <div>
+          <h4>Fuentes normativas</h4>
+          <p>
+            Estatuto Tributario (Decreto 624 de 1989), Arts. 206, 241, 336, 383, 387 y 592; Ley 2277 de 2022;
+            Ley 1393 de 2010.{" "}
+            <a href="https://normograma.dian.gov.co/dian/compilacion/docs/estatuto_tributario.htm" target="_blank" rel="noreferrer">
+              Estatuto Tributario en la DIAN
+            </a>
+          </p>
+        </div>
+        <div>
+          <h4>Valores de referencia {anio}</h4>
+          <p>
+            UVT: {formatCOP(C.UVT)}
+            <br />
+            SMMLV: {formatCOP(C.SMMLV)}
+            <br />
+            Auxilio de transporte: {formatCOP(C.AUX_TRANSPORTE)}
+          </p>
+        </div>
       </div>
-    </div>
+      <div className="site-footer-bottom">
+        Vigencia fiscal {anio} · Valores actualizados a octubre de 2026
+      </div>
+    </footer>
   );
 }
 
@@ -285,88 +297,47 @@ export default function CalculadoraPage() {
   const salariosRapidos = getSalariosRapidos(anio);
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "var(--bg-primary)", paddingBottom: 80 }}>
+    <div style={{ minHeight: "100vh", backgroundColor: "var(--bg-primary)", paddingBottom: 40 }}>
 
       {/* ══ HEADER ══════════════════════════════════════════════════ */}
-      <header style={{
-        position: "sticky", top: 0, zIndex: 50,
-        backdropFilter: "blur(14px)",
-        WebkitBackdropFilter: "blur(14px)",
-        backgroundColor: "rgba(15, 23, 42, 0.88)",
-        borderBottom: "1px solid var(--border-color)",
-        padding: "0 24px",
-      }}>
-        <div style={{ maxWidth: 1180, margin: "0 auto", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            {/* Logo */}
-            <div style={{
-              width: 38, height: 38, borderRadius: 11,
-              background: "linear-gradient(135deg, #06b6d4, #34d399)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: "0 0 18px rgba(6,182,212,0.35)",
-            }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+      <header className="site-header">
+        <div className="site-header-inner">
+          <div className="brand">
+            <div className="brand-logo" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
               </svg>
             </div>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: "0.96rem", color: "var(--text-primary)", lineHeight: 1.2 }}>
-                Retención en la Fuente
-              </div>
-              <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", lineHeight: 1 }}>
-                Art. 241 E.T. · Colombia {anio} · Metodología Anual-First
-              </div>
+            <div style={{ minWidth: 0 }}>
+              <div className="brand-title">Calculadora Tributaria</div>
+              <div className="brand-subtitle">Colombia · Estatuto Tributario · {anio}</div>
             </div>
           </div>
-          {/* Year selector in header + theme toggle */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <YearSelector anio={anio} onChange={handleAnioChange} />
+          <div className="header-actions">
+            {activeTab === "taxes" && <YearSelector anio={anio} onChange={handleAnioChange} />}
             <ThemeToggle />
           </div>
         </div>
       </header>
 
       {/* ── TABS DE NAVEGACIÓN ── */}
-      <div style={{ display: "flex", justifyContent: "center", paddingTop: 32, paddingLeft: 24, paddingRight: 24 }}>
-        <div style={{
-          display: "flex",
-          background: "var(--bg-card)",
-          borderRadius: 20,
-          padding: 6,
-          border: "1px solid var(--border-color)",
-          gap: 6
-        }}>
-          <button
-            onClick={() => setActiveTab('taxes')}
-            style={{
-              padding: "10px 24px",
-              borderRadius: 14,
-              fontWeight: 700,
-              fontSize: "0.9rem",
-              transition: "all 0.2s ease",
-              background: activeTab === 'taxes' ? "linear-gradient(135deg, rgba(6,182,212,0.15), rgba(52,211,153,0.1))" : "transparent",
-              color: activeTab === 'taxes' ? "var(--accent-emerald)" : "var(--text-muted)",
-              border: activeTab === 'taxes' ? "1px solid rgba(52,211,153,0.3)" : "1px solid transparent",
-              cursor: "pointer",
-            }}
-          >
-            🏛️ Calculadora de Impuestos
+      <div style={{ display: "flex", justifyContent: "center", padding: "28px 16px 0" }}>
+        <div role="tablist" aria-label="Herramienta" className="segmented">
+          <button role="tab" aria-selected={activeTab === "taxes"} className="segmented-btn" onClick={() => setActiveTab("taxes")}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="4" y="2" width="16" height="20" rx="2" />
+              <line x1="8" y1="6" x2="16" y2="6" />
+              <line x1="8" y1="11" x2="8" y2="11.01" /><line x1="12" y1="11" x2="12" y2="11.01" /><line x1="16" y1="11" x2="16" y2="11.01" />
+              <line x1="8" y1="15" x2="8" y2="15.01" /><line x1="12" y1="15" x2="12" y2="15.01" /><line x1="16" y1="15" x2="16" y2="15.01" />
+            </svg>
+            Calculadora de impuestos
           </button>
-          <button
-            onClick={() => setActiveTab('invest')}
-            style={{
-              padding: "10px 24px",
-              borderRadius: 14,
-              fontWeight: 700,
-              fontSize: "0.9rem",
-              transition: "all 0.2s ease",
-              background: activeTab === 'invest' ? "linear-gradient(135deg, rgba(59,130,246,0.15), rgba(147,51,234,0.1))" : "transparent",
-              color: activeTab === 'invest' ? "#60a5fa" : "var(--text-muted)",
-              border: activeTab === 'invest' ? "1px solid rgba(96,165,250,0.3)" : "1px solid transparent",
-              cursor: "pointer",
-            }}
-          >
-            📈 Comparador Brokers
+          <button role="tab" aria-selected={activeTab === "invest"} className="segmented-btn" onClick={() => setActiveTab("invest")}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+              <polyline points="17 6 23 6 23 12" />
+            </svg>
+            Comparador de brokers
           </button>
         </div>
       </div>
@@ -374,71 +345,27 @@ export default function CalculadoraPage() {
       {activeTab === 'taxes' ? (
         <>
           {/* ══ HERO ═══════════════════════════════════════════════════ */}
-          <div style={{ padding: "44px 24px 0", textAlign: "center" }}>
-        {/* Live badge */}
-        <div style={{
-          display: "inline-flex", alignItems: "center", gap: 8,
-          padding: "6px 16px", borderRadius: 20,
-          background: "rgba(6,182,212,0.08)",
-          border: "1px solid rgba(6,182,212,0.2)", marginBottom: 18,
-        }}>
-          <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#06b6d4" }} className="animate-pulse-glow" />
-          <span style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#06b6d4" }}>
-            Cálculo en tiempo real
-          </span>
-        </div>
-        <h1 style={{ fontSize: "clamp(1.7rem, 4vw, 2.5rem)", fontWeight: 800, color: "var(--text-primary)", lineHeight: 1.2, marginBottom: 12 }}>
-          Calculadora de Retención
-          <br />
-          <span style={{ background: "linear-gradient(90deg, #06b6d4, #34d399)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-            en la Fuente {anio}
-          </span>
-        </h1>
-        <p style={{ fontSize: "0.92rem", color: "var(--text-secondary)", maxWidth: 560, margin: "0 auto", lineHeight: 1.7 }}>
-          Calcula tu impuesto en base anual (norma DIAN) y observa el impacto real mensual
-          en tu nómina — incluyendo AFC y pensiones voluntarias.
-        </p>
+          <div style={{ padding: "36px 16px 0", textAlign: "center" }}>
+            <h1 style={{ fontSize: "clamp(1.6rem, 4vw, 2.3rem)", fontWeight: 800, color: "var(--text-primary)", lineHeight: 1.2, marginBottom: 12, letterSpacing: "-0.02em" }}>
+              Calculadora de Retención en la Fuente{" "}
+              <span style={{ color: "var(--accent-emerald)" }}>{anio}</span>
+            </h1>
+            <p style={{ fontSize: "0.95rem", color: "var(--text-secondary)", maxWidth: 560, margin: "0 auto", lineHeight: 1.65 }}>
+              Calcula tu impuesto en base anual (norma DIAN) y mira el impacto real en tu pago
+              mensual, incluyendo AFC y pensiones voluntarias.
+            </p>
 
-        {/* ── Tipo de Vinculación: Segmented Control ── */}
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, marginTop: 28, marginBottom: 0 }}>
-          <VinculacionSelector tipo={tipoVinculacion} onChange={setTipoVinculacion} />
-          {/* Nota aclaratoria */}
-          <p style={{
-            fontSize: "0.72rem",
-            color: "#64748b",   // Slate-400
-            margin: 0,
-            letterSpacing: "0.01em",
-          }}>
-            Cálculos válidos para personas con contrato laboral vigente en Colombia (Rentas de Trabajo).
-          </p>
-        </div>
-
-        {/* ── Year selector ── */}
-        <div style={{
-          display: "flex", justifyContent: "center", marginTop: 20, marginBottom: 4, gap: 12,
-        }}>
-          <YearSelector anio={anio} onChange={handleAnioChange} />
-        </div>
-
-        {/* UVT reference chip for selected year */}
-        <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: 10 }}>
-          UVT {anio}:{" "}
-          <span style={{ color: "var(--accent-cyan)", fontFamily: "JetBrains Mono, monospace", fontWeight: 700 }}>
-            ${C.UVT.toLocaleString("es-CO")}
-          </span>
-          {" · "}SMMLV:{" "}
-          <span style={{ color: "var(--accent-emerald)", fontFamily: "JetBrains Mono, monospace", fontWeight: 700 }}>
-            ${C.SMMLV.toLocaleString("es-CO")}
-          </span>
-          {" · "}Aux. Transporte:{" "}
-          <span style={{ color: "var(--accent-amber)", fontFamily: "JetBrains Mono, monospace", fontWeight: 700 }}>
-            ${C.AUX_TRANSPORTE.toLocaleString("es-CO")}
-          </span>
-        </div>
-      </div>
+            {/* ── Categoría y modo de cálculo ── */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, marginTop: 28 }}>
+              <VinculacionSelector tipo={tipoVinculacion} onChange={setTipoVinculacion} />
+              <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", margin: 0, maxWidth: 520 }}>
+                {NOTA_POR_TIPO[tipoVinculacion]}
+              </p>
+            </div>
+          </div>
 
       {/* ══ MAIN CONTENT ═══════════════════════════════════════════ */}
-      <main style={{ maxWidth: 1180, margin: "36px auto 0", padding: "0 24px" }}>
+      <main style={{ maxWidth: 1180, margin: "32px auto 0", padding: "0 16px" }}>
 
         {tipoVinculacion === "magico-asalariados" && (
           <div className="animate-fade-up">
@@ -490,11 +417,10 @@ export default function CalculadoraPage() {
 
         {(tipoVinculacion === "asalariados" || tipoVinculacion === "independientes") && (
           <>
-            {/* ── INPUT CARD (full-width) ────────────────────────────── */}
-            <div className="card animate-fade-up" style={{ animationDelay: "0s", marginBottom: 8 }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 24, alignItems: "start" }}>
+            {/* ── Formulario + resumen fijo ──────────────────────────── */}
+            <div className="calc-layout">
+              <div className="card animate-fade-up">
 
-                {/* Left: Input + Quick Select */}
                 <div key={tipoVinculacion} className="animate-fade-up">
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
                     <span className="section-badge badge-emerald">
@@ -502,13 +428,13 @@ export default function CalculadoraPage() {
                         <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
                         <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
                       </svg>
-                      {tipoVinculacion === "asalariados" ? `Salario Base Mensual — Año Gravable ${anio}` : `Ingresos Brutos Mensuales — Año Gravable ${anio}`}
+                      {tipoVinculacion === "asalariados" ? `Salario base mensual · ${anio}` : `Ingresos brutos mensuales · ${anio}`}
                     </span>
                   </div>
                   <div style={{ position: "relative", marginBottom: 16 }}>
                     <span style={{
                       position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)",
-                      fontFamily: "JetBrains Mono, monospace", fontWeight: 700,
+                      fontFamily: "var(--font-jetbrains), monospace", fontWeight: 700,
                       color: "var(--accent-emerald)", fontSize: "1.1rem",
                     }}>$</span>
                     <input
@@ -531,15 +457,8 @@ export default function CalculadoraPage() {
                         <button
                           key={label}
                           onClick={() => setSalarioRaw(String(value))}
-                          style={{
-                            padding: "7px 14px", borderRadius: 8,
-                            border: `1.5px solid ${salarioBase === value ? "var(--accent-emerald)" : "var(--border-color)"}`,
-                            background: salarioBase === value ? "var(--glow-emerald)" : "transparent",
-                            color: salarioBase === value ? "var(--accent-emerald)" : "var(--text-secondary)",
-                            fontSize: "0.78rem", fontWeight: 600, cursor: "pointer",
-                            transition: "all 0.18s ease",
-                            fontFamily: "JetBrains Mono, monospace",
-                          }}
+                          aria-pressed={salarioBase === value}
+                          className="chip"
                         >
                           {label}
                         </button>
@@ -549,11 +468,11 @@ export default function CalculadoraPage() {
 
                   {tipoVinculacion === "asalariados" && (
                     <div style={{ marginTop: 20 }}>
-                      <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.04em", display: "block", marginBottom: 6 }}>
+                      <label className="field-label">
                         + Ingresos No Salariales Mensual
                       </label>
                       <div style={{ position: "relative", marginBottom: 6 }}>
-                        <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", fontFamily: "JetBrains Mono, monospace", fontWeight: 700, color: "var(--text-muted)", fontSize: "1rem" }}>$</span>
+                        <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", fontFamily: "var(--font-jetbrains), monospace", fontWeight: 700, color: "var(--text-muted)", fontSize: "1rem" }}>$</span>
                         <input
                           type="text"
                           id="ingresos-no-salariales"
@@ -564,7 +483,7 @@ export default function CalculadoraPage() {
                           placeholder="0"
                         />
                       </div>
-                      <div style={{ fontSize: "0.68rem", color: "var(--text-muted)", lineHeight: 1.5 }}>
+                      <div className="field-hint">
                         Pagos que no constituyen salario (bonificaciones, auxilios habituales u ocasionales) sujetos a la regla del 40% (Ley 1393 de 2010).
                       </div>
                     </div>
@@ -573,7 +492,7 @@ export default function CalculadoraPage() {
                   {tipoVinculacion === "independientes" && (
                     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                       <div>
-                        <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.04em", display: "block", marginBottom: 6 }}>
+                        <label className="field-label">
                           Actividad Económica (Costos Presuntos)
                         </label>
                         <select
@@ -595,11 +514,11 @@ export default function CalculadoraPage() {
 
                       {actividad === "Costos Reales (Declarados con Soportes)" && (
                         <div className="animate-fade-up">
-                          <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.04em", display: "block", marginBottom: 6 }}>
+                          <label className="field-label">
                             Costos Reales Mensuales
                           </label>
                           <div style={{ position: "relative" }}>
-                            <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", fontFamily: "JetBrains Mono, monospace", fontWeight: 700, color: "var(--text-muted)", fontSize: "1rem" }}>$</span>
+                            <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", fontFamily: "var(--font-jetbrains), monospace", fontWeight: 700, color: "var(--text-muted)", fontSize: "1rem" }}>$</span>
                             <input
                               type="text"
                               id="costos-reales"
@@ -614,7 +533,7 @@ export default function CalculadoraPage() {
                       )}
 
                       <div>
-                        <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.04em", display: "block", marginBottom: 6 }}>
+                        <label className="field-label">
                           Método de Retención
                         </label>
                         <div style={{ display: "flex", gap: 16, marginBottom: 8 }}>
@@ -639,8 +558,7 @@ export default function CalculadoraPage() {
                   )}
 
                   {/* ── Stepper dependientes ── */}
-                  <div style={{ marginTop: 20, paddingTop: 16,
-                    borderTop: "1px solid var(--border-color)" }}>
+                  <div className="field-section">
                     <DependientesInput
                       value={numDependientes}
                       onChange={setNumDependientes}
@@ -648,12 +566,12 @@ export default function CalculadoraPage() {
                   </div>
 
                   {/* ── Aportes Voluntarios ── */}
-                  <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--border-color)" }}>
-                    <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.04em", display: "block", marginBottom: 6 }}>
+                  <div className="field-section">
+                    <label className="field-label">
                       Aportes Voluntarios (AFC / Pensiones) — Mensual
                     </label>
                     <div style={{ position: "relative", marginBottom: 6 }}>
-                      <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", fontFamily: "JetBrains Mono, monospace", fontWeight: 700, color: "var(--text-muted)", fontSize: "1rem" }}>$</span>
+                      <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", fontFamily: "var(--font-jetbrains), monospace", fontWeight: 700, color: "var(--text-muted)", fontSize: "1rem" }}>$</span>
                       <input
                         type="text"
                         id="aportes-voluntarios"
@@ -664,16 +582,16 @@ export default function CalculadoraPage() {
                         placeholder="0"
                       />
                     </div>
-                    <div style={{ fontSize: "0.68rem", color: "var(--text-muted)", lineHeight: 1.5 }}>
+                    <div className="field-hint">
                       Invierte en cuentas AFC o Fondos de Pensión Voluntaria (Art. 126-4 E.T.) para reducir tu base gravable.
                     </div>
                   </div>
 
                   {/* ── Deducciones Anuales Adicionales (Colapsable) ── */}
-                  <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--border-color)" }}>
+                  <div className="field-section">
                     <details style={{ width: "100%" }}>
-                      <summary style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.04em", cursor: "pointer", listStyle: "none", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <span>Deducciones Anuales Adicionales</span>
+                      <summary className="field-label" style={{ cursor: "pointer", listStyle: "none", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 0 }}>
+                        <span>Deducciones anuales adicionales (GMF y factura electrónica)</span>
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                           <polyline points="6 9 12 15 18 9" />
                         </svg>
@@ -681,11 +599,11 @@ export default function CalculadoraPage() {
                       <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 16 }}>
                         {/* GMF */}
                         <div>
-                          <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.04em", display: "block", marginBottom: 6 }}>
+                          <label className="field-label">
                             GMF (4x1000) — Anual
                           </label>
                           <div style={{ position: "relative", marginBottom: 6 }}>
-                            <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", fontFamily: "JetBrains Mono, monospace", fontWeight: 700, color: "var(--text-muted)", fontSize: "1rem" }}>$</span>
+                            <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", fontFamily: "var(--font-jetbrains), monospace", fontWeight: 700, color: "var(--text-muted)", fontSize: "1rem" }}>$</span>
                             <input
                               type="text"
                               id="deduccion-gmf"
@@ -696,18 +614,18 @@ export default function CalculadoraPage() {
                               placeholder="0"
                             />
                           </div>
-                          <div style={{ fontSize: "0.68rem", color: "var(--text-muted)", lineHeight: 1.5 }}>
+                          <div className="field-hint">
                             Deducción del 50% del Gravamen a los Movimientos Financieros pagado en el año.
                           </div>
                         </div>
 
                         {/* Factura Electrónica */}
                         <div>
-                          <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.04em", display: "block", marginBottom: 6 }}>
+                          <label className="field-label">
                             Compras con Factura Electrónica — Anual
                           </label>
                           <div style={{ position: "relative", marginBottom: 6 }}>
-                            <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", fontFamily: "JetBrains Mono, monospace", fontWeight: 700, color: "var(--text-muted)", fontSize: "1rem" }}>$</span>
+                            <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", fontFamily: "var(--font-jetbrains), monospace", fontWeight: 700, color: "var(--text-muted)", fontSize: "1rem" }}>$</span>
                             <input
                               type="text"
                               id="deduccion-factura"
@@ -718,7 +636,7 @@ export default function CalculadoraPage() {
                               placeholder="0"
                             />
                           </div>
-                          <div style={{ fontSize: "0.68rem", color: "var(--text-muted)", lineHeight: 1.5 }}>
+                          <div className="field-hint">
                             Deducción del 1% de compras soportadas con factura electrónica (Art. 336 E.T.). Tope: 240 UVT/año.
                           </div>
                         </div>
@@ -727,12 +645,12 @@ export default function CalculadoraPage() {
                   </div>
 
                   {/* ── Medicina Prepagada ── */}
-                  <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--border-color)" }}>
-                    <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.04em", display: "block", marginBottom: 6 }}>
+                  <div className="field-section">
+                    <label className="field-label">
                       Medicina Prepagada / Seguros de Salud — Mensual
                     </label>
                     <div style={{ position: "relative", marginBottom: 6 }}>
-                      <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", fontFamily: "JetBrains Mono, monospace", fontWeight: 700, color: "var(--text-muted)", fontSize: "1rem" }}>$</span>
+                      <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", fontFamily: "var(--font-jetbrains), monospace", fontWeight: 700, color: "var(--text-muted)", fontSize: "1rem" }}>$</span>
                       <input
                         type="text"
                         id="medicina-prepagada"
@@ -743,18 +661,18 @@ export default function CalculadoraPage() {
                         placeholder="0"
                       />
                     </div>
-                    <div style={{ fontSize: "0.68rem", color: "var(--text-muted)", lineHeight: 1.5 }}>
+                    <div className="field-hint">
                       Deducción por pagos a medicina prepagada o seguros de salud (Art. 387 E.T.). Tope: 16 UVT/mes.
                     </div>
                   </div>
 
                   {/* ── Intereses de Vivienda ── */}
-                  <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--border-color)" }}>
-                    <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.04em", display: "block", marginBottom: 6 }}>
+                  <div className="field-section">
+                    <label className="field-label">
                       Intereses de Vivienda / Leasing — Mensual
                     </label>
                     <div style={{ position: "relative", marginBottom: 6 }}>
-                      <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", fontFamily: "JetBrains Mono, monospace", fontWeight: 700, color: "var(--text-muted)", fontSize: "1rem" }}>$</span>
+                      <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", fontFamily: "var(--font-jetbrains), monospace", fontWeight: 700, color: "var(--text-muted)", fontSize: "1rem" }}>$</span>
                       <input
                         type="text"
                         id="intereses-vivienda"
@@ -765,161 +683,115 @@ export default function CalculadoraPage() {
                         placeholder="0"
                       />
                     </div>
-                    <div style={{ fontSize: "0.68rem", color: "var(--text-muted)", lineHeight: 1.5 }}>
+                    <div className="field-hint">
                       Deducción por intereses de vivienda o costo financiero del leasing habitacional (Art. 387 E.T.). Tope: 100 UVT/mes.
                     </div>
                   </div>
                 </div>
+              </div>
 
-                {/* Right: Indicadores rápidos */}
-                <div style={{ minWidth: 220, padding: "14px 16px", borderRadius: 12, background: "var(--bg-primary)", border: "1px solid var(--border-color)" }}>
-                  <div className="label" style={{ marginBottom: 10 }}>Indicadores Rápidos</div>
-                  {[
-                    {
-                      label: "Aux. Transporte",
-                      value: resultado.calificaAuxilio ? `+${formatCOP(resultado.auxilioTransporteMensual)}/mes` : "No aplica",
-                      color: resultado.calificaAuxilio ? "var(--accent-amber)" : "var(--text-muted)",
-                    },
-                    {
-                      label: "Tramo Marginal",
-                      value: `${(resultado.tramoMarginal * 100).toFixed(0)}%`,
-                      color: resultado.tramoMarginal === 0 ? "var(--accent-emerald)"
-                        : resultado.tramoMarginal >= 0.33 ? "var(--accent-rose)"
-                        : "var(--accent-amber)",
-                    },
-                    {
-                      label: "Base (UVT/año)",
-                      value: `${resultado.baseGravableAnualUVT.toFixed(2)} UVT`,
-                      color: "#06b6d4",
-                    },
-                    {
-                      label: "Tope Exenta 25%",
-                      value: resultado.topeRentaExentaActivo ? "⚠️ Activo" : "No aplica",
-                      color: resultado.topeRentaExentaActivo ? "var(--accent-amber)" : "var(--text-muted)",
-                    },
-                    {
-                      label: "Tope 40%",
-                      value: resultado.topeTecho40Activo ? "⚠️ Activo" : "No aplica",
-                      color: resultado.topeTecho40Activo ? "var(--accent-amber)" : "var(--text-muted)",
-                    },
-                  ].map(({ label, value, color }) => (
-                    <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", borderBottom: "1px solid var(--border-color)", fontSize: "0.76rem" }}>
-                      <span style={{ color: "var(--text-muted)" }}>{label}</span>
-                      <span style={{ color, fontWeight: 700, fontFamily: "JetBrains Mono, monospace", fontSize: "0.72rem" }}>{value}</span>
+              {/* ── Resumen fijo de resultados ─────────────────────────── */}
+              <aside className="summary-panel animate-fade-up" aria-live="polite">
+                <div className="label">Tu resultado · {anio}</div>
+
+                <div className="summary-hero">
+                  <div style={{ fontSize: "0.82rem", color: "var(--text-secondary)", fontWeight: 600 }}>
+                    Retención mensual estimada
+                  </div>
+                  <div className="big-number">{formatCOP(resultado.impuestoMes)}</div>
+                </div>
+
+                <div>
+                  <div className="summary-row">
+                    <span>Impuesto anual estimado</span>
+                    <span>{formatCOP(resultado.impuestoAnual)}</span>
+                  </div>
+                  <div className="summary-row">
+                    <span>Tarifa efectiva</span>
+                    <span>
+                      {resultado.ingresoBrutoAnual > 0
+                        ? `${((resultado.impuestoAnual / resultado.ingresoBrutoAnual) * 100).toFixed(2)}%`
+                        : "0%"}
+                    </span>
+                  </div>
+                  <div className="summary-row">
+                    <span>Tarifa marginal</span>
+                    <span>{(resultado.tramoMarginal * 100).toFixed(0)}%</span>
+                  </div>
+                  <div className="summary-row">
+                    <span>Base gravable anual</span>
+                    <span>{resultado.baseGravableAnualUVT.toFixed(2)} UVT</span>
+                  </div>
+                  {tipoVinculacion === "asalariados" && (
+                    <div className="summary-row">
+                      <span>Auxilio de transporte</span>
+                      <span>{resultado.calificaAuxilio ? `+${formatCOP(resultado.auxilioTransporteMensual)}/mes` : "No aplica"}</span>
                     </div>
-                  ))}
+                  )}
+                  {ahorroPorAportesVoluntarios > 0 && (
+                    <div className="summary-row">
+                      <span>Ahorro por AFC / pensión voluntaria</span>
+                      <span style={{ color: "var(--accent-emerald)" }}>{formatCOP(ahorroPorAportesVoluntarios)}/año</span>
+                    </div>
+                  )}
                 </div>
-              </div>
-            </div>
 
-            {/* ══ BANNER: OBLIGACIÓN DE DECLARAR ═══════════════════ */}
-            {salarioBase > 0 && (
-              <div
-                className="animate-fade-up"
-                style={{
-                  animationDelay: "0.06s",
-                  margin: "20px 0 8px",
-                  padding: "16px 20px",
-                  borderRadius: 12,
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: 14,
-                  background: obligadoDeclarar
-                    ? "rgba(6,182,212,0.07)"
-                    : "rgba(52,211,153,0.07)",
-                  border: `1.5px solid ${obligadoDeclarar
-                    ? "rgba(6,182,212,0.22)"
-                    : "rgba(52,211,153,0.22)"}`,
-                }}
-              >
-                <div style={{ fontSize: "1.4rem", lineHeight: 1 }}>
-                  {obligadoDeclarar ? "📋" : "✅"}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{
-                    fontWeight: 700,
-                    fontSize: "0.85rem",
-                    color: obligadoDeclarar ? "var(--accent-cyan)" : "var(--accent-emerald)",
-                    marginBottom: 4,
-                  }}>
-                    {obligadoDeclarar
-                      ? `Estás obligado a presentar declaración de renta ${anio}`
-                      : `No estás obligado a presentar declaración de renta por ingresos (${anio})`}
+                {(resultado.topeRentaExentaActivo || resultado.topeTecho40Activo) && (
+                  <div className="status-pill status-warn">
+                    <div>
+                      <strong>Topes legales alcanzados</strong>
+                      {resultado.topeRentaExentaActivo && "La renta exenta del 25% llegó a su tope (Art. 206 num. 10). "}
+                      {resultado.topeTecho40Activo && "Tus deducciones llegaron al límite del 40% / 1.340 UVT (Art. 336)."}
+                    </div>
                   </div>
-                  <div style={{ fontSize: "0.77rem", color: "var(--text-secondary)", lineHeight: 1.6 }}>
-                    {obligadoDeclarar ? (
-                      <>
-                        Tu ingreso bruto anual de{" "}
-                        <strong style={{ color: "var(--text-primary)", fontFamily: "JetBrains Mono, monospace" }}>
-                          {formatCOP(resultado.ingresoBrutoAnual)}
-                        </strong>{" "}
-                        supera el umbral de{" "}
-                        <strong>1.400 UVT = {formatCOP(UMBRAL_DECLARAR_COP)}</strong>{" "}
-                        (≈ {formatCOP(UMBRAL_MENSUAL_COP)}/mes · Art. 592 E.T.). Debes presentar declaración de renta anual.
-                      </>
-                    ) : (
-                      <>
-                        Tus ingresos anuales de{" "}
-                        <strong style={{ color: "var(--text-primary)", fontFamily: "JetBrains Mono, monospace" }}>
-                          {formatCOP(resultado.ingresoBrutoAnual)}
-                        </strong>{" "}
-                        son menores a{" "}
-                        <strong>1.400 UVT = {formatCOP(UMBRAL_DECLARAR_COP)}</strong>{" "}
-                        (≈ {formatCOP(UMBRAL_MENSUAL_COP)}/mes · Art. 592 E.T.). No estás en la obligación de declarar.
-                      </>
-                    )}
+                )}
+
+                {salarioBase > 0 && (
+                  <div className={`status-pill ${obligadoDeclarar ? "status-warn" : "status-ok"}`}>
+                    <div>
+                      <strong>
+                        {obligadoDeclarar ? `Debes declarar renta por el año ${anio}` : `No estás obligado a declarar por ingresos (${anio})`}
+                      </strong>
+                      Ingreso bruto anual de {formatCOP(resultado.ingresoBrutoAnual)} frente al umbral de 1.400 UVT
+                      ({formatCOP(UMBRAL_DECLARAR_COP)}, ≈ {formatCOP(UMBRAL_MENSUAL_COP)}/mes · Art. 592 E.T.).
+                    </div>
                   </div>
-                </div>
-              </div>
-            )}
-
-            {/* ══ SECCIÓN SUPERIOR: PROYECCIÓN ANUAL ═════════════════ */}
-            <div className="label" style={{ color: "#06b6d4", margin: "32px 0 12px", display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ width: 3, height: 16, borderRadius: 2, background: "#06b6d4" }} />
-              Sección A — Proyección Anual {anio}
-            </div>
-            <div className="results-grid-annual animate-fade-up" style={{ animationDelay: "0.08s" }}>
-              <SeccionProyeccionAnual resultado={resultado} aplicaTabla383={aplicaTabla383} />
+                )}
+              </aside>
             </div>
 
-            {/* ══ DIVISOR + SECCIÓN MENSUAL ═ */}
-            <SectionDivider
-              topLabel={`Resumen Fiscal ${anio}`}
-              bottomLabel="Impacto Mensual"
-              topColor="#06b6d4"
-              bottomColor="#34d399"
-            />
-
-            <div className="label" style={{ color: "var(--accent-emerald)", marginBottom: 12, display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ width: 3, height: 16, borderRadius: 2, background: "var(--accent-emerald)" }} />
-              Sección B — Desglose Mensual (Anual ÷ 12)
-            </div>
-            <div className="results-grid-monthly animate-fade-up" style={{ animationDelay: "0.12s" }}>
-              <SeccionResumenLey resultado={resultado} aplicaTabla383={aplicaTabla383} />
+            {/* ══ DIAGNÓSTICO DE AHORRO (visible) ═══════════════════ */}
+            <div className="animate-fade-up" style={{ marginTop: 24 }}>
               <SeccionDiagnosticoAhorro resultado={resultado} ahorroPorAportesVoluntarios={ahorroPorAportesVoluntarios} />
             </div>
+
+            {/* ══ CÁLCULO DETALLADO (plegable) ══════════════════════ */}
+            <DetalleCalculo
+              titulo={`Ver cálculo anual paso a paso (${anio})`}
+              subtitulo="Ingresos, aportes, renta exenta, límite del 40% y tabla del Art. 241 E.T."
+            >
+              <SeccionProyeccionAnual resultado={resultado} aplicaTabla383={aplicaTabla383} />
+            </DetalleCalculo>
+            <DetalleCalculo
+              titulo="Ver retención mensual paso a paso"
+              subtitulo="Cálculo anual dividido entre 12 y tabla del Art. 383 E.T."
+            >
+              <SeccionResumenLey resultado={resultado} aplicaTabla383={aplicaTabla383} />
+            </DetalleCalculo>
           </>
         )}
-
-        {/* ══ FOOTER NOTE ═════════════════════════════════════════ */}
-        <div style={{ marginTop: 40, textAlign: "center" }}>
-          <p style={{ fontSize: "0.72rem", color: "var(--text-muted)", lineHeight: 1.7 }}>
-            Calculadora con fines educativos · Vigencia fiscal {anio} ·
-            UVT: ${C.UVT.toLocaleString("es-CO")} · SMMLV: ${C.SMMLV.toLocaleString("es-CO")} · Aux. Transporte: ${C.AUX_TRANSPORTE.toLocaleString("es-CO")}
-            <br />
-            Basada en Arts. 241, 336, 383, 387 E.T.
-          </p>
-        </div>
       </main>
 
       {/* ══ REFERENCIAS LEGALES ════════════════════════════════════ */}
       <SeccionReferenciasLegales anio={anio} />
         </>
       ) : (
-        <div className="animate-fade-up">
+        <div className="animate-fade-up" style={{ padding: "28px 16px 0" }}>
           <CompareBrokers />
         </div>
       )}
+
+      <SiteFooter anio={anio} />
     </div>
   );
 }
