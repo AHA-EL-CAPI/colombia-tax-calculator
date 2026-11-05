@@ -58,7 +58,8 @@ export function SeccionResumenLey({ resultado: r, aplicaTabla383 }: Props) {
     ?? TABLA_ART_383[TABLA_ART_383.length - 1];
     
   const costosTotalesMes = r.isIndependiente ? (r.costosDeduciblesMes || 0) : 0;
-  const granTotalDeduccionesMes = r.descuentoSaludMes + r.descuentoPensionMes + (r.fspMes || 0) + costosTotalesMes + r.rentaExentaMes + r.deduccionArt387Mes + r.medicinaPrepagadaMensual + r.interesesViviendaMensual;
+  // Aportes obligatorios + costos DIAN + beneficios del 40% ya topados (incluye AFC/FPV), como en la base del Art. 383
+  const granTotalDeduccionesMes = r.descuentoSaludMes + r.descuentoPensionMes + (r.fspMes || 0) + costosTotalesMes + r.deduccionesCapadasMes;
 
   return (
     <div className="card animate-fade-up" style={{ gridColumn:"1/-1" }}>

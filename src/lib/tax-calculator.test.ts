@@ -18,22 +18,20 @@ describe('Auditoría DIAN: Retención en la Fuente 2026', () => {
     });
   });
 
-  describe('2. Auditoría de Dependientes (Art 387 vs Art 336, sin doble beneficio)', () => {
-    it('Un mismo dependiente no genera Art. 387 y 72 UVT a la vez (Concepto DIAN 11080/2023)', () => {
+  describe('2. Auditoría de Dependientes (Art. 387 y Art. 336)', () => {
+    it('Asalariado: el mismo dependiente da Art. 387 y 72 UVT (Decreto 2231/2023, Oficio DIAN 4642/2024)', () => {
       const res = calcularRetencion(10_000_000, 2026, 3);
       const topeMensual = 32 * CONSTANTES_2026.UVT;
       expect(res.tieneArt387).toBe(true);
       expect(res.deduccionArt387Mes).toBeLessThanOrEqual(topeMensual);
-      expect(res.deduccionArt336Mes).toBe(0);
-      // El primer dependiente va al Art. 387; los otros dos a las 72 UVT
-      expect(res.deduccionArt336Anual).toBe(72 * 2 * CONSTANTES_2026.UVT);
+      expect(res.deduccionArt336Mes).toBe(0); // las 72 UVT no se restan en la retención mensual
+      expect(res.deduccionArt336Anual).toBe(72 * 3 * CONSTANTES_2026.UVT);
     });
 
-    it('Con un dependiente elige la deducción que deja menos impuesto', () => {
-      const conDep = calcularRetencion(10_000_000, 2026, 1);
-      expect(conDep.tieneArt387 && conDep.tieneArt336).toBe(false);
-      const bajo = calcularRetencion(2_000_000, 2026, 1);
-      expect(bajo.tieneArt387 && bajo.tieneArt336).toBe(false);
+    it('Independiente: cada dependiente da una sola de las dos deducciones', () => {
+      const res = calcularRetencionIndependiente(10_000_000, 'Presunción Media', true, 0.11, 2026, 3);
+      const usados = (res.tieneArt387 ? 1 : 0) + res.deduccionArt336AnualUVT / 72;
+      expect(usados).toBe(3);
     });
   });
 

@@ -205,38 +205,44 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
 
     // Dependientes (Art. 387) - Tope 32 UVT/mes -> 384 UVT/año
     const brutoParaDependientes = rentasTrabajo.bruto + (honorarios.usaPresuntos ? honorarios.bruto : 0);
-    // Un mismo dependiente no puede dar lugar al Art. 387 y a las 72 UVT del Art. 336 (Concepto DIAN 11080 de 2023).
-    // El Art. 387 se usa para el primer dependiente cuando su efecto neto (descontando la reducción del 25%) supera 72 UVT.
     const deduccion387Potencial = Math.min((brutoParaDependientes * 12) * 0.10, 384 * C.UVT);
-    const usaArt387 = numDependientes > 0 && deduccion387Potencial * 0.75 > 72 * C.UVT;
-    const deduccionDependientes387Anual = usaArt387 ? deduccion387Potencial : 0;
-    const dependientesArt336 = usaArt387 ? numDependientes - 1 : numDependientes;
 
-    // Deducción por compras con factura electrónica (1% de compras, máx 240 UVT anuales - Art. 336 E.T.)
+    // Deducción por compras con factura electrónica (1% de compras, máx 240 UVT anuales - Art. 336 num. 5 E.T.)
     const deduccionFacturaAnual = Math.min(deducciones.factura * 0.01, 240 * C.UVT);
 
-    // Base depurada exclusiva para la renta de trabajo
-    const netoHonorariosExentos = honorarios.usaPresuntos ? (honorarios.bruto * 12) - (saludHonorariosAnual + pensionHonorariosAnual) : 0;
-    const baseRentaExenta = netoLaboralAnual + netoHonorariosExentos - deduccionDependientes387Anual - deduccionPrepagadaAnual - deduccionViviendaAnual - aportesAFCAnual;
-
-    // Si las deducciones superan el ingreso, la base es 0
-    const rentaExentaLaboralBruta = Math.max(0, baseRentaExenta) * 0.25;
-
-    // Tope legal del 25% (790 UVT anuales)
-    const rentaExentaLaboralAnual = Math.min(rentaExentaLaboralBruta, 790 * C.UVT);
-
-    const deduccionesSujetasAnual = rentaExentaLaboralAnual + deduccionDependientes387Anual + deduccionPrepagadaAnual + deduccionViviendaAnual + aportesAFCAnual;
-
+    // Renta exenta del 25% (Art. 206 num. 10): solo rentas de trabajo, y para honorarios solo
+    // si no se restan costos reales. La base ya descuenta salud, pensión y FSP (INCRGO).
+    const netoHonorariosExentos = honorarios.usaPresuntos ? netoHonorariosAnual : 0;
     const limite40Anual = rentaLiquidaTotal * 0.40;
     const limite1340UVT = 1340 * C.UVT;
     const limiteMaximoDeducciones = Math.min(limite40Anual, limite1340UVT);
 
-    const deduccionesLimitadasAnual = Math.min(deduccionesSujetasAnual, limiteMaximoDeducciones);
-    
-    // Deducciones fuera de tope
-    const deduccionDependientes336Anual = dependientesArt336 * 72 * C.UVT; // 72 UVT anuales por dep (Art. 336)
-    
-    const baseGravable = Math.max(0, rentaLiquidaTotal - deduccionesLimitadasAnual - deduccionDependientes336Anual - deduccionFacturaAnual);
+    const depurar = (usaArt387: boolean, dependientesArt336: number) => {
+      const deduccionDependientes387Anual = usaArt387 ? deduccion387Potencial : 0;
+      const baseRentaExenta = netoLaboralAnual + netoHonorariosExentos - deduccionDependientes387Anual - deduccionPrepagadaAnual - deduccionViviendaAnual - aportesAFCAnual;
+      // Tope legal del 25% (790 UVT anuales)
+      const rentaExentaLaboralAnual = Math.min(Math.max(0, baseRentaExenta) * 0.25, 790 * C.UVT);
+      const deduccionesSujetasAnual = rentaExentaLaboralAnual + deduccionDependientes387Anual + deduccionPrepagadaAnual + deduccionViviendaAnual + aportesAFCAnual;
+      const deduccionesLimitadasAnual = Math.min(deduccionesSujetasAnual, limiteMaximoDeducciones);
+      // 72 UVT por dependiente, fuera del límite del 40% (Art. 336 num. 3 inc. 2)
+      const deduccionDependientes336Anual = dependientesArt336 * 72 * C.UVT;
+      const baseGravable = Math.max(0, rentaLiquidaTotal - deduccionesLimitadasAnual - deduccionDependientes336Anual - deduccionFacturaAnual);
+      return { deduccionDependientes387Anual, rentaExentaLaboralAnual, deduccionesSujetasAnual, deduccionesLimitadasAnual, deduccionDependientes336Anual, baseGravable };
+    };
+
+    // Con relación laboral, el mismo dependiente da derecho al Art. 387 y a las 72 UVT del Art. 336
+    // (DUR 1625, art. 1.2.1.20.3 num. 1.1.2, Decreto 2231 de 2023; Oficio DIAN 4642 de 2024).
+    // Sin relación laboral solo una de las dos por dependiente: se elige la de menor base gravable.
+    let depuracion = depurar(false, numDependientes);
+    if (numDependientes > 0 && deduccion387Potencial > 0) {
+      if (rentasTrabajo.bruto > 0) {
+        depuracion = depurar(true, numDependientes);
+      } else {
+        const con387 = depurar(true, numDependientes - 1);
+        if (con387.baseGravable < depuracion.baseGravable) depuracion = con387;
+      }
+    }
+    const { deduccionDependientes387Anual, rentaExentaLaboralAnual, deduccionesSujetasAnual, deduccionesLimitadasAnual, deduccionDependientes336Anual, baseGravable } = depuracion;
     const baseGravableUVT = baseGravable / C.UVT;
 
     // Cupo Disponible para Optimización
@@ -1003,7 +1009,7 @@ export function DeclaracionCedular({ anio }: { anio: AnioGravable }) {
               onChange={(v) => setDeducciones({ ...deducciones, afc: v })}
             />
             <div style={{ marginTop: "12px" }}>
-              <DependientesInput value={numDependientes} onChange={setNumDependientes} />
+              <DependientesInput value={numDependientes} onChange={setNumDependientes} laboral={rentasTrabajo.bruto > 0} />
             </div>
           </div>
 

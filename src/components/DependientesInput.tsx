@@ -5,9 +5,11 @@ import React from "react";
 interface DependientesInputProps {
   value: number;
   onChange: (n: number) => void;
+  // Con relación laboral el mismo dependiente da derecho a ambas deducciones (Decreto 2231 de 2023)
+  laboral?: boolean;
 }
 
-export function DependientesInput({ value, onChange }: DependientesInputProps) {
+export function DependientesInput({ value, onChange, laboral = false }: DependientesInputProps) {
   const MAX = 4;
   return (
     <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
@@ -55,7 +57,9 @@ export function DependientesInput({ value, onChange }: DependientesInputProps) {
       <div style={{ fontSize:"0.68rem", color:"var(--text-muted)", lineHeight:1.5 }}>
         {value === 0
           ? "Sin beneficio por dependientes"
-          : <>Art. 387 o 72 UVT/año (Art. 336) por dependiente, sin repetir el mismo dependiente. Se elige la combinación de menor impuesto.</>}
+          : laboral
+            ? <>Art. 387 (10% del ingreso, máx. 32 UVT/mes) más 72 UVT/año por cada dependiente (Art. 336). Con relación laboral el mismo dependiente da derecho a ambas (Decreto 2231 de 2023).</>
+            : <>Sin relación laboral, cada dependiente da derecho al Art. 387 o a 72 UVT/año (Art. 336), no a ambas. Se elige la combinación de menor impuesto.</>}
       </div>
     </div>
   );
