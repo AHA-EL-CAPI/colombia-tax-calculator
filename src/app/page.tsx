@@ -370,7 +370,7 @@ export default function CalculadoraPage() {
         {tipoVinculacion === "magico-asalariados" && (
           <div className="animate-fade-up">
             <div style={{ background: "var(--bg-card)", padding: 20, borderRadius: 16, border: "1px solid var(--border-color)", marginBottom: 24 }}>
-              <DependientesInput value={numDependientes} onChange={setNumDependientes} />
+              <DependientesInput value={numDependientes} onChange={setNumDependientes} laboral />
             </div>
             <SalarioMagicoAsalariados 
               anio={anio} 
@@ -562,6 +562,7 @@ export default function CalculadoraPage() {
                     <DependientesInput
                       value={numDependientes}
                       onChange={setNumDependientes}
+                      laboral={tipoVinculacion === "asalariados"}
                     />
                   </div>
 

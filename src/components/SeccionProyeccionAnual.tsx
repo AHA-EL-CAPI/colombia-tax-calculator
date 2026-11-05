@@ -1,5 +1,15 @@
 "use client";
 import { ResultadoCalculo, formatCOP, formatUVT, TABLA_ART_241, PRESUNCION_COSTOS_UGPP } from "@/lib/tax-calculator";
+
+// Total restado del ingreso bruto: aportes obligatorios (INCRGO), costos DIAN, beneficios
+// del 40% ya topados y deducciones fuera del tope (72 UVT por dependiente y 1% factura).
+function granTotalDeduccionesAnual(r: ResultadoCalculo): number {
+  return r.totalDescuentosAnual
+    + (r.isIndependiente ? (r.costosDeduciblesAnual || 0) : 0)
+    + r.deduccionesCapadas
+    + r.deduccionArt336Anual
+    + (r.deduccionFacturaAnual || 0);
+}
 interface Props { resultado: ResultadoCalculo; aplicaTabla383?: boolean; }
 
 function Row({ label, value, sub, bold, accent, negative, dim, valueColor, subTestId }: {
@@ -277,7 +287,7 @@ export function SeccionProyeccionAnual({ resultado: r, aplicaTabla383 }: Props) 
                       <div>(–) Intereses Vivienda: <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(r.interesesViviendaAnual || 0)}</span></div>
                       <div>(–) Aportes AFC / FPV: <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(r.aportesVoluntariosAnual || 0)}</span></div>
                       <div style={{ borderTop: "1px solid rgba(245,158,11,0.2)", marginTop: "4px", paddingTop: "4px", fontWeight: 600 }}>
-                        (=) Base Depurada: <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(Math.max(0, r.ingresoNetoAnual - (r.deduccionArt387Anual || 0) - (r.medicinaPrepagadaAnual || 0) - (r.interesesViviendaAnual || 0) - (r.aportesVoluntariosAnual || 0)))}</span>
+                        (=) Base Depurada: <span style={{ fontFamily: "var(--font-jetbrains), monospace" }}>{formatCOP(Math.max(0, r.ingresoNetoAnual - (r.deduccionArt387Anual || 0) - (r.medicinaPrepagadaAnual || 0) - (r.interesesViviendaAnual || 0) - (r.deduccionGMFAnual || 0) - r.aportesVoluntariosValidosAnual))}</span>
                       </div>
                       <div>(×) 25% de Ley = <span style={{ fontFamily: "var(--font-jetbrains), monospace", color: "#f59e0b" }}>{formatCOP(r.rentaExentaAnual)}</span> {r.topeRentaExentaActivo ? <span style={{ color: "#fb923c" }}>(Topado a 790 UVT)</span> : ""}</div>
                     </div>
@@ -305,6 +315,17 @@ export function SeccionProyeccionAnual({ resultado: r, aplicaTabla383 }: Props) 
                 valueColor="#f59e0b"
                 dim={r.interesesViviendaAnual === 0} />
 
+              <Row label="(-) Aportes AFC / FPV (Arts. 126-1 y 126-4)"
+                value={`- ${formatCOP(r.aportesVoluntariosValidosAnual)}`}
+                valueColor="#f59e0b"
+                dim={r.aportesVoluntariosAnual === 0} />
+
+              {(r.deduccionGMFAnual || 0) > 0 && (
+                <Row label="(-) 50% GMF (Art. 115)"
+                  value={`- ${formatCOP(r.deduccionGMFAnual || 0)}`}
+                  valueColor="#f59e0b" />
+              )}
+
               {/* Límite 40% progress bar */}
               {aplicaTabla383 !== false && (
                 <div style={{ margin: "16px 0", padding: "16px 20px", borderRadius: 12,
@@ -331,10 +352,17 @@ export function SeccionProyeccionAnual({ resultado: r, aplicaTabla383 }: Props) 
 
               {/* Art. 336 → orange */}
               {r.tieneArt336 && (
-                <Row label={`Deducción Especial Art. 336 (${r.numDependientes} dep.)`}
+                <Row label={`Deducción Especial Art. 336 (${Math.round(r.deduccionArt336AnualUVT / 72)} dep.)`}
                   value={`- ${formatCOP(r.deduccionArt336Anual)}`}
                   valueColor="#fb923c"
                   sub={`${r.deduccionArt336AnualUVT} UVT anuales`} />
+              )}
+
+              {(r.deduccionFacturaAnual || 0) > 0 && (
+                <Row label="(-) 1% compras con factura electrónica (Art. 336 num. 5)"
+                  value={`- ${formatCOP(r.deduccionFacturaAnual || 0)}`}
+                  valueColor="#fb923c"
+                  sub="Fuera del límite del 40% · máx. 240 UVT" />
               )}
 
               {/* TOTAL → cyan (accent) */}
@@ -363,8 +391,7 @@ export function SeccionProyeccionAnual({ resultado: r, aplicaTabla383 }: Props) 
 
               {/* 2. EL GRAN TOTAL DE DEDUCCIONES */}
               {(() => {
-                const costosTotales = r.isIndependiente ? (r.costosDeduciblesMes || 0) * 12 : 0;
-                const granTotalDeducciones = r.descuentoSaludAnual + r.descuentoPensionAnual + (r.fspAnual || 0) + costosTotales + r.rentaExentaAnual + (r.tieneArt387 ? r.deduccionArt387Anual : 0) + (r.tieneArt336 ? r.deduccionArt336Anual : 0);
+                const granTotalDeducciones = granTotalDeduccionesAnual(r);
                 
                 return (
                   <div style={{ display: "flex", flexDirection: "column", gap: 4, padding: "16px 0", marginTop: 8, borderTop: "2px solid var(--accent-rose)" }}>
@@ -398,7 +425,7 @@ export function SeccionProyeccionAnual({ resultado: r, aplicaTabla383 }: Props) 
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
                   <span style={{ color: "var(--text-secondary)" }}>(-) Gran Total Deducciones</span>
-                  <span style={{ fontFamily: "var(--font-jetbrains), monospace", color: "var(--accent-rose)" }}>- {formatCOP(r.descuentoSaludAnual + r.descuentoPensionAnual + (r.fspAnual || 0) + (r.isIndependiente ? (r.costosDeduciblesMes || 0) * 12 : 0) + r.rentaExentaAnual + (r.tieneArt387 ? r.deduccionArt387Anual : 0) + (r.tieneArt336 ? r.deduccionArt336Anual : 0))}</span>
+                  <span style={{ fontFamily: "var(--font-jetbrains), monospace", color: "var(--accent-rose)" }}>- {formatCOP(granTotalDeduccionesAnual(r))}</span>
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "1rem", fontWeight: 700, borderTop: "1.5px solid rgba(52, 211, 153, 0.3)", paddingTop: 12, marginTop: 4 }}>
                   <span style={{ color: "var(--text-primary)" }}>(=) Base Gravable Final</span>

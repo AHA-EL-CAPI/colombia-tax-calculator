@@ -206,6 +206,7 @@ export interface ResultadoCalculo {
   // Aportes Voluntarios (AFC / Pensiones)
   aportesVoluntariosMensual: number;
   aportesVoluntariosAnual: number;
+  aportesVoluntariosValidosAnual: number; // tras los topes del 30% y 3.800 UVT
   aportesVoluntariosRecortados: boolean;
   aporteSugerido: number;
   reduccionNecesaria: number;
@@ -283,10 +284,12 @@ export interface ResultadoCalculo {
   excesoLey1393?: number;
 }
 
-// Un mismo dependiente no puede generar a la vez la deducción del Art. 387 y las
-// 72 UVT del Art. 336 (Concepto DIAN 11080 de 2023; Art. 23 Ley 383 de 1997).
-// El Art. 387 es una sola deducción con al menos un dependiente, así que se
+// Rentas de trabajo NO laborales (honorarios, servicios): un mismo dependiente solo da
+// lugar a una de las dos deducciones, Art. 387 o 72 UVT del Art. 336 (DUR 1625 de 2016,
+// art. 1.2.1.20.3 num. 1.1.2, modificado por el Decreto 2231 de 2023; Oficio DIAN 4642
+// de 2024). El Art. 387 es una sola deducción con al menos un dependiente, así que se
 // prueban las dos asignaciones y se conserva la de menor impuesto anual.
+// Con relación laboral la misma norma permite AMBAS deducciones por el mismo dependiente.
 function elegirAsignacionDependientes(
   nDep: number,
   calcular: (usarArt387: boolean) => ResultadoCalculo,
@@ -311,17 +314,18 @@ export function calcularRetencion(
 ): ResultadoCalculo {
   const C = CONSTANTES_POR_ANIO[anio];
   const nDep = Math.min(Math.max(0, Math.floor(numDependientes)), C.MAX_DEPENDIENTES);
-  return elegirAsignacionDependientes(nDep, (usarArt387) => calcularRetencionAsalariado(
-    salarioMensual, anio, nDep, usarArt387, aportesVoluntariosMensual, medicinaPrepagadaMensual,
+  // Asalariado: el mismo dependiente da derecho al Art. 387 y a las 72 UVT del Art. 336
+  // (DUR 1625, art. 1.2.1.20.3 num. 1.1.2, Decreto 2231 de 2023; Oficio DIAN 4642 de 2024).
+  return calcularRetencionAsalariado(
+    salarioMensual, anio, nDep, aportesVoluntariosMensual, medicinaPrepagadaMensual,
     interesesViviendaMensual, gmfAnual, comprasFacturaElectronicaAnual, ingresosNoSalarialesMensual,
-  ));
+  );
 }
 
 function calcularRetencionAsalariado(
   salarioMensual: number,
   anio: AnioGravable,
   nDep: number,
-  usarArt387: boolean,
   aportesVoluntariosMensual: number,
   medicinaPrepagadaMensual: number,
   interesesViviendaMensual: number,
@@ -330,7 +334,8 @@ function calcularRetencionAsalariado(
   ingresosNoSalarialesMensual: number,
 ): ResultadoCalculo {
   const C = CONSTANTES_POR_ANIO[anio];
-  const nDep336 = usarArt387 ? nDep - 1 : nDep;
+  const usarArt387 = nDep > 0;
+  const nDep336 = nDep;
 
   // ── A: Ingreso Bruto Anual ───────────────────────────────
   const calificaAuxilio = salarioMensual <= 2 * C.SMMLV;
@@ -500,6 +505,7 @@ function calcularRetencionAsalariado(
 
     aportesVoluntariosMensual,
     aportesVoluntariosAnual,
+    aportesVoluntariosValidosAnual,
     aportesVoluntariosRecortados,
     aporteSugerido,
     reduccionNecesaria,
@@ -866,6 +872,7 @@ function calcularIndependienteConDependientes(
 
     aportesVoluntariosMensual,
     aportesVoluntariosAnual,
+    aportesVoluntariosValidosAnual,
     aportesVoluntariosRecortados,
     aporteSugerido,
     reduccionNecesaria,
